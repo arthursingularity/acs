@@ -9,7 +9,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-gold: #F4A621;
+  --color-primary: #3DADFA;
+  --color-primary2: #0079B8;
+  --color-primary3: #00659A;
+  --color-primary4: #004064;
+  --color-primarySoft: #98D2FA;
+  --color-lightGray: #EEEEEE;
+  --color-lightBlack: #262321;
+  --color-border: #90A1AB;
+  --background-image-blackGradient: linear-gradient(to bottom, #010101, #47423F);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +37,13 @@ body {
 }
 
 .buttonHover:hover {
-  filter: brightness(95%);
+  filter: brightness(90%);
+  cursor: pointer;
+}
+
+.buttonHover2:hover {
+  background-color: #98D2FA;
+  border-color: black;
+  color: black;
   cursor: pointer;
 }
