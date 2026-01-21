@@ -19,6 +19,7 @@ export default function AddressModal({
     const [tipo, setTipo] = useState("");
     const [altura, setAltura] = useState("");
     const [observacao, setObservacao] = useState("");
+    const [tipoCaixa, setTipoCaixa] = useState("");
     const produtoEncontrado = Boolean(descricao);
 
     useEffect(() => {
@@ -31,6 +32,7 @@ export default function AddressModal({
             setAltura(initialData.altura || "");
             setDescricao(initialData.descricao || "");
             setObservacao(initialData.observacao || "");
+            setTipoCaixa(initialData.tipoCaixa || "");
         } else {
             setProduto("");
             setTipo("");
@@ -39,7 +41,8 @@ export default function AddressModal({
             setNivel("");
             setAltura("");
             setDescricao("")
-            setObservacao("")
+            setObservacao("");
+            setTipoCaixa("");
         }
     }, [initialData, open]);
 
@@ -59,6 +62,12 @@ export default function AddressModal({
             setDescricao("");
         }
     }, [produto]);
+
+    useEffect(() => {
+        if (tipo === "COLUNA") {
+            setNivel("1");
+        }
+    }, [tipo]);
 
     const onlyLettersUpper = (value) =>
         value.replace(/[^a-zA-Z]/g, "").toUpperCase();
@@ -82,7 +91,7 @@ export default function AddressModal({
             />
 
             {/* modal */}
-            <div className="relative bg-white w-[400px] rounded shadow-lg p-4 z-10">
+            <div className="relative bg-white w-[420px] rounded shadow-lg p-4 z-10">
                 <div className="flex justify-between items-center mb-3">
                     <h2 className="font-bold text-xl">Endereçar</h2>
                     <div className="enderecoCode text-cyan-500 bg-neutral-900 p-1 px-3 rounded-lg font-bold tracking-wide">
@@ -90,67 +99,101 @@ export default function AddressModal({
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <div className="flex space-x-2">
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Rua"
-                            value={rua}
-                            onChange={(e) => setRua(onlyLettersUpper(e.target.value))}
-                        />
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Coluna"
-                            value={coluna}
-                            onChange={(e) => setColuna(onlyNumbers(e.target.value))}
-                            onBlur={() => setColuna(formatColuna(coluna))}
-                        />
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Nível"
-                            value={nivel}
-                            onChange={(e) => setNivel(onlyNumbers(e.target.value))}
-                        />
+                <div className="space-y-1">
+                    <div className="flex space-x-1">
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Rua</label>
+                            <input
+                                className="border px-2 py-1 rounded w-full"
+                                value={rua}
+                                onChange={(e) => setRua(onlyLettersUpper(e.target.value))}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Coluna</label>
+                            <input
+                                className="border px-2 py-1 rounded w-full"
+                                value={coluna}
+                                onChange={(e) => setColuna(onlyNumbers(e.target.value))}
+                                onBlur={() => setColuna(formatColuna(coluna))}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Nível</label>
+                            <input
+                                className={`border px-2 py-1 rounded w-full ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                                value={nivel}
+                                disabled={tipo === "COLUNA"}
+                                onChange={(e) => setNivel(onlyNumbers(e.target.value))}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex space-x-1">
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Tipo endereço</label>
+                            <select
+                                className="border w-[123px] px-2 h-[34px] rounded"
+                                value={tipo}
+                                onChange={(e) => setTipo(e.target.value)}
+                            >
+                                <option value="">Selecionar</option>
+                                <option value="COLUNA">COLUNA</option>
+                                <option value="GAVETA">GAVETA</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Tipo caixa</label>
+                            <input
+                                className="border w-[132px] px-2 py-1 rounded"
+                                placeholder="Tipo de caixa"
+                                value={tipoCaixa}
+                                onChange={(e) => setTipoCaixa(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Altura máx</label>
+                            <input
+                                className="border w-[125px] px-2 py-1 rounded"
+                                placeholder="Altura máx"
+                                value={altura}
+                                onChange={(e) => setAltura(onlyNumbers(e.target.value))}
+                            />
+                        </div>
                     </div>
                     <div className="flex space-x-2">
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Tipo de endereço"
-                            value={tipo}
-                            onChange={(e) => setTipo(e.target.value)}
-                        />
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Altura máxima"
-                            value={altura}
-                            onChange={(e) => setAltura(onlyNumbers(e.target.value))}
-                        />
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Código</label>
+                            <input
+                                className="border w-full px-2 py-1 rounded"
+                                placeholder="Código"
+                                value={produto}
+                                onChange={(e) => setProduto(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">Observação</label>
+                            <input
+                                className="border w-full px-2 py-1 rounded"
+                                placeholder="Observação"
+                                value={observacao}
+                                onChange={(e) => setObservacao(e.target.value)}
+                            />
+                        </div>
+
                     </div>
-                    <div className="flex space-x-2">
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Código"
-                            value={produto}
-                            onChange={(e) => setProduto(e.target.value)}
-                        />
-                        <input
-                            className="border w-full px-2 py-1 rounded"
-                            placeholder="Observação"
-                            value={observacao}
-                            onChange={(e) => setObservacao(e.target.value)}
-                        />
-                    </div>
-                    <div
-                        className={`
+                    <div>
+                        <label className="text-xs font-semibold text-gray-600">Descrição</label>
+                        <div
+                            className={`
                             productDescricao cursor-default flex items-center
                             w-full px-3 py-2 rounded overflow-hidden text-sm
                             ${produtoEncontrado ? "bg-neutral-800 text-cyan-500 font-bold tracking-wide" : "bg-gray-200 text-gray-600"}
                         `}
-                    >
-                        {descricao || "Descrição do produto"}
+                        >
+                            {descricao || "Descrição do produto"}
+                        </div>
                     </div>
                 </div>
-
                 <div className="flex justify-between gap-2 mt-4">
                     <button onClick={onClose} className="buttonHover px-3 py-1 rounded bg-gray-300">Cancelar</button>
                     {initialData && (
@@ -162,7 +205,7 @@ export default function AddressModal({
                         </button>
                     )}
                     <button
-                        onClick={() => onSave({ rua, coluna, nivel, almo, produto, tipo, altura, descricao, observacao })}
+                        onClick={() => onSave({ rua, coluna, nivel, almo, produto, tipo, tipoCaixa, altura, descricao, observacao })}
                         className="bg-green-600 text-white px-3 py-1 rounded buttonHover"
                     >
                         Salvar

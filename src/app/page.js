@@ -242,6 +242,7 @@ export default function Home() {
         descricao: item.descricao,
         rua: item.rua,
         coluna: item.coluna,
+        tipoCaixa: item.tipoCaixa,
         nivel: item.nivel,
         codigo: `${almo}${item.rua}${item.coluna}N${item.nivel}`,
         observacao: item.observacao,
@@ -264,6 +265,7 @@ export default function Home() {
         { header: "COLUNA", key: "coluna", width: 10 },
         { header: "NIVEL", key: "nivel", width: 8 },
         { header: "CODIGO", key: "codigo", width: 18 },
+        { header: "TIPO", key: "tipoCaixa", width: 18 },
         { header: "OBSERVACAO", key: "observacao", width: 18 },
       ];
 
@@ -294,7 +296,7 @@ export default function Home() {
       rows.forEach(row => sheet.addRow(row));
 
       // 🔹 Alinhamento
-      ["C", "D", "E"].forEach(col => {
+      ["C", "D", "E", "G", "H"].forEach(col => {
         sheet.getColumn(col).alignment = { horizontal: "center" };
       });
       sheet.getColumn("F").alignment = { horizontal: "center" };
