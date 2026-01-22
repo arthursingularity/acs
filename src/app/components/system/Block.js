@@ -1,4 +1,5 @@
 import React from "react";
+import { BLOCK_COLORS } from "./AdressModal";
 
 const GRID_SIZE = 200;
 
@@ -17,6 +18,8 @@ const Block = React.memo(function Block({
   const hasColuna = Boolean(data?.coluna);
   const hasDescricao = Boolean(data?.descricao);
 
+  const colorClass = BLOCK_COLORS[data?.blockColor] || BLOCK_COLORS.gray;
+
   return (
     <div
       onClick={onClick}
@@ -32,11 +35,12 @@ const Block = React.memo(function Block({
           className={`
             absolute inset-0
             flex items-center justify-center
-            text-2xl font-bold
+            font-bold
             rounded-md
-            ${type === "letter"
-              ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
-              : "bg-gray-600 text-white hover:bg-sky-500"
+            ${
+              type === "letter"
+                ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
+                : `${colorClass} text-[30px] text-white`
             }
           `}
         >

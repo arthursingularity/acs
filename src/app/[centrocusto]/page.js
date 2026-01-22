@@ -243,26 +243,56 @@ export default function Home() {
   };
 
   const exportToExcel = async () => {
-    const items = Object.values(gridData).filter(item => item?.produto);
+    const rows = [];
 
-    if (items.length === 0) {
+    // 🔹 Coletar dados do grid
+    Object.values(gridData).forEach((item) => {
+      if (!item) return;
+
+      // 🔹 ENDEREÇO NORMAL
+      if (item.type === "endereco" && item.tipo !== "GAVETA") {
+        if (!item.produto) return;
+
+        rows.push({
+          produto: item.produto,
+          descricao: item.descricao,
+          rua: item.rua,
+          coluna: item.coluna,
+          nivel: item.nivel,
+          codigo: `${almo}${item.rua}${item.coluna}N${item.nivel}`,
+          tipoCaixa: item.tipoCaixa || "",
+          observacao: item.observacao || "",
+        });
+      }
+
+      // 🔹 GAVETA (múltiplos níveis)
+      if (item.tipo === "GAVETA" && Array.isArray(item.enderecos)) {
+        item.enderecos.forEach((g) => {
+          if (!g.produto) return;
+
+          rows.push({
+            produto: g.produto,
+            descricao: g.descricao,
+            rua: g.rua,
+            coluna: g.coluna,
+            nivel: g.nivel,
+            codigo: g.enderecoCode,
+            tipoCaixa: item.tipoCaixa || "",
+            observacao: g.observacao || "",
+          });
+        });
+      }
+    });
+
+    if (rows.length === 0) {
       alert("Nenhum endereço para exportar.");
       return;
     }
 
-    // 🔹 AGRUPAR POR RUA
-    const byRua = items.reduce((acc, item) => {
-      if (!acc[item.rua]) acc[item.rua] = [];
-      acc[item.rua].push({
-        produto: item.produto,
-        descricao: item.descricao,
-        rua: item.rua,
-        coluna: item.coluna,
-        tipoCaixa: item.tipoCaixa,
-        nivel: item.nivel,
-        codigo: `${almo}${item.rua}${item.coluna}N${item.nivel}`,
-        observacao: item.observacao,
-      });
+    // 🔹 Agrupar por RUA
+    const byRua = rows.reduce((acc, row) => {
+      if (!acc[row.rua]) acc[row.rua] = [];
+      acc[row.rua].push(row);
       return acc;
     }, {});
 
@@ -271,8 +301,8 @@ export default function Home() {
     /* ===================================================== */
     /* 🔹 FUNÇÃO REUTILIZÁVEL DE CRIAÇÃO DE ABA               */
     /* ===================================================== */
-    const createSheet = (name, rows) => {
-      const sheet = workbook.addWorksheet(`RUA ${name}`);
+    const createSheet = (rua, rows) => {
+      const sheet = workbook.addWorksheet(`RUA ${rua}`);
 
       sheet.columns = [
         { header: "PRODUTO", key: "produto", width: 15 },
@@ -285,8 +315,8 @@ export default function Home() {
         { header: "OBSERVACAO", key: "observacao", width: 18 },
       ];
 
-      // 🔹 Header
-      sheet.getRow(1).eachCell(cell => {
+      // 🔹 Header estilizado
+      sheet.getRow(1).eachCell((cell) => {
         cell.fill = {
           type: "pattern",
           pattern: "solid",
@@ -308,14 +338,13 @@ export default function Home() {
         };
       });
 
-      // 🔹 Dados
-      rows.forEach(row => sheet.addRow(row));
+      // 🔹 Linhas
+      rows.forEach((row) => sheet.addRow(row));
 
       // 🔹 Alinhamento
-      ["C", "D", "E", "G", "H"].forEach(col => {
+      ["C", "D", "E", "F", "G", "H"].forEach((col) => {
         sheet.getColumn(col).alignment = { horizontal: "center" };
       });
-      sheet.getColumn("F").alignment = { horizontal: "center" };
 
       // 🔹 Freeze header
       sheet.views = [{ state: "frozen", ySplit: 1 }];
@@ -326,7 +355,7 @@ export default function Home() {
       createSheet(rua, rows);
     });
 
-    // 🔹 Exportar
+    // 🔹 Exportar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
 
     saveAs(

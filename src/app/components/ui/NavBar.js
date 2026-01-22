@@ -75,6 +75,11 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
             Mudar Setor
           </button>
           <button
+            className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+          >
+            Iniciar Inv
+          </button>
+          <button
             onClick={onExportExcel}
             className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
           >
