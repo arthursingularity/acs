@@ -11,10 +11,10 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
         onClose={() => setOpenModal(false)}
       />
       <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[42px]">
+        <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[36px]">
           <div className="flex items-center h-full">
             <div>
-              <img src="/imagens/logo.png" className="w-[40px] border-1 border-primary p-1.5 rounded buttonHover" />
+              <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
             </div>
             <div className="bg-primary4 h-full flex items-center px-2.5 rounded-t">
               <div className="text-white text-sm flex items-center justify-center">Controle de Endereçamento
@@ -28,7 +28,7 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
           </div>
         </div>
 
-        <div className="bg-lightGray h-[42px] flex justify-between">
+        <div className="bg-lightGray h-[35px] flex justify-between">
           <div className="pl-1 pt-[1px] text-primary3 font-medium text-[20px]">
             <p>TOTVS | Suprimentos</p>
           </div>
@@ -61,13 +61,13 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
           </div>
         </div>
 
-        <div className="bg-blackGradient pl-1 pt-[1px] h-[35px] space-x-2 font-bold text-white tracking-wide flex items-center pl-3 text-[14px]">
+        <div className="bg-blackGradient pl-1 pt-[1px] h-[30px] space-x-2 font-bold text-white tracking-wide flex items-center pl-3 text-[13px]">
           <p>
             Controle de endereçamento - Setor: {setor} - C. Custo: {centroCusto}
           </p>
           <div className="hidden">{almo}</div>
         </div>
-        <div className="bg-white h-[30px] font-bold tracking-wide flex items-center text-[15px]">
+        <div className="bg-white h-[27px] font-bold tracking-wide flex items-center text-[13px]">
           <button
             onClick={() => setOpenModal(true)}
             className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"

@@ -250,7 +250,7 @@ export default function Home() {
       if (!item) return;
 
       // 🔹 ENDEREÇO NORMAL
-      if (item.type === "endereco" && item.tipo !== "GAVETA") {
+      if (item.type === "endereco" && item.tipo !== "NIVEL") {
         if (!item.produto) return;
 
         rows.push({
@@ -266,7 +266,7 @@ export default function Home() {
       }
 
       // 🔹 GAVETA (múltiplos níveis)
-      if (item.tipo === "GAVETA" && Array.isArray(item.enderecos)) {
+      if (item.tipo === "NIVEL" && Array.isArray(item.enderecos)) {
         item.enderecos.forEach((g) => {
           if (!g.produto) return;
 
@@ -307,11 +307,11 @@ export default function Home() {
       sheet.columns = [
         { header: "PRODUTO", key: "produto", width: 15 },
         { header: "DESCRICAO", key: "descricao", width: 45 },
-        { header: "RUA", key: "rua", width: 8 },
+        { header: "RUA", key: "rua", width: 7 },
         { header: "COLUNA", key: "coluna", width: 10 },
         { header: "NIVEL", key: "nivel", width: 8 },
-        { header: "CODIGO", key: "codigo", width: 18 },
-        { header: "TIPO", key: "tipoCaixa", width: 18 },
+        { header: "CODIGO", key: "codigo", width: 13 },
+        { header: "TIPO DE ETIQUETA", key: "tipoCaixa", width: 18 },
         { header: "OBSERVACAO", key: "observacao", width: 18 },
       ];
 
@@ -381,7 +381,7 @@ export default function Home() {
 
       <div
         ref={containerRef}
-        className="w-screen h-screen overflow-auto relative select-none mt-[150px] p-[2px]"
+        className="w-screen h-screen overflow-auto relative select-none mt-[128px] p-[2px]"
         onMouseMove={(e) => {
           if (e.ctrlKey && !isPanning.current) {
             e.currentTarget.style.cursor = "move";
