@@ -281,7 +281,7 @@ export default function AddressModal({
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Tipo de etiqueta</label>
                                         <select
-                                            className={`border w-full px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
+                                            className={`border w-[121px] px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
                                                 }`}
                                             value={tipoCaixa}
                                             disabled={tipo === "COLUNA"}
@@ -299,7 +299,7 @@ export default function AddressModal({
                                         <label className="text-xs font-semibold text-gray-600">Altura máxima</label>
                                         <input
                                             type="number"
-                                            className="border w-[112px] px-2 py-1 rounded"
+                                            className="border w-[116px] px-2 py-1 rounded"
                                             placeholder="Altura máx"
                                             value={altura}
                                             onChange={(e) => setAltura(e.target.value)}
@@ -364,7 +364,7 @@ export default function AddressModal({
                                                                 <div className="flex space-x-1">
                                                                     {/* Código do produto */}
                                                                     <input
-                                                                        className="border w-[60%] px-2 py-1 rounded mb-1"
+                                                                        className="border w-[60%] pl-2 py-1 rounded mb-1"
                                                                         placeholder="Código"
                                                                         value={item.produto}
                                                                         onChange={(e) => {
@@ -388,7 +388,7 @@ export default function AddressModal({
                                                                     />
                                                                     {/* Descrição automática */}
                                                                     <div
-                                                                        className={`text-xs px-2 w-full py-2 rounded cursor-default border mb-1 bg-gray-200 ${produtoEncontrado
+                                                                        className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 ${produtoEncontrado
                                                                             ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]"
                                                                             : "text-gray-600"
                                                                             }`}
