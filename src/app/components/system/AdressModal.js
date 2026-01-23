@@ -388,12 +388,16 @@ export default function AddressModal({
                                                                     />
                                                                     {/* Descrição automática */}
                                                                     <div
-                                                                        className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 ${produtoEncontrado
-                                                                            ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]"
-                                                                            : "text-gray-600"
+                                                                        className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 
+                                                                            flex items-center leading-[1.1]
+                                                                            ${produtoEncontrado
+                                                                                ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]"
+                                                                                : "text-gray-600"
                                                                             }`}
                                                                     >
-                                                                        {item.descricao || "Descrição do produto"}
+                                                                        <p className="text-left mt-[2px]">
+                                                                            {item.descricao || "Descrição do produto"}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
 
