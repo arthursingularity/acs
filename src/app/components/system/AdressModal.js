@@ -433,7 +433,7 @@ export default function AddressModal({
                                                                                 className={`bg-black ${etiquetaWidth[tipoCaixa] || "w-[120px]"
                                                                                     } px-1 font-bold h-[35px] flex items-center justify-center`}
                                                                             >
-                                                                                <p className="leading-[1.1] text-white text-[9px] text-center mt-[3px]">{item.descricao}</p>
+                                                                                <p className="leading-[1.1] text-white text-[9px] text-center">{item.descricao}</p>
                                                                             </div>
                                                                             <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
                                                                                 <QRCodeCanvas
@@ -482,7 +482,7 @@ export default function AddressModal({
                                 </label>
                                 <div className="flex">
                                     <div className="bg-black w-[120px] px-1 font-bold h-[35px] flex items-center justify-center">
-                                        <p className="leading-[1.1] text-white text-[9px] text-center mt-[3px]">{descricao}</p>
+                                        <p className="leading-[1.1] text-white text-[9px] text-center">{descricao}</p>
                                     </div>
                                     <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
                                         {enderecoCode && (
