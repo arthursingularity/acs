@@ -239,9 +239,13 @@ export default function AddressModal({
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Rua</label>
                                         <input
-                                            className="border px-2 w-full py-1 rounded w-full"
+                                            className="border px-2 py-1 rounded w-full"
                                             value={rua}
-                                            onChange={(e) => setRua(onlyLettersUpper(e.target.value))}
+                                            maxLength={3}
+                                            onChange={(e) => {
+                                                const valor = e.target.value.toUpperCase().slice(0, 2);
+                                                setRua(valor);
+                                            }}
                                         />
                                     </div>
                                     <div>
@@ -253,23 +257,19 @@ export default function AddressModal({
                                             onBlur={() => setColuna(formatColuna(coluna))}
                                         />
                                     </div>
-                                    {tipo != "NIVEL" && (
-                                        <div>
-                                            <label className="text-xs font-semibold text-gray-600">Nível</label>
-                                            <input
-                                                className={`border px-2 py-1 rounded w-full ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                                                value={nivel}
-                                                disabled={tipo === "COLUNA"}
-                                                onChange={(e) => setNivel(onlyNumbers(e.target.value))}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex space-x-1">
+                                    <div className="hidden">
+                                        <label className="text-xs font-semibold text-gray-600">Nível</label>
+                                        <input
+                                            className={`border px-2 py-1 rounded w-full ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                                            value={nivel}
+                                            disabled={tipo === "COLUNA"}
+                                            onChange={(e) => setNivel(onlyNumbers(e.target.value))}
+                                        />
+                                    </div>
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Tipo de endereço</label>
                                         <select
-                                            className="border w-full px-2 h-[34px] rounded"
+                                            className="border w-[120px] px-2 h-[34px] rounded"
                                             value={tipo}
                                             onChange={(e) => setTipo(e.target.value)}
                                         >
@@ -278,10 +278,12 @@ export default function AddressModal({
                                             <option value="NIVEL">NIVEL</option>
                                         </select>
                                     </div>
+                                </div>
+                                <div className="flex space-x-1">
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Tipo de etiqueta</label>
                                         <select
-                                            className={`border w-[121px] px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
+                                            className={`border ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"} px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
                                                 }`}
                                             value={tipoCaixa}
                                             disabled={tipo === "COLUNA"}
@@ -299,7 +301,7 @@ export default function AddressModal({
                                         <label className="text-xs font-semibold text-gray-600">Altura máxima</label>
                                         <input
                                             type="number"
-                                            className="border w-[116px] px-2 py-1 rounded"
+                                            className={`border w-[120px] px-2 py-1 rounded ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"}`}
                                             placeholder="Altura máx"
                                             value={altura}
                                             onChange={(e) => setAltura(e.target.value)}
@@ -308,35 +310,37 @@ export default function AddressModal({
                                             step={1}
                                         />
                                     </div>
+                                    {!showGavetaPopup && (
+                                        <div>
+                                            <label className="text-xs font-semibold text-gray-600">Observação</label>
+                                            <input
+                                                className="border w-full px-2 py-1 rounded"
+                                                placeholder="Observação"
+                                                value={observacao}
+                                                onChange={(e) => setObservacao(e.target.value)}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 {!showGavetaPopup && (
                                     <div>
-                                        <div className="flex space-x-1">
+                                        <div className="flex items-center space-x-1">
                                             <div>
-                                                <label className="text-xs font-semibold text-gray-600">Código</label>
+                                                <div className="text-xs font-semibold text-gray-600">Código</div>
                                                 <input
-                                                    className="border w-full px-2 py-1 rounded"
+                                                    className="border w-[116px] px-2 py-1 rounded"
                                                     placeholder="Código"
                                                     value={produto}
                                                     onChange={(e) => setProduto(e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-xs font-semibold text-gray-600">Observação</label>
-                                                <input
-                                                    className="border w-full px-2 py-1 rounded"
-                                                    placeholder="Observação"
-                                                    value={observacao}
-                                                    onChange={(e) => setObservacao(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-semibold text-gray-600">Descrição</label>
-                                            <div
-                                                className={`productDescricao cursor-default border flex items-centerw-full px-3 py-2 rounded overflow-hidden bg-gray-200 text-sm ${produtoEncontrado ? "text-primary3 font-bold tracking-wide border-black" : "text-gray-600"}`}
-                                            >
-                                                {descricao || "Descrição do produto"}
+                                                <div className="text-xs font-semibold text-gray-600">Descrição</div>
+                                                <div
+                                                    className={`productDescricao cursor-default border flex leading-[1] w-[238px] items-center h-[34px] pl-1 py-2 rounded overflow-hidden bg-gray-200 text-[13px] ${produtoEncontrado ? "text-primary3 font-bold tracking-wide border-black" : "text-gray-600"}`}
+                                                >
+                                                    {descricao || "Descrição do produto"}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -470,8 +474,8 @@ export default function AddressModal({
                             </div>
                         </div>
                     )}
-                    {tipo === "COLUNA" && (
-                        <div className="etiqueta flex justify-between mt-1">
+                    <div className="etiqueta flex justify-between mt-1">
+                        {tipo === "COLUNA" && (
                             <div>
                                 <label className="text-xs font-semibold text-gray-600">
                                     Placa de identificação
@@ -502,29 +506,29 @@ export default function AddressModal({
                                     </div>
                                 )}
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-600">
-                                    Cor do endereço
-                                </label>
-                                {mode === "endereco" && (
-                                    <div className="flex space-x-[4px]">
-                                        {Object.keys(BLOCK_COLORS).map((color) => (
-                                            <button
-                                                key={color}
-                                                type="button"
-                                                onClick={() => setBlockColor(color)}
-                                                className={`
+                        )}
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">
+                                Cor do endereço
+                            </label>
+                            {mode === "endereco" && (
+                                <div className="flex space-x-[4px]">
+                                    {Object.keys(BLOCK_COLORS).map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() => setBlockColor(color)}
+                                            className={`
                                 w-[25px] h-[25px] rounded border cursor-pointer
                                 ${BLOCK_COLORS[color]}
                                 ${blockColor === color ? "ring-1 ring-black" : ""}
                                 `}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                     <div className="flex justify-between items-center gap-2 mt-6">
                         {initialData && (
                             <button
