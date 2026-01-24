@@ -192,14 +192,14 @@ export default function AddressModal({
         "GAVETA G": "w-[106px] text-[8px]",
         "GAVETA M": "w-[87px] text-[7px]",
         "GAVETA P": "w-[68px] text-[7px]",
-        "COLUNA": "w-[120px]",
+        "COLUNA": "w-[120px] text-[7px]",
     };
 
     if (!open) return null;
 
     return (
         <>
-            <StoragePreview type={tipo} height={altura} />
+            <StoragePreview type={tipo} height={altura} tipoCaixa={tipoCaixa} levels={gavetaNiveis} />
             <ModalWrapper
                 isOpen={open}
                 onClose={onClose}
@@ -276,7 +276,7 @@ export default function AddressModal({
                                 </div>
                                 <div className="flex space-x-1">
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-600">Tipo de etiqueta</label>
+                                        <label className="tipoEtiquetaPrincipal text-xs font-semibold text-gray-600">Tipo de etiqueta</label>
                                         <select
                                             className={`border ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"} px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
                                                 }`}
@@ -300,16 +300,14 @@ export default function AddressModal({
                                             placeholder="Altura máx"
                                             value={altura}
                                             onChange={(e) => {
-                                                const value = Number(e.target.value);
-                                        
-                                                if (value >= 1 && value <= 6) {
-                                                    setAltura(value);
-                                                } else if (e.target.value === "") {
-                                                    setAltura("");
+                                                const val = e.target.value;
+                                                const maxVal = tipo === "COLUNA" ? 6 : 7;
+                                                if (val === "" || (Number(val) >= 1 && Number(val) <= maxVal)) {
+                                                    setAltura(val);
                                                 }
                                             }}
                                             min={1}
-                                            max={30}
+                                            max={tipo === "COLUNA" ? 6 : 7}
                                         />
                                     </div>
                                     {!showGavetaPopup && (
@@ -490,20 +488,32 @@ export default function AddressModal({
 
                                                                     {/* Line 3: Plate + Code Display */}
                                                                     <div className="nivelEtiqueta flex justify-between items-center mt-1">
-                                                                        <div className="flex border">
-                                                                            <div className={`bg-black ${etiquetaWidth[data.tipoCaixa] || "w-[106px] text-[9px]"} px-1 font-bold h-[35px] flex items-center justify-center`}>
-                                                                                <p className="leading-[1.1] text-white text-center">{data.descricao}</p>
+                                                                        <div>
+                                                                            <div className="flex border">
+                                                                                <div className={`bg-black ${etiquetaWidth[data.tipoCaixa || tipoCaixa] || "w-[106px] text-[9px]"} px-1 font-bold h-[35px] flex items-center justify-center`}>
+                                                                                    <p className="leading-[1.1] text-white text-center">{data.descricao}</p>
+                                                                                </div>
+                                                                                <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
+                                                                                    {codeDisplay && (
+                                                                                        <QRCodeCanvas
+                                                                                            value={codeDisplay}
+                                                                                            size={35}
+                                                                                            level="M"
+                                                                                            includeMargin={false}
+                                                                                        />
+                                                                                    )}
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
-                                                                                {codeDisplay && (
-                                                                                    <QRCodeCanvas
-                                                                                        value={codeDisplay}
-                                                                                        size={35}
-                                                                                        level="M"
-                                                                                        includeMargin={false}
-                                                                                    />
-                                                                                )}
-                                                                            </div>
+                                                                            {tipoCaixa === "COLUNA" && (
+                                                                                <div className="flex">
+                                                                                    <div className="bg-stamOrange w-full h-[7px] flex items-center justify-center">
+                                                                                        <p className="text-white font-bold text-[6px] text-center">{data.produto}</p>
+                                                                                    </div>
+                                                                                    <div className="bg-stamOrange w-[46px] h-[7px]">
+                                                                                        <p className="text-white font-bold text-[6px] text-center">{codeDisplay}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
 
                                                                         <div className="text-primary text-[14px] bg-blackGradient text-center flex justify-center items-center px-2 h-[35px] rounded font-bold tracking-tight min-w-[80px]">
