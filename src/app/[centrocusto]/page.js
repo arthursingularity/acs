@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Block from "../components/system/Block";
 import NavBar from "../components/ui/NavBar";
 import ExcelJS from "exceljs";
@@ -9,11 +9,13 @@ import AddressModal from "../components/system/AdressModal";
 import { useParams } from "next/navigation";
 import { SETORES_DB } from "../components/system/Database";
 
-const GRID_SIZE = 200;
+const DEFAULT_COLS = 50;
+const DEFAULT_ROWS = 50;
 const CELL_SIZE = 50;
-const BUFFER = 4; // render extra (anti flicker)
+const BUFFER = 3; // render extra (anti flicker)
 const STORAGE_KEY = "enderecamento-grid-data";
 const ALMO_STORAGE_KEY = "almoxarifado";
+const GRID_SIZE_KEY = "enderecamento-grid-size";
 
 export default function Home() {
   const containerRef = useRef(null);
@@ -23,6 +25,8 @@ export default function Home() {
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [gridCols, setGridCols] = useState(DEFAULT_COLS);
+  const [gridRows, setGridRows] = useState(DEFAULT_ROWS);
   const [viewport, setViewport] = useState({
     width: 0,
     height: 0,
@@ -78,13 +82,69 @@ export default function Home() {
     localStorage.setItem(ALMO_STORAGE_KEY, almo);
   }, [almo]);
 
+  // Carregar tamanho do grid do localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const savedSize = localStorage.getItem(GRID_SIZE_KEY);
+      if (savedSize) {
+        const { cols, rows } = JSON.parse(savedSize);
+        if (cols) setGridCols(cols);
+        if (rows) setGridRows(rows);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar tamanho do grid:", err);
+    }
+  }, []);
+
+  // Salvar tamanho do grid no localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      localStorage.setItem(GRID_SIZE_KEY, JSON.stringify({ cols: gridCols, rows: gridRows }));
+    } catch (err) {
+      console.error("Erro ao salvar tamanho do grid:", err);
+    }
+  }, [gridCols, gridRows]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        setGridData(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+
+        // 🔹 MIGRATION: Convert linear index to "row-col" keys if valid
+        const keys = Object.keys(parsed);
+        const hasLegacyKeys = keys.some(k => !k.includes("-") && !isNaN(parseInt(k)));
+
+        if (hasLegacyKeys) {
+          console.log("Migrating grid data from linear indices to coordinates...");
+          const savedSize = localStorage.getItem(GRID_SIZE_KEY);
+          let cols = DEFAULT_COLS;
+          if (savedSize) {
+            const s = JSON.parse(savedSize);
+            if (s.cols) cols = s.cols;
+          }
+
+          const migrated = {};
+          keys.forEach(k => {
+            const idx = parseInt(k, 10);
+            if (!isNaN(idx)) {
+              const r = Math.floor(idx / cols);
+              const c = idx % cols;
+              migrated[`${r}-${c}`] = parsed[k];
+            } else {
+              migrated[k] = parsed[k]; // keep if already weird
+            }
+          });
+          setGridData(migrated);
+        } else {
+          setGridData(parsed);
+        }
       }
     } catch (err) {
       console.error("Erro ao carregar gridData:", err);
@@ -192,33 +252,48 @@ export default function Home() {
     };
   }, []);
 
-  /* ---------------- VIRTUALIZAÇÃO ---------------- */
+  /* ---------------- VIRTUALIZAÇÃO (OTIMIZADO COM MEMO) ---------------- */
 
-  const viewportWidth = viewport.width;
-  const viewportHeight = viewport.height;
+  const visibleCells = useMemo(() => {
+    const viewportWidth = viewport.width;
+    const viewportHeight = viewport.height;
 
-  const scaledCell = CELL_SIZE * zoom;
+    const startCol = Math.max(
+      0,
+      Math.floor(scroll.x / (CELL_SIZE * zoom)) - BUFFER
+    );
 
-  const startCol = Math.max(
-    0,
-    Math.floor(scroll.x / (CELL_SIZE * zoom)) - BUFFER
-  );
+    const endCol = Math.min(
+      gridCols,
+      Math.ceil((scroll.x + viewportWidth) / (CELL_SIZE * zoom)) + BUFFER
+    );
 
-  const endCol = Math.min(
-    GRID_SIZE,
-    Math.ceil((scroll.x + viewportWidth) / (CELL_SIZE * zoom)) + BUFFER
-  );
+    const startRow = Math.max(
+      0,
+      Math.floor(scroll.y / (CELL_SIZE * zoom)) - BUFFER
+    );
 
-  const startRow = Math.max(
-    0,
-    Math.floor(scroll.y / (CELL_SIZE * zoom)) - BUFFER
-  );
+    const endRow = Math.min(
+      gridRows,
+      Math.ceil((scroll.y + viewportHeight) / (CELL_SIZE * zoom)) + BUFFER
+    );
 
-  const endRow = Math.min(
-    GRID_SIZE,
-    Math.ceil((scroll.y + viewportHeight) / (CELL_SIZE * zoom)) + BUFFER
-  );
+    const cells = [];
+    for (let row = startRow; row < endRow; row++) {
+      for (let col = startCol; col < endCol; col++) {
+        // Use coordinate key instead of linear index to preserve positions on resize
+        const key = `${row}-${col}`;
+        cells.push({ row, col, key });
+      }
+    }
+    return cells;
+  }, [scroll.x, scroll.y, viewport.width, viewport.height, zoom, gridCols, gridRows]);
 
+  // Funções para ajustar tamanho do grid
+  const handleAdjustGrid = useCallback((deltaRows, deltaCols) => {
+    setGridRows(prev => Math.max(5, Math.min(500, prev + deltaRows)));
+    setGridCols(prev => Math.max(5, Math.min(500, prev + deltaCols)));
+  }, []);
 
   const handleOpenModal = useCallback((index) => {
     setSelectedIndex(index);
@@ -368,6 +443,81 @@ export default function Home() {
   };
 
 
+  /* ---------------- CLIPBOARD + CONTEXT MENU ---------------- */
+  const [clipboard, setClipboard] = useState(null);
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    index: null,
+  });
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (contextMenu.visible)
+        setContextMenu((prev) => ({ ...prev, visible: false }));
+    };
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, [contextMenu.visible]);
+
+  const handleContextMenu = useCallback((e, index) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      index,
+    });
+  }, []);
+
+  const handleCopy = () => {
+    const data = gridData[contextMenu.index];
+    if (data) {
+      setClipboard(data);
+    }
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
+  const handlePaste = () => {
+    if (!clipboard || contextMenu.index === null) return;
+    setGridData((prev) => ({
+      ...prev,
+      [contextMenu.index]: { ...clipboard },
+    }));
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
+  /* ---------------- CENTER GRID ---------------- */
+  const centerGrid = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Grid logical dimensions
+    const gridW = gridCols * CELL_SIZE * zoom;
+    // Viewport dimensions
+    const viewportW = el.clientWidth;
+
+    // Calculate center scroll
+    const scrollX = (gridW - viewportW) / 2;
+    // Always top!
+    const scrollY = 0;
+
+    el.scrollTo({
+      left: Math.max(0, scrollX),
+      top: scrollY,
+      behavior: "auto",
+    });
+  }, [gridCols, gridRows, zoom]);
+
+  useEffect(() => {
+    // Tenta centralizar assim que carregar (aguarda render inicial/localStorage)
+    const t = setTimeout(() => {
+      centerGrid();
+    }, 100);
+    return () => clearTimeout(t);
+  }, []); // Executa uma vez
+
   /* ---------------- RENDER ---------------- */
 
   return (
@@ -377,11 +527,14 @@ export default function Home() {
         setor={descricaoSetor}
         centroCusto={centrocusto}
         onExportExcel={exportToExcel}
+        gridRows={gridRows}
+        gridCols={gridCols}
+        onAdjustGrid={handleAdjustGrid}
       />
 
       <div
         ref={containerRef}
-        className="w-screen h-screen overflow-auto relative select-none mt-[128px] p-[2px]"
+        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[128px] p-[2px] flex"
         onMouseMove={(e) => {
           if (e.ctrlKey && !isPanning.current) {
             e.currentTarget.style.cursor = "move";
@@ -390,47 +543,37 @@ export default function Home() {
           }
         }}
       >
-        {/* GRID TOTAL (FAKE, só tamanho) */}
+        {/* GRID TOTAL (tamanho dinâmico) */}
         <div
-          className="border border-primary"
+          className="border border-primary m-auto flex-none"
           style={{
-            width: GRID_SIZE * CELL_SIZE,
-            height: GRID_SIZE * CELL_SIZE,
+            width: gridCols * CELL_SIZE,
+            height: gridRows * CELL_SIZE,
             position: "relative",
             transform: `scale(${zoom})`,
             transformOrigin: "0 0",
           }}
         >
-          {/* GRID VISÍVEL */}
-          {Array.from({ length: endRow - startRow }).map((_, rowOffset) => {
-            const row = startRow + rowOffset;
-
-            return Array.from({ length: endCol - startCol }).map(
-              (_, colOffset) => {
-                const col = startCol + colOffset;
-                const index = row * GRID_SIZE + col;
-
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      position: "absolute",
-                      top: row * CELL_SIZE,
-                      left: col * CELL_SIZE,
-                    }}
-                  >
-                    <Block
-                      index={index}
-                      data={gridData[index]}
-                      gridData={gridData}
-                      onClick={() => handleOpenModal(index)}
-                      isCtrlPressed={isCtrlPressed}
-                    />
-                  </div>
-                );
-              }
-            );
-          })}
+          {/* GRID VISÍVEL (otimizado) */}
+          {visibleCells.map(({ row, col, key }) => (
+            <div
+              key={key}
+              style={{
+                position: "absolute",
+                top: row * CELL_SIZE,
+                left: col * CELL_SIZE,
+              }}
+              onContextMenu={(e) => handleContextMenu(e, key)}
+            >
+              <Block
+                index={key}
+                data={gridData[key]}
+                gridData={gridData}
+                onClick={() => handleOpenModal(key)}
+                isCtrlPressed={isCtrlPressed}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -442,6 +585,36 @@ export default function Home() {
         initialData={gridData[selectedIndex]}
         almo={almo}
       />
+
+      {/* CONTEXT MENU */}
+      {contextMenu.visible && (
+        <div
+          className="fixed z-[9999] bg-white border border-gray-200 shadow-xl rounded-md p-1 min-w-[150px] flex flex-col animate-in fade-in zoom-in-95 duration-100"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleCopy}
+            disabled={!gridData[contextMenu.index]}
+            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+          >
+            <span>Copiar</span>
+            <span className="text-xs text-gray-400 group-hover:text-blue-500">
+              Ctrl+C
+            </span>
+          </button>
+          <button
+            onClick={handlePaste}
+            disabled={!clipboard}
+            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+          >
+            <span>Colar</span>
+            <span className="text-xs text-gray-400 group-hover:text-blue-500">
+              Ctrl+V
+            </span>
+          </button>
+        </div>
+      )}
     </>
   );
 }

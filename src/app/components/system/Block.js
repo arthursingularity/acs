@@ -10,7 +10,7 @@ const Block = React.memo(function Block({
   onClick,
   isCtrlPressed,
 }) {
-  if (typeof index !== "number" || Number.isNaN(index)) {
+  if (index === undefined || index === null) {
     return null;
   }
 
@@ -37,10 +37,9 @@ const Block = React.memo(function Block({
             flex items-center justify-center
             font-bold
             rounded-md
-            ${
-              type === "letter"
-                ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
-                : `${colorClass} text-[30px] text-white`
+            ${type === "letter"
+              ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
+              : `${colorClass} text-[30px] text-white`
             }
           `}
         >

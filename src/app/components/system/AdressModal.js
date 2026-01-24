@@ -323,7 +323,7 @@ export default function AddressModal({
                                     )}
                                 </div>
                                 {!showGavetaPopup && (
-                                    <div>
+                                    <div className="mt-2">
                                         <div className="flex items-center space-x-1">
                                             <div>
                                                 <div className="text-xs font-semibold text-gray-600">Código</div>
@@ -480,7 +480,7 @@ export default function AddressModal({
                                 <label className="text-xs font-semibold text-gray-600">
                                     Placa de identificação
                                 </label>
-                                <div className="flex">
+                                <div className="flex border">
                                     <div className="bg-black w-[120px] px-1 font-bold h-[35px] flex items-center justify-center">
                                         <p className="leading-[1.1] text-white text-[9px] text-center">{descricao}</p>
                                     </div>
@@ -507,11 +507,11 @@ export default function AddressModal({
                                 )}
                             </div>
                         )}
-                        <div>
-                            <label className="text-xs font-semibold text-gray-600">
-                                Cor do endereço
-                            </label>
-                            {mode === "endereco" && (
+                        <div>{mode === "endereco" && (
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600">
+                                    Cor do endereço
+                                </label>
                                 <div className="flex space-x-[4px]">
                                     {Object.keys(BLOCK_COLORS).map((color) => (
                                         <button
@@ -521,12 +521,13 @@ export default function AddressModal({
                                             className={`
                                 w-[25px] h-[25px] rounded border cursor-pointer
                                 ${BLOCK_COLORS[color]}
-                                ${blockColor === color ? "ring-1 ring-black" : ""}
+                                ${blockColor === color ? "ring-2 ring-primary" : ""}
                                 `}
                                         />
                                     ))}
                                 </div>
-                            )}
+                            </div>
+                        )}
                         </div>
                     </div>
                     <div className="flex justify-between items-center gap-2 mt-6">

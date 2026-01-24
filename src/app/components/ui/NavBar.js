@@ -1,7 +1,7 @@
 import { useState } from "react";
 import SelectSetorModal from "../system/SelectSetorModal";
 
-export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
+export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid }) {
   const [openModal, setOpenModal] = useState(false);
 
   return (
@@ -67,24 +67,68 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel }) {
           </p>
           <div className="hidden">{almo}</div>
         </div>
-        <div className="bg-white h-[27px] font-bold tracking-wide flex items-center text-[13px]">
-          <button
-            onClick={() => setOpenModal(true)}
-            className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-          >
-            Mudar Setor
-          </button>
-          <button
-            className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-          >
-            Iniciar Inv
-          </button>
-          <button
-            onClick={onExportExcel}
-            className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-          >
-            Excel
-          </button>
+        <div className="bg-white h-[27px] font-bold tracking-wide flex items-center justify-between text-[13px] border-b border-gray-300">
+          <div>
+            <button
+              onClick={() => setOpenModal(true)}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+            >
+              Mudar Setor
+            </button>
+            <button
+              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+            >
+              Iniciar Inv
+            </button>
+            <button
+              onClick={onExportExcel}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+            >
+              Excel
+            </button>
+          </div>
+          {/* Controles de Grid */}
+          <div className="flex items-center space-x-2 px-2 border-l border-r border-gray-200 h-full mx-2">
+            <div className="flex items-center space-x-1">
+              <span className="text-gray-600 text-[11px] font-bold">Altura:</span>
+              <span className="text-primary3 font-bold text-xs w-6 text-center">{gridRows}</span>
+              <button
+                onClick={() => onAdjustGrid(5, 0)}
+                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                title="Adicionar 10 linhas"
+              >
+                +
+              </button>
+              <button
+                onClick={() => onAdjustGrid(-5, 0)}
+                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                title="Remover 10 linhas"
+              >
+                -
+              </button>
+            </div>
+
+            <div className="w-[1px] h-[15px] bg-gray-300"></div>
+
+            <div className="flex items-center space-x-1">
+              <span className="text-gray-600 text-[11px] font-bold">Largura:</span>
+              <span className="text-primary3 font-bold text-xs w-6 text-center">{gridCols}</span>
+              <button
+                onClick={() => onAdjustGrid(0, 5)}
+                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                title="Adicionar 10 colunas"
+              >
+                +
+              </button>
+              <button
+                onClick={() => onAdjustGrid(0, -5)}
+                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                title="Remover 10 colunas"
+              >
+                -
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
