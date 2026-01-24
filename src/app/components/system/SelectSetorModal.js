@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ModalWrapper from "../ui/ModalWrapper";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import { SETORES_DB } from "./Database";
 
 export default function SelectSetorModal({ isOpen, onClose }) {
     const [centroCusto, setCentroCusto] = useState("");
@@ -48,6 +49,27 @@ export default function SelectSetorModal({ isOpen, onClose }) {
                 >
                     Confirmar
                 </Button>
+
+                <div className="mt-4 border-t pt-2">
+                    <p className="text-sm font-bold text-gray-500 mb-2">Disponíveis:</p>
+                    <div className="overflow-y-auto max-h-[200px] border rounded bg-gray-50">
+                        {SETORES_DB.map((s) => (
+                            <div
+                                key={s.centroCusto}
+                                onClick={() => {
+                                    setCentroCusto(s.centroCusto);
+                                    // Optional: auto-navigate on click
+                                    // router.push(`/${s.centroCusto}`);
+                                    // onClose();
+                                }}
+                                className="p-2 text-sm border-b cursor-pointer hover:bg-blue-100 flex justify-between"
+                            >
+                                <span>{s.centroCusto}</span>
+                                <span className="text-gray-600">{s.descricao}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </ModalWrapper>
     );

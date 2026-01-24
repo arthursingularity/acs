@@ -90,7 +90,7 @@ const Block = React.memo(function Block({
             ${tl} ${tr} ${bl} ${br}
             ${type === "letter"
               ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
-              : `${colorClass} text-[30px] text-white`
+              : `${colorClass} text-[27px] text-white`
             }
           `}
         >

@@ -62,74 +62,81 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
         </div>
 
         <div className="bg-blackGradient pl-1 pt-[1px] h-[30px] space-x-2 font-bold text-white tracking-wide flex items-center pl-3 text-[13px]">
-          <p>
-            Controle de endereçamento - Setor: {setor} - C. Custo: {centroCusto}
-          </p>
+          {centroCusto ? (
+            <p>
+              Controle de endereçamento - Setor: {setor} - C. Custo: {centroCusto}
+            </p>
+          ) : (
+            <p>TOTVS | Home</p>
+          )}
           <div className="hidden">{almo}</div>
         </div>
-        <div className="bg-white h-[27px] font-bold tracking-wide flex items-center justify-between text-[13px] border-b border-gray-300">
-          <div>
-            <button
-              onClick={() => setOpenModal(true)}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-            >
-              Mudar Setor
-            </button>
-            <button
-              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-            >
-              Iniciar Inv
-            </button>
-            <button
-              onClick={onExportExcel}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-            >
-              Excel
-            </button>
-          </div>
-          {/* Controles de Grid */}
-          <div className="flex items-center space-x-2 px-2 border-l border-r border-gray-200 h-full mx-2">
-            <div className="flex items-center space-x-1">
-              <span className="text-gray-600 text-[11px] font-bold">Altura:</span>
-              <span className="text-primary3 font-bold text-xs w-6 text-center">{gridRows}</span>
+
+        {centroCusto && (
+          <div className="bg-white h-[27px] font-bold tracking-wide flex items-center justify-between text-[13px] border-b border-gray-300">
+            <div>
               <button
-                onClick={() => onAdjustGrid(5, 0)}
-                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
-                title="Adicionar 10 linhas"
+                onClick={() => setOpenModal(true)}
+                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
               >
-                +
+                Mudar Setor
               </button>
               <button
-                onClick={() => onAdjustGrid(-5, 0)}
-                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
-                title="Remover 10 linhas"
+                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
               >
-                -
+                Iniciar Inv
+              </button>
+              <button
+                onClick={onExportExcel}
+                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+              >
+                Excel
               </button>
             </div>
+            {/* Controles de Grid */}
+            <div className="flex items-center space-x-2 px-2 border-l border-r border-gray-200 h-full mx-2">
+              <div className="flex items-center space-x-1">
+                <span className="text-gray-600 text-[11px] font-bold">Altura:</span>
+                <span className="text-primary3 font-bold text-xs w-6 text-center">{gridRows}</span>
+                <button
+                  onClick={() => onAdjustGrid(5, 0)}
+                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  title="Adicionar 10 linhas"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => onAdjustGrid(-5, 0)}
+                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  title="Remover 10 linhas"
+                >
+                  -
+                </button>
+              </div>
 
-            <div className="w-[1px] h-[15px] bg-gray-300"></div>
+              <div className="w-[1px] h-[15px] bg-gray-300"></div>
 
-            <div className="flex items-center space-x-1">
-              <span className="text-gray-600 text-[11px] font-bold">Largura:</span>
-              <span className="text-primary3 font-bold text-xs w-6 text-center">{gridCols}</span>
-              <button
-                onClick={() => onAdjustGrid(0, 5)}
-                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
-                title="Adicionar 10 colunas"
-              >
-                +
-              </button>
-              <button
-                onClick={() => onAdjustGrid(0, -5)}
-                className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
-                title="Remover 10 colunas"
-              >
-                -
-              </button>
+              <div className="flex items-center space-x-1">
+                <span className="text-gray-600 text-[11px] font-bold">Largura:</span>
+                <span className="text-primary3 font-bold text-xs w-6 text-center">{gridCols}</span>
+                <button
+                  onClick={() => onAdjustGrid(0, 5)}
+                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  title="Adicionar 10 colunas"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => onAdjustGrid(0, -5)}
+                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  title="Remover 10 colunas"
+                >
+                  -
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

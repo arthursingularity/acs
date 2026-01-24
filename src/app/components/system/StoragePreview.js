@@ -9,7 +9,7 @@ export default function StoragePreview({ type, height, tipoCaixa, levels }) {
 
     return (
         <div
-            className={`fixed top-1/2 left-1/2 ml-[200px] -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[1000] p-2 flex flex-col items-center justify-end animate-modal-enter ${tipoCaixa != "COLUNA" ? "h-[382px]" : "h-[392px]"} w-[110px] border border-gray-200`}
+            className={`fixed top-1/2 left-1/2 ml-[200px] -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[1000] px-2 pb-2 flex flex-col items-center justify-end animate-modal-enter ${tipoCaixa != "COLUNA" ? "h-[382px]" : "h-[392px]"} w-[115px] border border-gray-200`}
             style={{ maxHeight: '80vh' }}
         >
             <div className="w-full overflow-y-auto custom-scrollbar flex flex-col items-center">
@@ -18,7 +18,7 @@ export default function StoragePreview({ type, height, tipoCaixa, levels }) {
                     {tipoCaixa === "COLUNA" && (
                         <div className="w-full flex flex-col items-center">
                             {items.map((_, i) => (
-                                <div key={i} className="w-[92px] relative rounded-xs shadow-sm flex items-center justify-center group overflow-hidden">
+                                <div key={i} className="w-[93px] relative rounded-xs shadow-sm flex items-center justify-center group overflow-hidden">
                                     <img src='/imagens/caixa.jpeg' />
                                 </div>
                             ))}

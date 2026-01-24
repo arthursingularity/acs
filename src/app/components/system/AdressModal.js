@@ -23,6 +23,8 @@ export default function AddressModal({
     initialData,
     onDelete,
     almo,
+    existingBlocks = {},
+    lastInteraction,
 }) {
     const [blockColor, setBlockColor] = useState("gray");
     const [mode, setMode] = useState("endereco");
@@ -163,6 +165,41 @@ export default function AddressModal({
             setTipoCaixa("COLUNA");
         }
     }, [tipo]);
+
+    // 🔹 Auto-incremento inteligente da coluna (Bidirecional)
+    useEffect(() => {
+        // Só executa se estiver criando um novo (sem initialData) e Rua tiver 2 caracteres
+        if (!initialData && rua.length === 2) {
+            const cols = [];
+            const blocks = existingBlocks || {};
+
+            Object.values(blocks).forEach((item) => {
+                if (item.rua === rua && item.coluna) {
+                    const v = parseInt(item.coluna, 10);
+                    if (!isNaN(v)) cols.push(v);
+                }
+            });
+
+            if (cols.length === 0) {
+                setColuna("01");
+                return;
+            }
+
+            const min = Math.min(...cols);
+            const max = Math.max(...cols);
+            let next = max + 1;
+
+            // Se a última ação foi nesta rua e foi <= min atual, sugere decrescente
+            if (lastInteraction && lastInteraction.rua === rua) {
+                const lastCol = parseInt(lastInteraction.coluna, 10);
+                if (lastCol <= min) {
+                    next = Math.max(1, min - 1);
+                }
+            }
+
+            setColuna(String(next).padStart(2, "0"));
+        }
+    }, [rua, initialData, existingBlocks, lastInteraction]);
 
     const onlyLettersUpper = (value) =>
         value.replace(/[^a-zA-Z]/g, "").toUpperCase();

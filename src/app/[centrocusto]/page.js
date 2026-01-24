@@ -17,6 +17,33 @@ const STORAGE_KEY = "enderecamento-grid-data";
 const ALMO_STORAGE_KEY = "almoxarifado";
 const GRID_SIZE_KEY = "enderecamento-grid-size";
 
+/* 🔹 Helper para calcular próxima coluna (inteligente) */
+function getNextColumn(rua, gridData, lastInteraction) {
+  const cols = [];
+  Object.values(gridData).forEach((item) => {
+    if (item.rua === rua && item.coluna) {
+      const v = parseInt(item.coluna, 10);
+      if (!isNaN(v)) cols.push(v);
+    }
+  });
+
+  if (cols.length === 0) return "01";
+
+  const min = Math.min(...cols);
+  const max = Math.max(...cols);
+
+  // Detecta padrão decrescente se a última interação foi o MÍNIMO da sequência
+  if (lastInteraction && lastInteraction.rua === rua) {
+    const lastCol = parseInt(lastInteraction.coluna, 10);
+    if (lastCol <= min) {
+      // Prevents 0 or negative
+      return String(Math.max(1, min - 1)).padStart(2, "0");
+    }
+  }
+
+  return String(max + 1).padStart(2, "0");
+}
+
 export default function Home() {
   const containerRef = useRef(null);
   const [zoom, setZoom] = useState(1);
@@ -31,6 +58,8 @@ export default function Home() {
     width: 0,
     height: 0,
   });
+  const [lastInteraction, setLastInteraction] = useState(null); // { rua: string, coluna: string }
+
   const handleDeleteAddress = useCallback(() => {
     if (selectedIndex === null) return;
 
@@ -43,6 +72,7 @@ export default function Home() {
     setModalOpen(false);
     setSelectedIndex(null);
   }, [selectedIndex]);
+
   const isPanning = useRef(false);
   const panStart = useRef({
     mouseX: 0,
@@ -74,7 +104,6 @@ export default function Home() {
       window.removeEventListener("keyup", onKeyUp);
     };
   }, []);
-
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -301,6 +330,11 @@ export default function Home() {
   }, []);
 
   const handleSaveAddress = (data) => {
+    // 🔹 Update Last Interaction for smart sequence
+    if (data.rua && data.coluna) {
+      setLastInteraction({ rua: data.rua, coluna: data.coluna });
+    }
+
     setGridData((prev) => {
       const next = { ...prev };
 
@@ -481,9 +515,57 @@ export default function Home() {
 
   const handlePaste = () => {
     if (!clipboard || contextMenu.index === null) return;
+
+    // 🔹 COLAR RUA INTEIRA
+    if (clipboard.type === "street" && Array.isArray(clipboard.items)) {
+      const [tRow, tCol] = contextMenu.index.split("-").map(Number);
+
+      setGridData((prev) => {
+        const nextGrid = { ...prev };
+        clipboard.items.forEach((item) => {
+          const nr = tRow + item.dr;
+          const nc = tCol + item.dc;
+          // Verifica limites do grid
+          if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) {
+            const newKey = `${nr}-${nc}`;
+            // Clona os dados
+            nextGrid[newKey] = JSON.parse(JSON.stringify(item.data));
+          }
+        });
+        return nextGrid;
+      });
+      setContextMenu((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    let newItem = { ...clipboard };
+
+    // 🔹 Lógica de incremento inteligente da coluna (Asc/Desc)
+    if (newItem.rua) {
+      const nextCol = getNextColumn(newItem.rua, gridData, lastInteraction);
+      newItem.coluna = nextCol;
+
+      // 🔹 Update Last Interaction so sequence continues!
+      setLastInteraction({ rua: newItem.rua, coluna: nextCol });
+
+      // Se for GAVETA (NIVEL), atualizar endereços internos
+      if (newItem.tipo === "NIVEL" && Array.isArray(newItem.enderecos)) {
+        newItem.enderecos = newItem.enderecos.map((addr) => {
+          const oldColPart = `${newItem.rua}${clipboard.coluna}`;
+          const newColPart = `${newItem.rua}${nextCol}`;
+
+          return {
+            ...addr,
+            coluna: nextCol,
+            enderecoCode: addr.enderecoCode.replace(oldColPart, newColPart)
+          };
+        });
+      }
+    }
+
     setGridData((prev) => ({
       ...prev,
-      [contextMenu.index]: { ...clipboard },
+      [contextMenu.index]: newItem,
     }));
     setContextMenu((prev) => ({ ...prev, visible: false }));
   };
@@ -584,6 +666,8 @@ export default function Home() {
         onDelete={handleDeleteAddress}
         initialData={gridData[selectedIndex]}
         almo={almo}
+        existingBlocks={gridData}
+        lastInteraction={lastInteraction}
       />
 
       {/* CONTEXT MENU */}
@@ -603,6 +687,61 @@ export default function Home() {
               Ctrl+C
             </span>
           </button>
+
+          <button
+            onClick={() => {
+              const sourceKey = contextMenu.index;
+              const sourceItem = gridData[sourceKey];
+              if (!sourceItem || !sourceItem.rua) return;
+
+              const [sRow, sCol] = sourceKey.split('-').map(Number);
+              const streetItems = [];
+
+              // Find all items with same Rua
+              Object.entries(gridData).forEach(([k, item]) => {
+                if (item.rua === sourceItem.rua) {
+                  const [r, c] = k.split('-').map(Number);
+                  streetItems.push({
+                    data: item,
+                    dr: r - sRow,
+                    dc: c - sCol
+                  });
+                }
+              });
+
+              setClipboard({ type: 'street', items: streetItems });
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            disabled={!gridData[contextMenu.index] || !gridData[contextMenu.index].rua}
+            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+          >
+            <span>Copiar Rua Inteira</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const sourceItem = gridData[contextMenu.index];
+              if (!sourceItem || !sourceItem.rua) return;
+
+              if (confirm(`Tem certeza que deseja excluir TODA a RUA ${sourceItem.rua}?`)) {
+                setGridData(prev => {
+                  const next = { ...prev };
+                  Object.keys(next).forEach(key => {
+                    if (next[key].rua === sourceItem.rua) {
+                      delete next[key];
+                    }
+                  });
+                  return next;
+                });
+              }
+              setContextMenu((prev) => ({ ...prev, visible: false }));
+            }}
+            disabled={!gridData[contextMenu.index] || !gridData[contextMenu.index].rua}
+            className="text-left px-3 py-2 hover:bg-red-50 text-red-600 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+          >
+            <span>Excluir Rua Inteira</span>
+          </button>
+
           <button
             onClick={handlePaste}
             disabled={!clipboard}
