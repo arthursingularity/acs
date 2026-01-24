@@ -20,13 +20,64 @@ const Block = React.memo(function Block({
 
   const colorClass = BLOCK_COLORS[data?.blockColor] || BLOCK_COLORS.gray;
 
+  // 🔹 Check connectivity (only for "endereco")
+  let isLeftConnected = false;
+  let isRightConnected = false;
+  let isTopConnected = false;
+  let isBottomConnected = false;
+
+  if (type === "endereco") {
+    // index is expected to be "row-col" string
+    const parts = String(index).split("-");
+    if (parts.length === 2) {
+      const r = parseInt(parts[0], 10);
+      const c = parseInt(parts[1], 10);
+
+      const leftKey = `${r}-${c - 1}`;
+      const rightKey = `${r}-${c + 1}`;
+      const topKey = `${r - 1}-${c}`;
+      const bottomKey = `${r + 1}-${c}`;
+
+      const leftNeighbor = gridData[leftKey];
+      const rightNeighbor = gridData[rightKey];
+      const topNeighbor = gridData[topKey];
+      const bottomNeighbor = gridData[bottomKey];
+
+      const isEndereco = (d) => (d?.type || "endereco") === "endereco";
+
+      if (leftNeighbor && isEndereco(leftNeighbor)) isLeftConnected = true;
+      if (rightNeighbor && isEndereco(rightNeighbor)) isRightConnected = true;
+      if (topNeighbor && isEndereco(topNeighbor)) isTopConnected = true;
+      if (bottomNeighbor && isEndereco(bottomNeighbor)) isBottomConnected = true;
+    }
+  }
+
+  // Determine corner rounding
+  // If a side is connected, its adjacent corners become sharp.
+  const tl = isTopConnected || isLeftConnected ? "rounded-tl-none" : "rounded-tl-lg";
+  const tr = isTopConnected || isRightConnected ? "rounded-tr-none" : "rounded-tr-lg";
+  const bl = isBottomConnected || isLeftConnected ? "rounded-bl-none" : "rounded-bl-lg";
+  const br = isBottomConnected || isRightConnected ? "rounded-br-none" : "rounded-br-lg";
+
+  // Determine borders (outer div handles borders)
+  // We start with full border, then remove sides that are connected.
+  // Tailwind `border` adds 1px to all sides.
+  const borderClass = `
+    border
+    ${isLeftConnected ? "border-l-0" : ""}
+    ${isRightConnected ? "border-r-0" : ""}
+    ${isTopConnected ? "border-t-0" : ""}
+    ${isBottomConnected ? "border-b-0" : ""}
+  `;
+
   return (
     <div
       onClick={onClick}
       className={`
     relative group w-[50px] h-[50px]
-    border border-gray-400 flex
+    border-gray-400 flex
     ${isCtrlPressed ? "cursor-move" : "cursor-pointer"}
+    ${borderClass}
   `}
     >
       {/* 🔹 BLOCO */}
@@ -36,7 +87,7 @@ const Block = React.memo(function Block({
             absolute inset-0
             flex items-center justify-center
             font-bold
-            rounded-md
+            ${tl} ${tr} ${bl} ${br}
             ${type === "letter"
               ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
               : `${colorClass} text-[30px] text-white`
