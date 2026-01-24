@@ -75,7 +75,7 @@ const Block = React.memo(function Block({
       onClick={onClick}
       className={`
     relative group w-[50px] h-[50px]
-    border-gray-400 flex
+    border-gray-400 flex transition-all duration-200
     ${isCtrlPressed ? "cursor-move" : "cursor-pointer"}
     ${borderClass}
   `}

@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { PRODUCTS_DB } from "./Database";
 import { QRCodeCanvas } from "qrcode.react";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import ModalWrapper from "../ui/ModalWrapper";
+import StoragePreview from "./StoragePreview";
 
 export const BLOCK_COLORS = {
     gray: "bg-gray-600 hover:bg-gray-500",
@@ -157,7 +161,6 @@ export default function AddressModal({
     useEffect(() => {
         if (tipo === "COLUNA") {
             setTipoCaixa("COLUNA");
-            setAltura("5");
         }
     }, [tipo]);
 
@@ -186,60 +189,52 @@ export default function AddressModal({
             : "";
 
     const etiquetaWidth = {
-        "GAVETA G": "w-[106px]",
-        "GAVETA M": "w-[87px]",
-        "GAVETA P": "w-[68px]",
+        "GAVETA G": "w-[106px] text-[8px]",
+        "GAVETA M": "w-[87px] text-[7px]",
+        "GAVETA P": "w-[68px] text-[7px]",
         "COLUNA": "w-[120px]",
     };
 
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50"
-                onClick={onClose}
-            />
-
-            {/* modal */}
-            <div className="relative bg-white w-[390px] shadow-lg z-10">
-                <div className="flex justify-between items-center bg-blackGradient text-white px-3 py-2 text-sm font-semibold">
-                    <span>Cadastrar endereço</span>
-                    <div className="flex items-center space-x-3">
-                        {mode === "endereco" && !showGavetaPopup && tipo !== "NIVEL" && (
-                            <div className="enderecoCode text-white text-[15px] bg-primary2 py-[2px] px-2 rounded font-bold tracking-wide">
-                                {almo}{rua}{coluna}N{nivel}
-                            </div>
-                        )}
-                        <div onClick={onClose}>
-                            <img src="/imagens/close3.svg" className="w-[20px] buttonHover" />
+        <>
+            <StoragePreview type={tipo} height={altura} />
+            <ModalWrapper
+                isOpen={open}
+                onClose={onClose}
+                title="Cadastrar endereço"
+                headerContent={
+                    mode === "endereco" && !showGavetaPopup && tipo !== "NIVEL" && (
+                        <div className="enderecoCode text-white text-[15px] bg-primary2 py-[2px] px-2 rounded font-bold tracking-wide">
+                            {almo}{rua}{coluna}N{nivel}
                         </div>
+                    )
+                }
+            >
+                {mode === "letter" && (
+                    <div>
+                        <label className="text-xs font-semibold text-gray-600">
+                            Letra da Rua
+                        </label>
+                        <Input
+                            className="w-full"
+                            value={coluna}
+                            onChange={(e) =>
+                                setColuna(onlyLettersUpper(e.target.value))
+                            }
+                        />
                     </div>
-                </div>
-                <div className="p-4">
-                    {mode === "letter" && (
-                        <div>
-                            <label className="text-xs font-semibold text-gray-600">
-                                Letra da Rua
-                            </label>
-                            <input
-                                className="border px-2 py-1 rounded w-full"
-                                value={coluna}
-                                onChange={(e) =>
-                                    setColuna(onlyLettersUpper(e.target.value))
-                                }
-                            />
-                        </div>
-                    )}
+                )}
+                <div>
                     {mode === "endereco" && (
                         <div className="flex">
                             <div className="space-y-1">
                                 <div className="flex space-x-1">
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Rua</label>
-                                        <input
-                                            className="border px-2 py-1 rounded w-full"
+                                        <Input
+                                            className="w-full"
                                             value={rua}
                                             maxLength={3}
                                             onChange={(e) => {
@@ -250,8 +245,8 @@ export default function AddressModal({
                                     </div>
                                     <div>
                                         <label className="text-xs w-full font-semibold text-gray-600">Coluna</label>
-                                        <input
-                                            className="border px-2 py-1 rounded w-full"
+                                        <Input
+                                            className="w-full"
                                             value={coluna}
                                             onChange={(e) => setColuna(onlyNumbers(e.target.value))}
                                             onBlur={() => setColuna(formatColuna(coluna))}
@@ -259,8 +254,8 @@ export default function AddressModal({
                                     </div>
                                     <div className="hidden">
                                         <label className="text-xs font-semibold text-gray-600">Nível</label>
-                                        <input
-                                            className={`border px-2 py-1 rounded w-full ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                                        <Input
+                                            className={`w-full ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""}`}
                                             value={nivel}
                                             disabled={tipo === "COLUNA"}
                                             onChange={(e) => setNivel(onlyNumbers(e.target.value))}
@@ -299,22 +294,29 @@ export default function AddressModal({
 
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Altura máxima</label>
-                                        <input
+                                        <Input
                                             type="number"
-                                            className={`border w-[120px] px-2 py-1 rounded ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"}`}
+                                            className={`w-[120px] ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"}`}
                                             placeholder="Altura máx"
                                             value={altura}
-                                            onChange={(e) => setAltura(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = Number(e.target.value);
+                                        
+                                                if (value >= 1 && value <= 6) {
+                                                    setAltura(value);
+                                                } else if (e.target.value === "") {
+                                                    setAltura("");
+                                                }
+                                            }}
                                             min={1}
                                             max={30}
-                                            step={1}
                                         />
                                     </div>
                                     {!showGavetaPopup && (
                                         <div>
                                             <label className="text-xs font-semibold text-gray-600">Observação</label>
-                                            <input
-                                                className="border w-full px-2 py-1 rounded"
+                                            <Input
+                                                className="w-full"
                                                 placeholder="Observação"
                                                 value={observacao}
                                                 onChange={(e) => setObservacao(e.target.value)}
@@ -327,8 +329,8 @@ export default function AddressModal({
                                         <div className="flex items-center space-x-1">
                                             <div>
                                                 <div className="text-xs font-semibold text-gray-600">Código</div>
-                                                <input
-                                                    className="border w-[116px] px-2 py-1 rounded"
+                                                <Input
+                                                    className="w-[116px]"
                                                     placeholder="Código"
                                                     value={produto}
                                                     onChange={(e) => setProduto(e.target.value)}
@@ -347,122 +349,188 @@ export default function AddressModal({
                                 )}
                                 {showGavetaPopup && (
                                     <div className="flex items-center justify-center z-50 pt-4">
-                                        <div className="bg-white w-full max-h-[220px] overflow-auto rounded shadow-lg">
-                                            <div className="space-y-2">
+                                        <div className="bg-white w-full max-h-[220px] overflow-auto rounded">
+                                            <div className="space-y-4">
                                                 {gavetaNiveis
                                                     .slice()
                                                     .reverse()
                                                     .map((item) => {
-                                                        const produtoEncontrado = Boolean(item.descricao);
                                                         const realIndex = gavetaNiveis.findIndex(
                                                             (g) => g.nivel === item.nivel
                                                         );
+                                                        const isDivisoria = item.isDivisoria;
 
-                                                        return (
-                                                            <div key={item.nivel} className="border-2 border-primary3 p-2 rounded">
-                                                                <div className="flex justify-between items-center mb-1">
-                                                                    <label className="text-xs font-semibold text-gray-600">
-                                                                        Código do produto
-                                                                    </label>
-                                                                </div>
-                                                                <div className="flex space-x-1">
-                                                                    {/* Código do produto */}
-                                                                    <input
-                                                                        className="border w-[60%] pl-2 py-1 rounded mb-1"
-                                                                        placeholder="Código"
-                                                                        value={item.produto}
-                                                                        onChange={(e) => {
-                                                                            const codigo = e.target.value;
+                                                        const toggleDivisoria = () => {
+                                                            const copy = [...gavetaNiveis];
+                                                            if (isDivisoria) {
+                                                                // Convert back to single
+                                                                const kept = item.d1 || {};
+                                                                copy[realIndex] = {
+                                                                    ...item,
+                                                                    isDivisoria: false,
+                                                                    produto: kept.produto || "",
+                                                                    descricao: kept.descricao || "",
+                                                                    observacao: kept.observacao || "",
+                                                                    d1: null,
+                                                                    d2: null
+                                                                };
+                                                            } else {
+                                                                // Split
+                                                                copy[realIndex] = {
+                                                                    ...item,
+                                                                    isDivisoria: true,
+                                                                    d1: {
+                                                                        produto: item.produto || "",
+                                                                        descricao: item.descricao || "",
+                                                                        observacao: item.observacao || ""
+                                                                    },
+                                                                    d2: {
+                                                                        produto: "",
+                                                                        descricao: "",
+                                                                        observacao: ""
+                                                                    }
+                                                                };
+                                                            }
+                                                            setGavetaNiveis(copy);
+                                                        };
 
-                                                                            const foundProduct = PRODUCTS_DB.find(
-                                                                                (p) => p.produto === codigo
-                                                                            );
+                                                        const updateItem = (field, value, subObj = null) => {
+                                                            const copy = [...gavetaNiveis];
+                                                            const current = copy[realIndex];
 
-                                                                            const copy = [...gavetaNiveis];
-                                                                            copy[realIndex] = {
-                                                                                ...copy[realIndex],
-                                                                                produto: codigo,
-                                                                                descricao: foundProduct
-                                                                                    ? foundProduct.descricao
-                                                                                    : "",
-                                                                            };
+                                                            if (subObj) {
+                                                                const sub = { ...current[subObj], [field]: value };
 
-                                                                            setGavetaNiveis(copy);
-                                                                        }}
-                                                                    />
-                                                                    {/* Descrição automática */}
-                                                                    <div
-                                                                        className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 
-                                                                            flex items-center leading-[1.1]
-                                                                            ${produtoEncontrado
-                                                                                ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]"
-                                                                                : "text-gray-600"
-                                                                            }`}
-                                                                    >
-                                                                        <p className="text-left mt-[2px]">
-                                                                            {item.descricao || "Descrição do produto"}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
+                                                                // Product Lookup for SubObj
+                                                                if (field === 'produto') {
+                                                                    const found = PRODUCTS_DB.find(p => p.produto === value);
+                                                                    sub.descricao = found ? found.descricao : "";
+                                                                }
 
-                                                                <div>
+                                                                let updatedCurrent = { ...current, [subObj]: sub };
+
+                                                                // Sync tipoCaixa: if updating D1, also update D2
+                                                                if (field === 'tipoCaixa' && subObj === 'd1' && updatedCurrent.d2) {
+                                                                    updatedCurrent.d2 = { ...updatedCurrent.d2, [field]: value };
+                                                                }
+
+                                                                copy[realIndex] = updatedCurrent;
+                                                            } else {
+                                                                copy[realIndex] = { ...current, [field]: value };
+
+                                                                // Product Lookup for Main
+                                                                if (field === 'produto') {
+                                                                    const found = PRODUCTS_DB.find(p => p.produto === value);
+                                                                    copy[realIndex].descricao = found ? found.descricao : "";
+                                                                }
+                                                            }
+                                                            setGavetaNiveis(copy);
+                                                        };
+
+                                                        const renderInputs = (data, prefix, subObj = null) => {
+                                                            const isFound = Boolean(data.descricao);
+                                                            const codeDisplay = subObj ? `${almo}${rua}${coluna}N${item.nivel}${subObj.toUpperCase()}` : `${almo}${rua}${coluna}N${item.nivel}`;
+
+                                                            return (
+                                                                <div className="flex flex-col gap-1 w-full relative">
+                                                                    {/* Line 1: Code + Desc */}
                                                                     <div className="flex space-x-1">
-                                                                        {/* Observação */}
-                                                                        <input
-                                                                            className="border w-full px-2 py-1 rounded"
-                                                                            placeholder="Observação"
-                                                                            value={item.observacao}
-                                                                            onChange={(e) => {
-                                                                                const copy = [...gavetaNiveis];
-                                                                                copy[realIndex] = {
-                                                                                    ...copy[realIndex],
-                                                                                    observacao: onlyLettersAndSpacesUpper(e.target.value),
-                                                                                };
-                                                                                setGavetaNiveis(copy);
-                                                                            }}
+                                                                        <Input
+                                                                            className="w-[118px] mb-1 pl-2"
+                                                                            placeholder={`Código`}
+                                                                            value={data.produto}
+                                                                            onChange={(e) => updateItem('produto', e.target.value, subObj)}
                                                                         />
-                                                                        <button className="border-2 border-primary3 rounded bg-primary3 text-white px-3 pr-5 buttonHover text-sm flex items-center justify-center">
-                                                                            <img src="/imagens/add.svg" className="w-[20px]" />Divisória
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex justify-between mt-1">
-                                                                    <div className="border">
-                                                                        <div className="flex">
-                                                                            <div
-                                                                                className={`bg-black ${etiquetaWidth[tipoCaixa] || "w-[120px]"
-                                                                                    } px-1 font-bold h-[35px] flex items-center justify-center`}
-                                                                            >
-                                                                                <p className="leading-[1.1] text-white text-[9px] text-center">{item.descricao}</p>
-                                                                            </div>
-                                                                            <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
-                                                                                <QRCodeCanvas
-                                                                                    value={`${almo}${rua}${coluna}N${item.nivel}`}
-                                                                                    size={35}
-                                                                                    level="M"
-                                                                                    includeMargin={false}
-                                                                                />
-                                                                            </div>
+                                                                        <div
+                                                                            className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 
+                                                                    flex items-center leading-[1.1]
+                                                                    ${isFound ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]" : "text-gray-600"}`}
+                                                                        >
+                                                                            <p className="text-left mt-[2px]">
+                                                                                {data.descricao || "Descrição do produto"}
+                                                                            </p>
                                                                         </div>
-                                                                        {(tipo === "COLUNA" || tipoCaixa === "COLUNA") && (
-                                                                            <div className="flex">
-                                                                                <div className="bg-stamOrange w-full h-[7px] flex items-center justify-center">
-                                                                                    <p className="text-white font-bold text-[6px] text-center">
-                                                                                        {item.produto}
-                                                                                    </p>
-                                                                                </div>
-                                                                                <div className="bg-stamOrange w-[46px] h-[7px]">
-                                                                                    <p className="text-white font-bold text-[6px] text-center">
-                                                                                        {almo}{rua}{coluna}N{item.nivel}
-                                                                                    </p>
-                                                                                </div>
+                                                                    </div>
+                                                                    {/* Line 2: Obs + Actions */}
+                                                                    <div className="flex space-x-1 items-center">
+                                                                        <Input
+                                                                            className="w-full"
+                                                                            placeholder="Observação"
+                                                                            value={data.observacao}
+                                                                            onChange={(e) => updateItem('observacao', onlyLettersAndSpacesUpper(e.target.value), subObj)}
+                                                                        />
+
+                                                                        {/* Only show Divisória Button on the main block or D1 (to toggle) */}
+                                                                        {(!subObj || subObj === 'd1') && (
+                                                                            <div className="flex items-center space-x-1">
+                                                                                <Button
+                                                                                    onClick={toggleDivisoria}
+                                                                                    className={`whitespace-nowrap w-[55px] py-0 h-[34px] text-[13px] ${isDivisoria ? 'bg-black text-white' : 'border-2 border-primary3 text-primary3'}`}
+                                                                                    title={isDivisoria ? "Remover Divisória" : "Adicionar Divisória"}
+                                                                                >
+                                                                                    {isDivisoria ? "- Div" : "+ Div"}
+                                                                                </Button>
+                                                                                {isDivisoria && (
+                                                                                    <div>
+                                                                                        <select
+                                                                                            className={`divEtiqueta border rounded h-[34px] pl-1`}
+                                                                                            value={data.tipoCaixa || ""}
+                                                                                            onChange={(e) => updateItem('tipoCaixa', e.target.value, subObj)}
+                                                                                        >
+                                                                                            <option value="">Etiqueta</option>
+                                                                                            <option value="GAVETA G">GAVETA G</option>
+                                                                                            <option value="GAVETA M">GAVETA M</option>
+                                                                                            <option value="GAVETA P">GAVETA P</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <div className="text-primary2 text-[15px] cursor-default bg-gray-200 border border-black text-center flex items-center px-[11px] rounded font-bold tracking-wide">
-                                                                        {almo}{rua}{coluna}N{item.nivel}
+
+                                                                    {/* Line 3: Plate + Code Display */}
+                                                                    <div className="nivelEtiqueta flex justify-between items-center mt-1">
+                                                                        <div className="flex border">
+                                                                            <div className={`bg-black ${etiquetaWidth[data.tipoCaixa] || "w-[106px] text-[9px]"} px-1 font-bold h-[35px] flex items-center justify-center`}>
+                                                                                <p className="leading-[1.1] text-white text-center">{data.descricao}</p>
+                                                                            </div>
+                                                                            <div className="qrCode w-[35px] h-[35px] bg-stamOrange">
+                                                                                {codeDisplay && (
+                                                                                    <QRCodeCanvas
+                                                                                        value={codeDisplay}
+                                                                                        size={35}
+                                                                                        level="M"
+                                                                                        includeMargin={false}
+                                                                                    />
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="text-primary text-[14px] bg-blackGradient text-center flex justify-center items-center px-2 h-[35px] rounded font-bold tracking-tight min-w-[80px]">
+                                                                            {codeDisplay}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div key={item.nivel} className={`border-2 ${isDivisoria ? 'border-primary' : 'border-primary3'} p-2 rounded-lg overflow-hidden relative bg-white`}>
+                                                                <div className="absolute top-0 right-0 bg-blackGradient text-white text-[10px] w-4 h-4 flex items-center justify-center rounded font-bold z-10">
+                                                                    {item.nivel}
+                                                                </div>
+
+                                                                {isDivisoria ? (
+                                                                    <div className="flex flex-col gap-3 pt-1">
+                                                                        {renderInputs(item.d1, 'D1', 'd1')}
+                                                                        <div className="border-t border-dashed border-primary relative">
+                                                                            <span className="absolute left-1/2 -top-2 -translate-x-1/2 bg-white px-2 text-[10px] text-gray-400">Divisória</span>
+                                                                        </div>
+                                                                        {renderInputs(item.d2, 'D2', 'd2')}
+                                                                    </div>
+                                                                ) : (
+                                                                    renderInputs(item, '', null)
+                                                                )}
                                                             </div>
                                                         );
                                                     })}
@@ -530,85 +598,108 @@ export default function AddressModal({
                         )}
                         </div>
                     </div>
-                    <div className="flex justify-between items-center gap-2 mt-6">
-                        {initialData && (
-                            <button
-                                onClick={handleDelete}
-                                className="border-2 border-primary3 rounded text-primary3 px-5 py-1 cursor-pointer hover:border-black hover:bg-red-200 hover:text-black"
-                            >
-                                Excluir
-                            </button>
-                        )}
-                        {!initialData && (
-                            <button
-                                onClick={() =>
-                                    setMode((prev) =>
-                                        prev === "endereco" ? "letter" : "endereco"
-                                    )
-                                }
-                                className="border-2 border-primary3 text-primary3 px-3 py-1 rounded buttonHover2"
-                            >
-                                {mode === "endereco" ? "Definir Letra" : "Definir Endereço"}
-                            </button>
-                        )}
-                        <button
-                            onClick={() => {
-                                if (mode === "letter") {
-                                    onSave({
-                                        type: "letter",          // ✅ ISSO É O PONTO-CHAVE
-                                        coluna,                  // letra
-                                        almo,
-                                    });
-                                    return;
-                                }
+                </div>
 
-                                // 🔹 GAVETA
-                                if (tipo === "NIVEL") {
-                                    onSave({
-                                        type: "endereco",
-                                        tipo: "NIVEL",
-                                        rua,
-                                        coluna,
-                                        almo,
-                                        tipoCaixa,
-                                        altura,
-                                        blockColor,
-                                        enderecos: gavetaNiveis.map((g) => ({
-                                            rua,
-                                            coluna,
-                                            nivel: g.nivel,
-                                            enderecoCode: `${almo}${rua}${coluna}N${g.nivel}`,
-                                            produto: g.produto,
-                                            descricao: g.descricao,
-                                            observacao: g.observacao,
-                                        })),
-                                    });
-                                    return;
-                                }
+                <div className="flex justify-between items-center gap-2 mt-6">
+                    {initialData && (
+                        <Button
+                            onClick={handleDelete}
+                            variant="danger"
+                            className="px-5 py-1"
+                        >
+                            Excluir
+                        </Button>
+                    )}
+                    {!initialData && (
+                        <Button
+                            onClick={() =>
+                                setMode((prev) =>
+                                    prev === "endereco" ? "letter" : "endereco"
+                                )
+                            }
+                            variant="outline"
+                            className="px-3 py-1"
+                        >
+                            {mode === "endereco" ? "Definir Letra" : "Definir Endereço"}
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => {
+                            if (mode === "letter") {
+                                onSave({
+                                    type: "letter",          // ✅ ISSO É O PONTO-CHAVE
+                                    coluna,                  // letra
+                                    almo,
+                                });
+                                return;
+                            }
 
-                                // 🔹 ENDEREÇO NORMAL
+                            // 🔹 GAVETA
+                            if (tipo === "NIVEL") {
                                 onSave({
                                     type: "endereco",
+                                    tipo: "NIVEL",
                                     rua,
                                     coluna,
-                                    nivel,
                                     almo,
-                                    produto,
-                                    tipo,
                                     tipoCaixa,
                                     altura,
-                                    descricao,
-                                    observacao,
                                     blockColor,
+                                    enderecos: gavetaNiveis.flatMap((g) => {
+                                        if (g.isDivisoria) {
+                                            return [
+                                                {
+                                                    rua, coluna, nivel: g.nivel,
+                                                    divisoria: 'D1',
+                                                    enderecoCode: `${almo}${rua}${coluna}N${g.nivel}D1`,
+                                                    produto: g.d1?.produto || "",
+                                                    descricao: g.d1?.descricao || "",
+                                                    observacao: g.d1?.observacao || ""
+                                                },
+                                                {
+                                                    rua, coluna, nivel: g.nivel,
+                                                    divisoria: 'D2',
+                                                    enderecoCode: `${almo}${rua}${coluna}N${g.nivel}D2`,
+                                                    produto: g.d2?.produto || "",
+                                                    descricao: g.d2?.descricao || "",
+                                                    observacao: g.d2?.observacao || ""
+                                                }
+                                            ];
+                                        }
+                                        return [{
+                                            rua, coluna, nivel: g.nivel,
+                                            enderecoCode: `${almo}${rua}${coluna}N${g.nivel}`,
+                                            produto: g.produto || "",
+                                            descricao: g.descricao || "",
+                                            observacao: g.observacao || ""
+                                        }];
+                                    }),
                                 });
-                            }}
-                            className="bg-primary3 text-white px-6 py-2 rounded buttonHover text-sm"
-                        >
-                            Salvar
-                        </button>
-                    </div>
+                                return;
+                            }
+
+                            // 🔹 ENDEREÇO NORMAL
+                            onSave({
+                                type: "endereco",
+                                rua,
+                                coluna,
+                                nivel,
+                                almo,
+                                produto,
+                                tipo,
+                                tipoCaixa,
+                                altura,
+                                descricao,
+                                observacao,
+                                blockColor,
+                            });
+                        }}
+                        className="px-6 py-2 text-sm"
+                    >
+                        Salvar
+                    </Button>
                 </div>
-            </div>
-        </div>
+            </ModalWrapper>
+        </>
     );
 }

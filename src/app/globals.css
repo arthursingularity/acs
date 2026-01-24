@@ -19,6 +19,9 @@
   --color-lightBlack: #262321;
   --color-border: #90A1AB;
   --background-image-blackGradient: linear-gradient(to bottom, #010101, #47423F);
+
+  /* iOS-like transitions */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,11 +33,21 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', Arial, Helvetica, sans-serif; /* Prefer Inter if available, fallback to Arial */
   margin: 0;
   padding: 0;
   overflow: hidden;
   height: 100%;
+  -webkit-font-smoothing: antialiased; /* iOS-like text rendering */
+}
+
+/* Base interactive transitions */
+.buttonHover, .buttonHover2 {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.buttonHover:active, .buttonHover2:active {
+  transform: scale(0.96);
 }
 
 .buttonHover:hover {
@@ -47,4 +60,33 @@ body {
   border-color: black;
   color: black;
   cursor: pointer;
+}
+
+/* iOS-like Modal Animations */
+@keyframes modal-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes backdrop-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-modal-enter {
+  animation: modal-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-enter {
+  animation: backdrop-fade-in 0.3s ease-out forwards;
 }
