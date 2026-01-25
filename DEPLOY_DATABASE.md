@@ -54,3 +54,48 @@ Se você quiser levar os dados que já migramos no seu PC para o banco remoto:
 
 > [!TIP]
 > **Segurança**: Nunca suba seu arquivo `.env` para o GitHub. Use o arquivo `.gitignore` (que já deve ter o `.env` listado).
+
+---
+
+## 📦 Como Migrar seus Dados Local (PgAdmin) para o Neon
+
+Existem duas formas principais: via terminal (mais rápido) ou via interface do PgAdmin.
+
+### Opção A: Via Terminal (Recomendado)
+Use as ferramentas nativas do PostgreSQL (`pg_dump` e `psql`).
+
+1. **Exportar do local**:
+   Abra o seu terminal (CMD ou PowerShell) e rode:
+   ```bash
+   pg_dump -U postgres -d acs --data-only --column-inserts -f backup_dados.sql
+   ```
+   *(Substitua `acs` pelo nome do seu banco local se for diferente)*.
+
+2. **Importar para o Neon**:
+   Use a Connection String do Neon que você colocou no `.env`:
+   ```bash
+   psql "postgresql://alex:password@ep-cool-darkness-123.us-east-1.aws.neon.tech/neondb" -f backup_dados.sql
+   ```
+
+### Opção B: Via PgAdmin 4 (Interface)
+1. **Conectar ao Neon no PgAdmin**:
+   - Botão direito em **Servers** -> **Register** -> **Server**.
+   - **General**: Nome "Neon DB".
+   - **Connection**:
+     - Host: O host que está na sua string do Neon (ex: `ep-raspy-water...`).
+     - Port: 5432.
+     - Database: `neondb`.
+     - Username: O usuário do Neon.
+     - Password: A senha do Neon.
+2. **Exportar Local**:
+   - Botão direito no seu banco local -> **Backup**.
+   - Em **Format**, escolha `Plain`.
+   - Em **Dump options**, marque `Only Data` e `Use Column Inserts`.
+   - Salve o arquivo `.sql`.
+3. **Importar no Neon**:
+   - Botão direito no banco do Neon (dentro do PgAdmin) -> **Query Tool**.
+   - Clique no ícone de "Pasta" (Open File) e escolha o seu arquivo `.sql`.
+   - Clique no ícone de "Raio" (Execute).
+
+> [!IMPORTANT]
+> Se você usou o `npx prisma db push` antes, as tabelas já existem. Por isso usamos `--data-only` no export para não tentar criar as tabelas novamente e dar erro de "Already Exists".
