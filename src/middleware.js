@@ -34,7 +34,15 @@ export async function middleware(request) {
 
     try {
         const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key-change-it');
-        await jwtVerify(token, secret);
+        const { payload } = await jwtVerify(token, secret);
+
+        // 🛡️ Proteção de Rotas Admin
+        if (request.nextUrl.pathname.startsWith('/admin')) {
+            if (payload.role !== 'admin') {
+                return NextResponse.redirect(new URL('/', request.url));
+            }
+        }
+
         return NextResponse.next();
     } catch (err) {
         // Token inválido ou expirado

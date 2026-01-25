@@ -1,8 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import SelectSetorModal from "../system/SelectSetorModal";
 
 export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid }) {
   const [openModal, setOpenModal] = useState(false);
+  const [username, setUsername] = useState("Visitante");
+  const [currentDate, setCurrentDate] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    // Carregar usuário
+    const storedUser = localStorage.getItem("username");
+    if (storedUser) {
+      setUsername(storedUser.toUpperCase());
+    }
+
+    // Carregar data atual
+    const today = new Date();
+    setCurrentDate(today.toLocaleDateString("pt-BR"));
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      localStorage.removeItem("username");
+      router.push("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   return (
     <>
@@ -39,10 +65,10 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
               <p>TOTVS Manufatura MSSQL Html</p>
             </div>
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>ARTHURM</p>
+              <p>{username}</p>
             </div>
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>21/01/2026</p>
+              <p>{currentDate}</p>
             </div>
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
               <p>Stam/Matriz</p>
@@ -56,7 +82,10 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
               <p>Stam/Matriz</p>
             </div>
-            <div className="font-medium space-x-1 buttonHover bg-lightGray text-gray-600 text-[13px] border-l rounded flex items-center border-border px-4">
+            <div
+              onClick={handleLogout}
+              className="font-medium space-x-1 buttonHover bg-lightGray text-gray-600 text-[13px] border-l rounded flex items-center border-border px-4 cursor-pointer"
+            >
               <img src="/imagens/close2.svg" className="w-[20px]" />
               <p>Sair</p>
             </div>
