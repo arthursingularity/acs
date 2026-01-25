@@ -672,7 +672,7 @@ export default function Home() {
             disabled={!gridData[contextMenu.index]}
             className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
-            <span>Copiar</span>
+            <span>Copia</span>
             <span className="text-xs text-gray-400 group-hover:text-blue-500">
               Ctrl+C
             </span>
