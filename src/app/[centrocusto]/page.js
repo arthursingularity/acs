@@ -226,7 +226,7 @@ export default function Home() {
       el.removeEventListener("scroll", onScroll);
       el.removeEventListener("wheel", onWheel);
     };
-  }, []);
+  }, [isLoading]);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -288,7 +288,7 @@ export default function Home() {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, []);
+  }, [isLoading]);
 
   /* ---------------- VIRTUALIZAÇÃO ---------------- */
 
@@ -577,11 +577,12 @@ export default function Home() {
   }, [gridCols, zoom]);
 
   useEffect(() => {
+    if (isLoading) return;
     const t = setTimeout(() => {
       centerGrid();
     }, 100);
     return () => clearTimeout(t);
-  }, [centerGrid]);
+  }, [centerGrid, isLoading]);
 
   /* ---------------- RENDER ---------------- */
 
@@ -607,7 +608,7 @@ export default function Home() {
 
       <div
         ref={containerRef}
-        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[128px] p-[2px] flex"
+        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[128px] flex bg-white"
         onMouseMove={(e) => {
           if (e.ctrlKey && !isPanning.current) {
             e.currentTarget.style.cursor = "move";
@@ -616,36 +617,43 @@ export default function Home() {
           }
         }}
       >
-        {/* GRID TOTAL */}
+        {/* SIZING WRAPPER (SCALED DIMENSIONS) + SAFE CENTERING (m-auto) */}
         <div
-          className="border border-primary m-auto flex-none"
+          className="m-auto relative flex-none"
           style={{
-            width: gridCols * CELL_SIZE,
-            height: gridRows * CELL_SIZE,
-            position: "relative",
-            transform: `scale(${zoom})`,
-            transformOrigin: "0 0",
+            width: gridCols * CELL_SIZE * zoom,
+            height: gridRows * CELL_SIZE * zoom,
           }}
         >
-          {visibleCells.map(({ row, col, key }) => (
-            <div
-              key={key}
-              style={{
-                position: "absolute",
-                top: row * CELL_SIZE,
-                left: col * CELL_SIZE,
-              }}
-              onContextMenu={(e) => handleContextMenu(e, key)}
-            >
-              <Block
-                index={key}
-                data={gridData[key]}
-                gridData={gridData}
-                onClick={() => handleOpenModal(key)}
-                isCtrlPressed={isCtrlPressed}
-              />
-            </div>
-          ))}
+          {/* TRANSFORM WRAPPER (RENDER LAYER) */}
+          <div
+            className="border border-primary origin-top-left absolute top-0 left-0"
+            style={{
+              width: gridCols * CELL_SIZE,
+              height: gridRows * CELL_SIZE,
+              transform: `scale(${zoom})`,
+            }}
+          >
+            {visibleCells.map(({ row, col, key }) => (
+              <div
+                key={key}
+                style={{
+                  position: "absolute",
+                  top: row * CELL_SIZE,
+                  left: col * CELL_SIZE,
+                }}
+                onContextMenu={(e) => handleContextMenu(e, key)}
+              >
+                <Block
+                  index={key}
+                  data={gridData[key]}
+                  gridData={gridData}
+                  onClick={() => handleOpenModal(key)}
+                  isCtrlPressed={isCtrlPressed}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
