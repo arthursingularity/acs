@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { PRODUCTS_DB } from "./Database";
+import { useEffect, useState, useCallback } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -126,21 +125,38 @@ export default function AddressModal({
         }
     }, [initialData, open]);
 
+    // 🔹 Helper para buscar produto na API
+    const fetchProduct = async (code) => {
+        if (!code) return null;
+        try {
+            const res = await fetch(`/api/produtos?codigo=${code}`);
+            if (res.ok) {
+                return await res.json();
+            }
+        } catch (err) {
+            console.error("Erro ao buscar produto:", err);
+        }
+        return null;
+    };
+
+    // 🔹 Buscar produto principal
     useEffect(() => {
         if (!produto) {
             setDescricao("");
             return;
         }
 
-        const foundProduct = PRODUCTS_DB.find(
-            (item) => item.produto === produto
-        );
+        // Debounce simples para evitar muitas chamadas
+        const timer = setTimeout(async () => {
+            const foundProduct = await fetchProduct(produto);
+            if (foundProduct) {
+                setDescricao(foundProduct.descricao);
+            } else {
+                setDescricao("");
+            }
+        }, 500);
 
-        if (foundProduct) {
-            setDescricao(foundProduct.descricao);
-        } else {
-            setDescricao("");
-        }
+        return () => clearTimeout(timer);
     }, [produto]);
 
     useEffect(() => {
@@ -301,7 +317,7 @@ export default function AddressModal({
                                     <div>
                                         <label className="text-xs font-semibold text-gray-600">Tipo de endereço</label>
                                         <select
-                                            className="border w-[120px] px-2 h-[34px] rounded"
+                                            className="border w-[120px] pl-1 h-[34px] rounded"
                                             value={tipo}
                                             onChange={(e) => setTipo(e.target.value)}
                                         >
@@ -315,7 +331,7 @@ export default function AddressModal({
                                     <div>
                                         <label className="tipoEtiquetaPrincipal text-xs font-semibold text-gray-600">Tipo de etiqueta</label>
                                         <select
-                                            className={`border ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"} px-2 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
+                                            className={`border ${!showGavetaPopup ? "w-[111px]" : "w-[177px]"} pl-1 h-[34px] rounded ${tipo === "COLUNA" ? "bg-gray-200 cursor-not-allowed" : ""
                                                 }`}
                                             value={tipoCaixa}
                                             disabled={tipo === "COLUNA"}
@@ -374,7 +390,7 @@ export default function AddressModal({
                                             <div>
                                                 <div className="text-xs font-semibold text-gray-600">Descrição</div>
                                                 <div
-                                                    className={`productDescricao cursor-default border flex leading-[1] w-[238px] items-center h-[34px] pl-1 py-2 rounded overflow-hidden bg-gray-200 text-[13px] ${produtoEncontrado ? "text-primary3 font-bold tracking-wide border-black" : "text-gray-600"}`}
+                                                    className={`productDescricao cursor-default border flex leading-[1] w-[238px] items-center h-[34px] pl-2 py-2 rounded overflow-hidden bg-gray-200 text-[13px] ${produtoEncontrado ? "text-primary3 font-bold tracking-wide border-black" : "text-gray-600"}`}
                                                 >
                                                     {descricao || "Descrição do produto"}
                                                 </div>
@@ -429,7 +445,7 @@ export default function AddressModal({
                                                             setGavetaNiveis(copy);
                                                         };
 
-                                                        const updateItem = (field, value, subObj = null) => {
+                                                        const updateItem = async (field, value, subObj = null) => {
                                                             const copy = [...gavetaNiveis];
                                                             const current = copy[realIndex];
 
@@ -438,7 +454,7 @@ export default function AddressModal({
 
                                                                 // Product Lookup for SubObj
                                                                 if (field === 'produto') {
-                                                                    const found = PRODUCTS_DB.find(p => p.produto === value);
+                                                                    const found = await fetchProduct(value);
                                                                     sub.descricao = found ? found.descricao : "";
                                                                 }
 
@@ -451,13 +467,17 @@ export default function AddressModal({
 
                                                                 copy[realIndex] = updatedCurrent;
                                                             } else {
-                                                                copy[realIndex] = { ...current, [field]: value };
+                                                                // copy[realIndex] = { ...current, [field]: value }; // Isso estava sobrescrevendo errado antes? Parece ok.
+                                                                // Vamos garantir que atualizamos o objeto corretamente
+                                                                const newItem = { ...current, [field]: value };
 
                                                                 // Product Lookup for Main
                                                                 if (field === 'produto') {
-                                                                    const found = PRODUCTS_DB.find(p => p.produto === value);
-                                                                    copy[realIndex].descricao = found ? found.descricao : "";
+                                                                    const found = await fetchProduct(value);
+                                                                    newItem.descricao = found ? found.descricao : "";
                                                                 }
+
+                                                                copy[realIndex] = newItem;
                                                             }
                                                             setGavetaNiveis(copy);
                                                         };

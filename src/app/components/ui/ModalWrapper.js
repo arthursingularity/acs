@@ -21,7 +21,7 @@ export default function ModalWrapper({
             {/* Modal Content */}
             <div className={`relative bg-white shadow-2xl rounded-lg overflow-hidden z-10 animate-modal-enter ${className}`}>
                 {/* Header */}
-                <div className="flex justify-between items-center bg-blackGradient text-white px-3 py-3 text-sm font-semibold select-none">
+                <div className="flex justify-between items-center bg-blackGradient text-white px-4 py-3 text-sm font-semibold select-none">
                     {title ? <span>{title}</span> : <div></div>}
 
                     <div className="flex items-center space-x-3">

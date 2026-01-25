@@ -13,9 +13,11 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[36px]">
           <div className="flex items-center h-full">
-            <div>
-              <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
-            </div>
+            <a href="/">
+              <div>
+                <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
+              </div>
+            </a>
             <div className="bg-primary4 h-full flex items-center px-2.5 rounded-t">
               <div className="text-white text-sm flex items-center justify-center">Controle de Endereçamento
                 <img src="/imagens/close.svg" className="border border-border rounded w-[16px] ml-2 cursor-pointer" />

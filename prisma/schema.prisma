@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Setores (Centro de Custo)
+model Setor {
+  id           String   @id @default(cuid())
+  centroCusto  String   @unique
+  descricao    String
+  almoxarifado String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relação com blocos do grid
+  blocks Block[]
+}
+
+// Produtos
+model Produto {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  descricao String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Blocos do Grid (endereços)
+model Block {
+  id         String   @id @default(cuid())
+  gridKey    String   // "row-col" format
+  setorId    String
+  setor      Setor    @relation(fields: [setorId], references: [id], onDelete: Cascade)
+  
+  // Dados do bloco
+  type       String   @default("endereco") // "endereco" ou "letter"
+  rua        String?
+  coluna     String?
+  nivel      String?
+  tipo       String?  // "COLUNA" ou "NIVEL"
+  altura     String?
+  produto    String?
+  descricao  String?
+  observacao String?
+  tipoCaixa  String?
+  blockColor String   @default("gray")
+  almo       String?
+  
+  // Para blocos tipo NIVEL (gavetas)
+  enderecos  Json?    // Array de endereços internos
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([setorId, gridKey])
+  @@index([setorId])
+}
+
+// Configuração do Grid por Setor
+model GridConfig {
+  id        String   @id @default(cuid())
+  setorId   String   @unique
+  cols      Int      @default(50)
+  rows      Int      @default(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Usuários do Sistema
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // Senha criptografada (hash)
+  name      String?
+  role      String   @default("admin") // "admin" ou "user"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

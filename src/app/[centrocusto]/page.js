@@ -7,15 +7,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import AddressModal from "../components/system/AdressModal";
 import { useParams } from "next/navigation";
-import { SETORES_DB } from "../components/system/Database";
 
 const DEFAULT_COLS = 50;
 const DEFAULT_ROWS = 50;
 const CELL_SIZE = 50;
-const BUFFER = 3; // render extra (anti flicker)
-const STORAGE_KEY = "enderecamento-grid-data";
-const ALMO_STORAGE_KEY = "almoxarifado";
-const GRID_SIZE_KEY = "enderecamento-grid-size";
+const BUFFER = 3;
 
 /* 🔹 Helper para calcular próxima coluna (inteligente) */
 function getNextColumn(rua, gridData, lastInteraction) {
@@ -32,11 +28,9 @@ function getNextColumn(rua, gridData, lastInteraction) {
   const min = Math.min(...cols);
   const max = Math.max(...cols);
 
-  // Detecta padrão decrescente se a última interação foi o MÍNIMO da sequência
   if (lastInteraction && lastInteraction.rua === rua) {
     const lastCol = parseInt(lastInteraction.coluna, 10);
     if (lastCol <= min) {
-      // Prevents 0 or negative
       return String(Math.max(1, min - 1)).padStart(2, "0");
     }
   }
@@ -54,11 +48,117 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [gridCols, setGridCols] = useState(DEFAULT_COLS);
   const [gridRows, setGridRows] = useState(DEFAULT_ROWS);
-  const [viewport, setViewport] = useState({
-    width: 0,
-    height: 0,
-  });
-  const [lastInteraction, setLastInteraction] = useState(null); // { rua: string, coluna: string }
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [lastInteraction, setLastInteraction] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [setor, setSetor] = useState(null);
+
+  const { centrocusto } = useParams();
+  const almo = setor?.almoxarifado || "";
+  const descricaoSetor = setor?.descricao || "";
+  const setorId = setor?.id || null;
+
+  // Debounce ref para salvar no banco
+  const saveTimeoutRef = useRef(null);
+
+  // 🔹 Carregar setor da API
+  useEffect(() => {
+    if (!centrocusto) return;
+
+    const fetchSetor = async () => {
+      try {
+        const res = await fetch(`/api/setores/${centrocusto}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSetor(data);
+        } else {
+          console.error("Setor não encontrado");
+        }
+      } catch (err) {
+        console.error("Erro ao buscar setor:", err);
+      }
+    };
+
+    fetchSetor();
+  }, [centrocusto]);
+
+  // 🔹 Carregar dados do grid da API
+  useEffect(() => {
+    if (!setorId) return;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Carregar blocos
+        const blocksRes = await fetch(`/api/blocks/${setorId}`);
+        if (blocksRes.ok) {
+          const blocks = await blocksRes.json();
+          setGridData(blocks);
+        }
+
+        // Carregar configuração do grid
+        const configRes = await fetch(`/api/grid-config/${setorId}`);
+        if (configRes.ok) {
+          const config = await configRes.json();
+          setGridCols(config.cols || DEFAULT_COLS);
+          setGridRows(config.rows || DEFAULT_ROWS);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [setorId]);
+
+  // 🔹 Salvar dados no banco (debounced)
+  useEffect(() => {
+    if (!setorId || isLoading) return;
+
+    // Debounce de 1 segundo
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/blocks/${setorId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(gridData),
+        });
+      } catch (err) {
+        console.error("Erro ao salvar blocos:", err);
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [gridData, setorId, isLoading]);
+
+  // 🔹 Salvar configuração do grid
+  useEffect(() => {
+    if (!setorId || isLoading) return;
+
+    const saveConfig = async () => {
+      try {
+        await fetch(`/api/grid-config/${setorId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cols: gridCols, rows: gridRows }),
+        });
+      } catch (err) {
+        console.error("Erro ao salvar config:", err);
+      }
+    };
+
+    saveConfig();
+  }, [gridCols, gridRows, setorId, isLoading]);
 
   const handleDeleteAddress = useCallback(() => {
     if (selectedIndex === null) return;
@@ -80,12 +180,6 @@ export default function Home() {
     scrollX: 0,
     scrollY: 0,
   });
-  const { centrocusto } = useParams();
-  const setor = SETORES_DB.find(
-    (s) => s.centroCusto === centrocusto
-  );
-  const almo = setor?.almoxarifado || "";
-  const descricaoSetor = setor?.descricao || "";
 
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -105,95 +199,11 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    localStorage.setItem(ALMO_STORAGE_KEY, almo);
-  }, [almo]);
-
-  // Carregar tamanho do grid do localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const savedSize = localStorage.getItem(GRID_SIZE_KEY);
-      if (savedSize) {
-        const { cols, rows } = JSON.parse(savedSize);
-        if (cols) setGridCols(cols);
-        if (rows) setGridRows(rows);
-      }
-    } catch (err) {
-      console.error("Erro ao carregar tamanho do grid:", err);
-    }
-  }, []);
-
-  // Salvar tamanho do grid no localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      localStorage.setItem(GRID_SIZE_KEY, JSON.stringify({ cols: gridCols, rows: gridRows }));
-    } catch (err) {
-      console.error("Erro ao salvar tamanho do grid:", err);
-    }
-  }, [gridCols, gridRows]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-
-        // 🔹 MIGRATION: Convert linear index to "row-col" keys if valid
-        const keys = Object.keys(parsed);
-        const hasLegacyKeys = keys.some(k => !k.includes("-") && !isNaN(parseInt(k)));
-
-        if (hasLegacyKeys) {
-          console.log("Migrating grid data from linear indices to coordinates...");
-          const savedSize = localStorage.getItem(GRID_SIZE_KEY);
-          let cols = DEFAULT_COLS;
-          if (savedSize) {
-            const s = JSON.parse(savedSize);
-            if (s.cols) cols = s.cols;
-          }
-
-          const migrated = {};
-          keys.forEach(k => {
-            const idx = parseInt(k, 10);
-            if (!isNaN(idx)) {
-              const r = Math.floor(idx / cols);
-              const c = idx % cols;
-              migrated[`${r}-${c}`] = parsed[k];
-            } else {
-              migrated[k] = parsed[k]; // keep if already weird
-            }
-          });
-          setGridData(migrated);
-        } else {
-          setGridData(parsed);
-        }
-      }
-    } catch (err) {
-      console.error("Erro ao carregar gridData:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(gridData));
-    } catch (err) {
-      console.error("Erro ao salvar gridData:", err);
-    }
-  }, [gridData]);
-
   /* ---------------- SCROLL + ZOOM ---------------- */
 
   useEffect(() => {
     const el = containerRef.current;
+    if (!el) return;
 
     const onScroll = () => {
       setScroll({
@@ -226,7 +236,7 @@ export default function Home() {
       });
     };
 
-    updateViewport(); // inicial
+    updateViewport();
     window.addEventListener("resize", updateViewport);
 
     return () => window.removeEventListener("resize", updateViewport);
@@ -237,7 +247,6 @@ export default function Home() {
     if (!el) return;
 
     const onMouseDown = (e) => {
-      // CTRL + botão esquerdo
       if (e.button !== 0 || !e.ctrlKey) return;
 
       e.preventDefault();
@@ -281,7 +290,7 @@ export default function Home() {
     };
   }, []);
 
-  /* ---------------- VIRTUALIZAÇÃO (OTIMIZADO COM MEMO) ---------------- */
+  /* ---------------- VIRTUALIZAÇÃO ---------------- */
 
   const visibleCells = useMemo(() => {
     const viewportWidth = viewport.width;
@@ -310,7 +319,6 @@ export default function Home() {
     const cells = [];
     for (let row = startRow; row < endRow; row++) {
       for (let col = startCol; col < endCol; col++) {
-        // Use coordinate key instead of linear index to preserve positions on resize
         const key = `${row}-${col}`;
         cells.push({ row, col, key });
       }
@@ -318,7 +326,6 @@ export default function Home() {
     return cells;
   }, [scroll.x, scroll.y, viewport.width, viewport.height, zoom, gridCols, gridRows]);
 
-  // Funções para ajustar tamanho do grid
   const handleAdjustGrid = useCallback((deltaRows, deltaCols) => {
     setGridRows(prev => Math.max(5, Math.min(500, prev + deltaRows)));
     setGridCols(prev => Math.max(5, Math.min(500, prev + deltaCols)));
@@ -330,7 +337,6 @@ export default function Home() {
   }, []);
 
   const handleSaveAddress = (data) => {
-    // 🔹 Update Last Interaction for smart sequence
     if (data.rua && data.coluna) {
       setLastInteraction({ rua: data.rua, coluna: data.coluna });
     }
@@ -351,14 +357,13 @@ export default function Home() {
     setSelectedIndex(null);
   };
 
+  /* ---------------- EXCEL EXPORT ---------------- */
   const exportToExcel = async () => {
     const rows = [];
 
-    // 🔹 Coletar dados do grid
     Object.values(gridData).forEach((item) => {
       if (!item) return;
 
-      // 🔹 ENDEREÇO NORMAL
       if (item.type === "endereco" && item.tipo !== "NIVEL") {
         if (!item.produto) return;
 
@@ -374,7 +379,6 @@ export default function Home() {
         });
       }
 
-      // 🔹 GAVETA (múltiplos níveis)
       if (item.tipo === "NIVEL" && Array.isArray(item.enderecos)) {
         item.enderecos.forEach((g) => {
           if (!g.produto) return;
@@ -398,7 +402,6 @@ export default function Home() {
       return;
     }
 
-    // 🔹 Agrupar por RUA
     const byRua = rows.reduce((acc, row) => {
       if (!acc[row.rua]) acc[row.rua] = [];
       acc[row.rua].push(row);
@@ -407,9 +410,6 @@ export default function Home() {
 
     const workbook = new ExcelJS.Workbook();
 
-    /* ===================================================== */
-    /* 🔹 FUNÇÃO REUTILIZÁVEL DE CRIAÇÃO DE ABA               */
-    /* ===================================================== */
     const createSheet = (rua, rows) => {
       const sheet = workbook.addWorksheet(`RUA ${rua}`);
 
@@ -424,7 +424,6 @@ export default function Home() {
         { header: "OBSERVACAO", key: "observacao", width: 18 },
       ];
 
-      // 🔹 Header estilizado
       sheet.getRow(1).eachCell((cell) => {
         cell.fill = {
           type: "pattern",
@@ -447,24 +446,19 @@ export default function Home() {
         };
       });
 
-      // 🔹 Linhas
       rows.forEach((row) => sheet.addRow(row));
 
-      // 🔹 Alinhamento
       ["C", "D", "E", "F", "G", "H"].forEach((col) => {
         sheet.getColumn(col).alignment = { horizontal: "center" };
       });
 
-      // 🔹 Freeze header
       sheet.views = [{ state: "frozen", ySplit: 1 }];
     };
 
-    // 🔹 Criar abas por RUA
-    Object.entries(byRua).forEach(([rua, rows]) => {
-      createSheet(rua, rows);
+    Object.entries(byRua).forEach(([rua, rRows]) => {
+      createSheet(rua, rRows);
     });
 
-    // 🔹 Exportar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
 
     saveAs(
@@ -516,7 +510,6 @@ export default function Home() {
   const handlePaste = () => {
     if (!clipboard || contextMenu.index === null) return;
 
-    // 🔹 COLAR RUA INTEIRA
     if (clipboard.type === "street" && Array.isArray(clipboard.items)) {
       const [tRow, tCol] = contextMenu.index.split("-").map(Number);
 
@@ -525,10 +518,8 @@ export default function Home() {
         clipboard.items.forEach((item) => {
           const nr = tRow + item.dr;
           const nc = tCol + item.dc;
-          // Verifica limites do grid
           if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) {
             const newKey = `${nr}-${nc}`;
-            // Clona os dados
             nextGrid[newKey] = JSON.parse(JSON.stringify(item.data));
           }
         });
@@ -540,15 +531,12 @@ export default function Home() {
 
     let newItem = { ...clipboard };
 
-    // 🔹 Lógica de incremento inteligente da coluna (Asc/Desc)
     if (newItem.rua) {
       const nextCol = getNextColumn(newItem.rua, gridData, lastInteraction);
       newItem.coluna = nextCol;
 
-      // 🔹 Update Last Interaction so sequence continues!
       setLastInteraction({ rua: newItem.rua, coluna: nextCol });
 
-      // Se for GAVETA (NIVEL), atualizar endereços internos
       if (newItem.tipo === "NIVEL" && Array.isArray(newItem.enderecos)) {
         newItem.enderecos = newItem.enderecos.map((addr) => {
           const oldColPart = `${newItem.rua}${clipboard.coluna}`;
@@ -575,14 +563,10 @@ export default function Home() {
     const el = containerRef.current;
     if (!el) return;
 
-    // Grid logical dimensions
     const gridW = gridCols * CELL_SIZE * zoom;
-    // Viewport dimensions
     const viewportW = el.clientWidth;
 
-    // Calculate center scroll
     const scrollX = (gridW - viewportW) / 2;
-    // Always top!
     const scrollY = 0;
 
     el.scrollTo({
@@ -590,17 +574,24 @@ export default function Home() {
       top: scrollY,
       behavior: "auto",
     });
-  }, [gridCols, gridRows, zoom]);
+  }, [gridCols, zoom]);
 
   useEffect(() => {
-    // Tenta centralizar assim que carregar (aguarda render inicial/localStorage)
     const t = setTimeout(() => {
       centerGrid();
     }, 100);
     return () => clearTimeout(t);
-  }, []); // Executa uma vez
+  }, [centerGrid]);
 
   /* ---------------- RENDER ---------------- */
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl font-semibold text-gray-600">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -625,7 +616,7 @@ export default function Home() {
           }
         }}
       >
-        {/* GRID TOTAL (tamanho dinâmico) */}
+        {/* GRID TOTAL */}
         <div
           className="border border-primary m-auto flex-none"
           style={{
@@ -636,7 +627,6 @@ export default function Home() {
             transformOrigin: "0 0",
           }}
         >
-          {/* GRID VISÍVEL (otimizado) */}
           {visibleCells.map(({ row, col, key }) => (
             <div
               key={key}
@@ -697,7 +687,6 @@ export default function Home() {
               const [sRow, sCol] = sourceKey.split('-').map(Number);
               const streetItems = [];
 
-              // Find all items with same Rua
               Object.entries(gridData).forEach(([k, item]) => {
                 if (item.rua === sourceItem.rua) {
                   const [r, c] = k.split('-').map(Number);
@@ -723,14 +712,37 @@ export default function Home() {
               const sourceItem = gridData[contextMenu.index];
               if (!sourceItem || !sourceItem.rua) return;
 
-              if (confirm(`Tem certeza que deseja excluir TODA a RUA ${sourceItem.rua}?`)) {
+              if (confirm(`Tem certeza que deseja excluir essa rua?`)) {
                 setGridData(prev => {
                   const next = { ...prev };
-                  Object.keys(next).forEach(key => {
-                    if (next[key].rua === sourceItem.rua) {
-                      delete next[key];
-                    }
-                  });
+
+                  const queue = [contextMenu.index];
+                  const visited = new Set([contextMenu.index]);
+                  const toDelete = [contextMenu.index];
+                  const targetRua = sourceItem.rua;
+
+                  while (queue.length > 0) {
+                    const currentKey = queue.shift();
+                    const [r, c] = currentKey.split('-').map(Number);
+
+                    const neighbors = [
+                      `${r - 1}-${c}`,
+                      `${r + 1}-${c}`,
+                      `${r}-${c - 1}`,
+                      `${r}-${c + 1}`
+                    ];
+
+                    neighbors.forEach(nKey => {
+                      if (!visited.has(nKey) && next[nKey] && next[nKey].rua === targetRua) {
+                        visited.add(nKey);
+                        queue.push(nKey);
+                        toDelete.push(nKey);
+                      }
+                    });
+                  }
+
+                  toDelete.forEach(key => delete next[key]);
+
                   return next;
                 });
               }
@@ -739,7 +751,7 @@ export default function Home() {
             disabled={!gridData[contextMenu.index] || !gridData[contextMenu.index].rua}
             className="text-left px-3 py-2 hover:bg-red-50 text-red-600 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
-            <span>Excluir Rua Inteira</span>
+            <span>Excluir Rua</span>
           </button>
 
           <button

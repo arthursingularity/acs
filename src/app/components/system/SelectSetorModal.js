@@ -1,15 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ModalWrapper from "../ui/ModalWrapper";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import { SETORES_DB } from "./Database";
 
 export default function SelectSetorModal({ isOpen, onClose }) {
     const [centroCusto, setCentroCusto] = useState("");
+    const [setores, setSetores] = useState([]);
     const router = useRouter();
+
+    useEffect(() => {
+        if (isOpen) {
+            fetch("/api/setores")
+                .then((res) => res.json())
+                .then((data) => {
+                    if (Array.isArray(data)) {
+                        setSetores(data);
+                    }
+                })
+                .catch((err) => console.error("Erro ao carregar setores:", err));
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -53,21 +66,21 @@ export default function SelectSetorModal({ isOpen, onClose }) {
                 <div className="mt-4 border-t pt-2">
                     <p className="text-sm font-bold text-gray-500 mb-2">Disponíveis:</p>
                     <div className="overflow-y-auto max-h-[200px] border rounded bg-gray-50">
-                        {SETORES_DB.map((s) => (
+                        {setores.map((s) => (
                             <div
                                 key={s.centroCusto}
                                 onClick={() => {
                                     setCentroCusto(s.centroCusto);
-                                    // Optional: auto-navigate on click
-                                    // router.push(`/${s.centroCusto}`);
-                                    // onClose();
                                 }}
                                 className="p-2 text-sm border-b cursor-pointer hover:bg-blue-100 flex justify-between"
                             >
-                                <span>{s.centroCusto}</span>
+                                <span className="font-semibold">{s.centroCusto}</span>
                                 <span className="text-gray-600">{s.descricao}</span>
                             </div>
                         ))}
+                        {setores.length === 0 && (
+                            <div className="p-2 text-sm text-gray-500 text-center">Nenhum setor encontrado</div>
+                        )}
                     </div>
                 </div>
             </div>
