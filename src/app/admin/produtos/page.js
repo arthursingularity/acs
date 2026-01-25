@@ -91,7 +91,7 @@ export default function ProdutosPage() {
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
     return (
-        <div>
+        <div className="pb-20">
             <h2 className="text-2xl font-bold mb-6">Gerenciar Produtos</h2>
 
             {/* Form de Criação/Edição */}
