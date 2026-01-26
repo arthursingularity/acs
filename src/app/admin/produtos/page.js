@@ -119,7 +119,7 @@ export default function ProdutosPage() {
                     </div>
                     <div className="md:col-span-1 flex gap-2">
                         <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 justify-center h-9 px-3" disabled={loading}>
-                            {loading ? "Salvando..." : (isEditing ? "Atualizar" : "Criar Produto")}
+                            {loading ? "Salvando..." : (isEditing ? "Atualizar" : "Cadastrar Produto")}
                         </Button>
                         {isEditing && (
                             <Button type="button" onClick={resetForm} variant="outline" className="h-10 px-4">

@@ -51,17 +51,10 @@ export default function LoginPage() {
 
             <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
                 {/* Logo Section */}
-                <div className="flex flex-col items-center mb-8">
-                    <div className="flex items-center gap-2 mb-6">
-                        {/* TOTVS Logo placeholder - using text to emulate the look if image not perfect match, 
-                            but using existing logo if available. The image shows a specific TOTVS logo. 
-                            We will try to use the existing one but styled properly. */}
-                        <img src="/imagens/logo.png" alt="TOTVS" className="h-[40px]" />
-                        <span className="text-3xl font-bold text-gray-700 tracking-tight hidden">TOTVS</span>
-                    </div>
-
-                    <h1 className="text-3xl text-gray-600 font-normal mb-2">Linha Protheus</h1>
-                    <h2 className="text-xl text-[#0079B8] font-normal">Boas-vindas</h2>
+                <div className="flex flex-col items-center mb-8 space-y-8">
+                    <img src="/imagens/totvs-logo.png" alt="TOTVS" className="h-[40px]" />
+                    <h1 className="text-3xl text-gray-600 font-normal ">Linha Protheus</h1>
+                    <h2 className="text-2xl text-[#0079B8] font-normal">Boas-vindas</h2>
                 </div>
 
                 <div className="w-full max-w-[400px]">
@@ -78,11 +71,11 @@ export default function LoginPage() {
                                 <input
                                     type="text"
                                     value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    onChange={(e) => setUsername(e.target.value.toUpperCase())}
                                     className="block w-full pl-10 pr-10 py-2.5 border border-gray-400 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary3 focus:border-primary3 sm:text-sm bg-white"
-                                    placeholder="" // Image has no placeholder text inside, just the label above and icon
                                     required
                                 />
+
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <InformationCircleIcon className="h-5 w-5 text-primary3" />
                                 </div>
