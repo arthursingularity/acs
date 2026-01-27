@@ -52,8 +52,7 @@ export default function LoginPage() {
             <div className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
                 {/* Logo Section */}
                 <div className="flex flex-col items-center mb-8 space-y-8">
-                    <img src="/imagens/totvs-logo.png" alt="TOTVS" className="h-[40px]" />
-                    <h1 className="text-3xl text-gray-600 font-normal ">Linha Protheus</h1>
+                    <h1 className="text-3xl text-gray-600 font-normal ">SUPRIMENTOS</h1>
                     <h2 className="text-2xl text-[#0079B8] font-normal">Boas-vindas</h2>
                 </div>
 
@@ -145,7 +144,7 @@ export default function LoginPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </div>
                 <div className="flex items-center gap-2 mt-4 opacity-50">
-                    <span className="font-bold tracking-widest text-lg">TOTVS</span>
+                    <span className="font-bold tracking-widest text-lg">Suprimentos</span>
                 </div>
             </div>
         </div>

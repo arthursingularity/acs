@@ -58,29 +58,14 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
 
         <div className="bg-lightGray h-[35px] flex justify-between">
           <div className="pl-1 pt-[1px] text-primary3 font-medium text-[20px]">
-            <p>TOTVS | Suprimentos</p>
+            <p>Suprimentos</p>
           </div>
           <div className="flex">
-            <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>TOTVS Manufatura MSSQL Html</p>
-            </div>
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
               <p>{username}</p>
             </div>
             <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
               <p>{currentDate}</p>
-            </div>
-            <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>Stam/Matriz</p>
-            </div>
-            <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>F4 | F8</p>
-            </div>
-            <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>F4 | F8 | F12</p>
-            </div>
-            <div className="mt-1.5 mb-1.5 font-medium text-[13px] border-l rounded flex items-center border-border px-4">
-              <p>Stam/Matriz</p>
             </div>
             <div
               onClick={handleLogout}
@@ -98,7 +83,7 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
               Controle de endereçamento - Setor: {setor} - C. Custo: {centroCusto}
             </p>
           ) : (
-            <p>TOTVS | Home</p>
+            <p>Home</p>
           )}
           <div className="hidden">{almo}</div>
         </div>

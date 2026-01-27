@@ -290,8 +290,8 @@ export default function AddressModal({
     const onlyLettersUpper = (value) =>
         value.replace(/[^a-zA-Z]/g, "").toUpperCase();
 
-    const onlyLettersAndSpacesUpper = (value) =>
-        value.replace(/[^a-zA-Z ]/g, "").toUpperCase();
+    const lettersUpper = (value) =>
+        value.replace(/[a-z]/gi, (char) => char.toUpperCase());
 
     const onlyNumbers = (value) =>
         value.replace(/\D/g, "");
@@ -518,7 +518,7 @@ export default function AddressModal({
                                 )}
                                 {showGavetaPopup && (
                                     <div className="flex items-center justify-center z-50 pt-4">
-                                        <div className="bg-white w-full max-h-[220px] overflow-auto rounded">
+                                        <div className="bg-white w-[360px] max-h-[220px] overflow-auto rounded">
                                             <div className="space-y-4">
                                                 {gavetaNiveis
                                                     .slice()
@@ -630,7 +630,7 @@ export default function AddressModal({
                                                                             className="w-full"
                                                                             placeholder="Observação"
                                                                             value={data.observacao}
-                                                                            onChange={(e) => updateItem('observacao', onlyLettersAndSpacesUpper(e.target.value), subObj)}
+                                                                            onChange={(e) => updateItem('observacao', lettersUpper(e.target.value), subObj)}
                                                                         />
 
                                                                         {/* Only show Divisória Button on the main block or D1 (to toggle) */}

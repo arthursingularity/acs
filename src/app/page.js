@@ -19,11 +19,11 @@ export default function Home() {
           {/* Sidebar */}
           <div className="w-[240px] bg-[#EEEEEE] border-r border-gray-300 flex flex-col">
             {/* Logo Area */}
-            <div className="border-[3px] border-black p-10 inline-block">
-              <div className="flex flex-col items-center">
+            <div className="border-[3px] border-black p-8 inline-block">
+              <div className="flex flex-col items-center space-y-3">
                 <img src="/imagens/logo.png" alt="TOTVS" className="w-[100px]" />
                 <h1 className="text-red-600 font-bold text-4xl tracking-tighter" style={{ fontFamily: 'Arial, sans-serif' }}>
-                  Harpia
+                  ICS
                 </h1>
               </div>
             </div>

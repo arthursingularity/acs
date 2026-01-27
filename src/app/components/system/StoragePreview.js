@@ -9,8 +9,8 @@ export default function StoragePreview({ type, height, tipoCaixa, levels }) {
 
     return (
         <div
-            className={`fixed top-1/2 left-1/2 ml-[200px] -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[1000] p-2 flex flex-col items-center justify-end animate-modal-enter ${tipoCaixa != "COLUNA" ? "h-[382px]" : "h-[392px]"} w-[110px] border border-gray-200`}
-            style={{ maxHeight: '80vh' }}
+            className={`fixed top-1/2 left-1/2 ml-[200px] -translate-y-1/2 bg-white rounded-lg shadow-2xl z-[1000] p-2 flex flex-col items-center justify-end animate-modal-enter w-[110px] border border-gray-200`}
+            style={{ maxHeight: '85vh', height: 'auto' }}
         >
             <div className="w-full overflow-y-auto custom-scrollbar flex flex-col items-center">
                 <div className='relative'>
