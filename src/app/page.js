@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "./components/ui/NavBar";
 import SelectSetorModal from "./components/system/SelectSetorModal";
 import Link from "next/link";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    document.title = "Home - Sistema de Endereçamento";
+  }, []);
 
   return (
     <div className="bg-gray-100 h-screen overflow-hidden flex flex-col">
@@ -63,6 +67,9 @@ export default function Home() {
               </div>
               <Link href={"/buscarendereco"}>
                 <MenuLink text="Buscar Endereço" />
+              </Link>
+              <Link href={"/admin/produtos"}>
+                <MenuLink text="Admin" />
               </Link>
             </div>
           </div>

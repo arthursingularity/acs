@@ -6,9 +6,10 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const codigo = searchParams.get('codigo');
+        const busca = searchParams.get('busca');
 
         if (codigo) {
-            // Buscar produto específico
+            // Buscar produto específico por código
             const produto = await prisma.produto.findUnique({
                 where: { codigo },
             });
@@ -18,6 +19,21 @@ export async function GET(request) {
             }
 
             return NextResponse.json(produto);
+        }
+
+        if (busca && busca.length >= 2) {
+            // Buscar produtos por descrição (para autocomplete)
+            const produtos = await prisma.produto.findMany({
+                where: {
+                    descricao: {
+                        contains: busca.toUpperCase(),
+                    },
+                },
+                take: 15,
+                orderBy: { descricao: 'asc' },
+            });
+
+            return NextResponse.json({ sugestoes: produtos });
         }
 
         // Buscar todos

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -209,25 +209,82 @@ export default function AddressModal({
         return null;
     };
 
-    // 🔹 Buscar produto principal
+    // 🔹 Buscar produto principal (por código)
     useEffect(() => {
-        if (!produto) {
-            setDescricao("");
-            return;
-        }
+        if (!produto) return; // Não limpa descrição se produto estiver vazio (permite digitar descrição primeiro)
 
         // Debounce simples para evitar muitas chamadas
         const timer = setTimeout(async () => {
             const foundProduct = await fetchProduct(produto);
             if (foundProduct) {
                 setDescricao(foundProduct.descricao);
-            } else {
-                setDescricao("");
             }
         }, 500);
 
         return () => clearTimeout(timer);
     }, [produto]);
+
+    /* ---------------- SUGESTÕES POR DESCRIÇÃO ---------------- */
+    const [sugestoes, setSugestoes] = useState([]);
+    const [showSugestoes, setShowSugestoes] = useState(false);
+    const [isSearchingDesc, setIsSearchingDesc] = useState(false);
+
+    // 🔹 Refs para click outside
+    const descricaoRef = useRef(null);
+    const sugestoesRef = useRef(null);
+
+    // Buscar sugestões quando digitar na descrição
+    useEffect(() => {
+        if (!descricao || descricao.length < 2) {
+            setSugestoes([]);
+            return;
+        }
+
+        // Se já tiver um código preenchido e a descrição bater com ele, evita buscar (opcional, mas bom pra UX)
+        // Mas o usuário pode querer mudar, então deixamos buscar se ele estiver digitando.
+
+        const timer = setTimeout(async () => {
+            setIsSearchingDesc(true);
+            try {
+                // Buscar na tabela de produtos cadastrados
+                const res = await fetch(`/api/produtos?busca=${encodeURIComponent(descricao)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSugestoes(data.sugestoes || []);
+                    setShowSugestoes(true);
+                }
+            } catch (err) {
+                console.error("Erro ao buscar sugestões:", err);
+            } finally {
+                setIsSearchingDesc(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [descricao]);
+
+    // Fechar sugestões ao clicar fora
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (
+                descricaoRef.current &&
+                !descricaoRef.current.contains(e.target) &&
+                sugestoesRef.current &&
+                !sugestoesRef.current.contains(e.target)
+            ) {
+                setShowSugestoes(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSelectSugestao = (sugestao) => {
+        setProduto(sugestao.codigo);
+        setDescricao(sugestao.descricao);
+        setShowSugestoes(false);
+    };
 
     useEffect(() => {
         if (tipo === "COLUNA") {
@@ -506,11 +563,34 @@ export default function AddressModal({
                                                 />
                                             </div>
                                             <div>
-                                                <div className="text-xs font-semibold text-gray-600">Descrição</div>
-                                                <div
-                                                    className={`productDescricao cursor-default border flex leading-[1] w-[238px] items-center h-[34px] pl-2 py-2 rounded overflow-hidden bg-gray-200 text-[13px] ${produtoEncontrado ? "text-primary3 font-bold tracking-wide border-black" : "text-gray-600"}`}
-                                                >
-                                                    {descricao || "Descrição do produto"}
+                                                <div className="text-xs font-semibold text-gray-600">Descrição (Busca)</div>
+                                                <div className="relative">
+                                                    <div ref={descricaoRef}>
+                                                        <Input
+                                                            className={`w-[238px] h-[34px] text-[14px] ${produtoEncontrado ? "text-primary3 font-bold" : ""}`}
+                                                            placeholder="Digite para buscar..."
+                                                            value={descricao}
+                                                            onChange={(e) => {
+                                                                setDescricao(e.target.value.toUpperCase());
+                                                            }}
+                                                            onFocus={() => sugestoes.length > 0 && setShowSugestoes(true)}
+                                                        />
+                                                    </div>
+                                                    {/* Dropdown de Sugestões */}
+                                                    {showSugestoes && sugestoes.length > 0 && (
+                                                        <div ref={sugestoesRef} className="absolute z-[9999] w-[237px] mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-[140px] overflow-y-auto left-0">
+                                                            {sugestoes.map((s, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    onClick={() => handleSelectSugestao(s)}
+                                                                    className="px-3 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                                                                >
+                                                                    <div className="text-sm font-bold text-gray-800 leading-[1.1]">{s.descricao}</div>
+                                                                    <div className="text-xs text-gray-500 font-mono mt-0.5">Cód: {s.codigo}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

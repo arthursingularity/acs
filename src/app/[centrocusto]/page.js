@@ -40,7 +40,23 @@ function getNextColumn(rua, gridData, lastInteraction) {
 
 export default function Home() {
   const containerRef = useRef(null);
-  const [zoom, setZoom] = useState(1);
+  const { centrocusto } = useParams();
+
+  // 🔹 Carregar zoom do localStorage (por setor)
+  const getInitialZoom = () => {
+    if (typeof window !== "undefined" && centrocusto) {
+      const savedZoom = localStorage.getItem(`zoom_${centrocusto}`);
+      if (savedZoom) {
+        const parsed = parseFloat(savedZoom);
+        if (!isNaN(parsed) && parsed >= 0.3 && parsed <= 3) {
+          return parsed;
+        }
+      }
+    }
+    return 1;
+  };
+
+  const [zoom, setZoom] = useState(getInitialZoom);
   const [scroll, setScroll] = useState({ x: 0, y: 0 });
   const [gridData, setGridData] = useState({});
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
@@ -53,13 +69,19 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [setor, setSetor] = useState(null);
 
-  const { centrocusto } = useParams();
   const almo = setor?.almoxarifado || "";
   const descricaoSetor = setor?.descricao || "";
   const setorId = setor?.id || null;
 
   // Debounce ref para salvar no banco
   const saveTimeoutRef = useRef(null);
+
+  // 🔹 Salvar zoom no localStorage quando mudar
+  useEffect(() => {
+    if (centrocusto) {
+      localStorage.setItem(`zoom_${centrocusto}`, zoom.toString());
+    }
+  }, [zoom, centrocusto]);
 
   // 🔹 Carregar setor da API
   useEffect(() => {
@@ -81,6 +103,15 @@ export default function Home() {
 
     fetchSetor();
   }, [centrocusto]);
+
+  // 🔹 Atualizar título da página
+  useEffect(() => {
+    if (descricaoSetor) {
+      document.title = `${descricaoSetor} - Controle de Endereçamento`;
+    } else if (centrocusto) {
+      document.title = `${centrocusto} - Controle de Endereçamento`;
+    }
+  }, [descricaoSetor, centrocusto]);
 
   // 🔹 Carregar dados do grid da API
   useEffect(() => {
@@ -216,7 +247,31 @@ export default function Home() {
       if (!e.altKey) return;
       e.preventDefault();
 
-      setZoom((z) => Math.min(Math.max(z + (e.deltaY > 0 ? -0.1 : 0.1), 0.3), 3));
+      const oldZoom = zoom;
+      const newZoom = Math.min(Math.max(oldZoom + (e.deltaY > 0 ? -0.1 : 0.1), 0.3), 3);
+
+      if (oldZoom === newZoom) return;
+
+      // Calculate center point in grid coordinates
+      const rect = el.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Point in content coordinates before zoom
+      const contentX = (el.scrollLeft + mouseX) / oldZoom;
+      const contentY = (el.scrollTop + mouseY) / oldZoom;
+
+      // New scroll position to keep the same point under cursor
+      const newScrollLeft = contentX * newZoom - mouseX;
+      const newScrollTop = contentY * newZoom - mouseY;
+
+      setZoom(newZoom);
+
+      // Apply new scroll after state update
+      requestAnimationFrame(() => {
+        el.scrollLeft = Math.max(0, newScrollLeft);
+        el.scrollTop = Math.max(0, newScrollTop);
+      });
     };
 
     el.addEventListener("scroll", onScroll);
@@ -282,8 +337,29 @@ export default function Home() {
 
         const newDistance = getDistance(e.touches);
         const scale = newDistance / lastTouchDistance.current;
+        const center = getCenter(e.touches);
 
-        setZoom((z) => Math.min(Math.max(z * scale, 0.3), 3));
+        const oldZoom = zoom;
+        const newZoom = Math.min(Math.max(oldZoom * scale, 0.3), 3);
+
+        if (oldZoom !== newZoom) {
+          const rect = el.getBoundingClientRect();
+          const touchX = center.x - rect.left;
+          const touchY = center.y - rect.top;
+
+          const contentX = (el.scrollLeft + touchX) / oldZoom;
+          const contentY = (el.scrollTop + touchY) / oldZoom;
+
+          const newScrollLeft = contentX * newZoom - touchX;
+          const newScrollTop = contentY * newZoom - touchY;
+
+          setZoom(newZoom);
+
+          requestAnimationFrame(() => {
+            el.scrollLeft = Math.max(0, newScrollLeft);
+            el.scrollTop = Math.max(0, newScrollTop);
+          });
+        }
 
         lastTouchDistance.current = newDistance;
       }
@@ -622,11 +698,13 @@ export default function Home() {
   };
 
   /* ---------------- CENTER GRID ---------------- */
+  const hasCenteredRef = useRef(false);
+
   const centerGrid = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const gridW = gridCols * CELL_SIZE * zoom;
+    const gridW = gridCols * CELL_SIZE;
     const viewportW = el.clientWidth;
 
     const scrollX = (gridW - viewportW) / 2;
@@ -637,12 +715,13 @@ export default function Home() {
       top: scrollY,
       behavior: "auto",
     });
-  }, [gridCols, zoom]);
+  }, [gridCols]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || hasCenteredRef.current) return;
     const t = setTimeout(() => {
       centerGrid();
+      hasCenteredRef.current = true;
     }, 100);
     return () => clearTimeout(t);
   }, [centerGrid, isLoading]);
@@ -721,7 +800,7 @@ export default function Home() {
       </div>
 
       {/* 🔹 CONTROLES DE ZOOM FLUTUANTES (Mobile-friendly) */}
-      <div className="flex justify-center">
+      <div className="flex justify-center drop-shadow-xl">
         <div className="fixed bottom-4 z-50 space-y-2">
           <div className="flex items-center">
             {/* Indicador de Zoom */}
@@ -731,14 +810,62 @@ export default function Home() {
 
             {/* Botões de Zoom */}
             <button
-              onClick={() => setZoom(z => Math.max(0.3, z - 0.2))}
+              onClick={() => {
+                const el = containerRef.current;
+                if (!el) return;
+
+                const oldZoom = zoom;
+                const newZoom = Math.max(0.3, oldZoom - 0.2);
+                if (oldZoom === newZoom) return;
+
+                // Use viewport center as anchor
+                const centerX = el.clientWidth / 2;
+                const centerY = el.clientHeight / 2;
+
+                const contentX = (el.scrollLeft + centerX) / oldZoom;
+                const contentY = (el.scrollTop + centerY) / oldZoom;
+
+                const newScrollLeft = contentX * newZoom - centerX;
+                const newScrollTop = contentY * newZoom - centerY;
+
+                setZoom(newZoom);
+
+                requestAnimationFrame(() => {
+                  el.scrollLeft = Math.max(0, newScrollLeft);
+                  el.scrollTop = Math.max(0, newScrollTop);
+                });
+              }}
               className="w-10 h-10 bg-primary shadow-lg rounded-lg buttonHover cursor-pointer flex items-center justify-center text-2xl font-bold text-white active:scale-95 transition-all border border-gray-200"
               title="Diminuir zoom"
             >
               −
             </button>
             <button
-              onClick={() => setZoom(z => Math.min(3, z + 0.2))}
+              onClick={() => {
+                const el = containerRef.current;
+                if (!el) return;
+
+                const oldZoom = zoom;
+                const newZoom = Math.min(3, oldZoom + 0.2);
+                if (oldZoom === newZoom) return;
+
+                // Use viewport center as anchor
+                const centerX = el.clientWidth / 2;
+                const centerY = el.clientHeight / 2;
+
+                const contentX = (el.scrollLeft + centerX) / oldZoom;
+                const contentY = (el.scrollTop + centerY) / oldZoom;
+
+                const newScrollLeft = contentX * newZoom - centerX;
+                const newScrollTop = contentY * newZoom - centerY;
+
+                setZoom(newZoom);
+
+                requestAnimationFrame(() => {
+                  el.scrollLeft = Math.max(0, newScrollLeft);
+                  el.scrollTop = Math.max(0, newScrollTop);
+                });
+              }}
               className="w-10 h-10 bg-primary shadow-lg rounded-lg buttonHover cursor-pointer flex items-center justify-center text-2xl font-bold text-white active:scale-95 transition-all border border-gray-200"
               title="Aumentar zoom"
             >
@@ -769,41 +896,59 @@ export default function Home() {
           <button
             onClick={handleCopy}
             disabled={!gridData[contextMenu.index]}
-            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+            className="text-left px-3 cursor-pointer py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
-            <span>Copia</span>
-            <span className="text-xs text-gray-400 group-hover:text-blue-500">
-              Ctrl+C
-            </span>
+            <span>Copiar</span>
           </button>
 
           <button
             onClick={() => {
               const sourceKey = contextMenu.index;
               const sourceItem = gridData[sourceKey];
-              if (!sourceItem || !sourceItem.rua) return;
+              if (!sourceItem) return;
 
               const [sRow, sCol] = sourceKey.split('-').map(Number);
-              const streetItems = [];
+              const connectedItems = [];
 
-              Object.entries(gridData).forEach(([k, item]) => {
-                if (item.rua === sourceItem.rua) {
-                  const [r, c] = k.split('-').map(Number);
-                  streetItems.push({
-                    data: item,
-                    dr: r - sRow,
-                    dc: c - sCol
-                  });
-                }
-              });
+              // Flood-fill para encontrar blocos conectados
+              const queue = [sourceKey];
+              const visited = new Set([sourceKey]);
 
-              setClipboard({ type: 'street', items: streetItems });
+              while (queue.length > 0) {
+                const currentKey = queue.shift();
+                const currentItem = gridData[currentKey];
+                const [r, c] = currentKey.split('-').map(Number);
+
+                // Adiciona o item atual à lista
+                connectedItems.push({
+                  data: currentItem,
+                  dr: r - sRow,
+                  dc: c - sCol
+                });
+
+                // Verifica os 4 vizinhos (cima, baixo, esquerda, direita)
+                const neighbors = [
+                  `${r - 1}-${c}`,
+                  `${r + 1}-${c}`,
+                  `${r}-${c - 1}`,
+                  `${r}-${c + 1}`
+                ];
+
+                neighbors.forEach(nKey => {
+                  if (!visited.has(nKey) && gridData[nKey]) {
+                    visited.add(nKey);
+                    queue.push(nKey);
+                  }
+                });
+              }
+
+              setClipboard({ type: 'street', items: connectedItems });
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
-            disabled={!gridData[contextMenu.index] || !gridData[contextMenu.index].rua}
-            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+            disabled={!gridData[contextMenu.index]}
+            className="text-left px-3 cursor-pointer py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
-            <span>Copiar Rua Inteira</span>
+            <span>Copiar Blocos Conectados</span>
           </button>
 
           <button
@@ -811,7 +956,7 @@ export default function Home() {
               const sourceItem = gridData[contextMenu.index];
               if (!sourceItem || !sourceItem.rua) return;
 
-              if (confirm(`Tem certeza que deseja excluir essa rua?`)) {
+              if (confirm(`Tem certeza que deseja excluir essa conexão?`)) {
                 setGridData(prev => {
                   const next = { ...prev };
 
@@ -848,20 +993,17 @@ export default function Home() {
               setContextMenu((prev) => ({ ...prev, visible: false }));
             }}
             disabled={!gridData[contextMenu.index] || !gridData[contextMenu.index].rua}
-            className="text-left px-3 py-2 hover:bg-red-50 text-red-600 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+            className="text-left cursor-pointer px-3 py-2 hover:bg-red-50 text-red-600 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
-            <span>Excluir Rua</span>
+            <span>Excluir Conexão</span>
           </button>
 
           <button
             onClick={handlePaste}
             disabled={!clipboard}
-            className="text-left px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
+            className="text-left cursor-pointer px-3 py-2 hover:bg-blue-50 text-sm rounded-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed flex items-center justify-between group"
           >
             <span>Colar</span>
-            <span className="text-xs text-gray-400 group-hover:text-blue-500">
-              Ctrl+V
-            </span>
           </button>
         </div>
       )}

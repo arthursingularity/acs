@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserIcon, LockClosedIcon, InformationCircleIcon, EyeIcon, EyeSlashIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 
@@ -11,6 +11,10 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        document.title = "Login - Sistema de Endereçamento";
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

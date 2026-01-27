@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
 
 export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid }) {
@@ -7,6 +9,8 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
+  const { tabs, closeTab } = useTabs();
 
   useEffect(() => {
     // Carregar usuário
@@ -39,16 +43,31 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[36px]">
           <div className="flex items-center h-full">
-            <a href="/">
+            <Link href="/">
               <div>
                 <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
               </div>
-            </a>
-            <div className="bg-primary4 h-full flex items-center px-2.5 rounded-t">
-              <div className="text-white text-sm flex items-center justify-center">Controle de Endereçamento
-                <img src="/imagens/close.svg" className="border border-border rounded w-[16px] ml-2 cursor-pointer" />
+            </Link>
+            {tabs.map((tab) => (
+              <div
+                key={tab.path}
+                onClick={() => router.push(tab.path)}
+                className={`h-full flex items-center px-2.5 rounded-t cursor-pointer border-r border-primary ${pathname === tab.path ? "bg-primary4" : "bg-primary3 hover:opacity-90"
+                  }`}
+              >
+                <div className="text-white text-sm flex items-center justify-center whitespace-nowrap">
+                  {tab.title}
+                  <img
+                    src="/imagens/close.svg"
+                    className="border border-border rounded w-[16px] ml-2 cursor-pointer hover:bg-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.path);
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            ))}
           </div>
           <div className="flex">
             <img src="/imagens/mail.svg" className="w-[40px] border-1 border-primary p-2 rounded buttonHover" />

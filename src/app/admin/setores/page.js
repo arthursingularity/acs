@@ -16,6 +16,7 @@ export default function SetoresPage() {
 
     useEffect(() => {
         fetchSetores();
+        document.title = "Gerenciar Setores - Admin";
     }, []);
 
     const fetchSetores = async () => {

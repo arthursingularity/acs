@@ -16,6 +16,7 @@ export default function ProdutosPage() {
 
     useEffect(() => {
         fetchProdutos();
+        document.title = "Gerenciar Produtos - Admin";
     }, []);
 
     useEffect(() => {

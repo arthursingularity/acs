@@ -1,4 +1,5 @@
 import "./globals.css";
+import { TabsProvider } from "./context/TabsContext";
 
 export const metadata = {
   title: "Sistema de Controle de Endereçamento",
@@ -39,7 +40,9 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="Endereçamento" />
       </head>
       <body className="">
-        {children}
+        <TabsProvider>
+          {children}
+        </TabsProvider>
       </body>
     </html>
   );

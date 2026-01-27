@@ -17,6 +17,7 @@ export default function UsersPage() {
 
     useEffect(() => {
         fetchUsers();
+        document.title = "Gerenciar Usuários - Admin";
     }, []);
 
     const fetchUsers = async () => {

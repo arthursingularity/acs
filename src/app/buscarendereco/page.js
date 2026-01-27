@@ -19,6 +19,11 @@ export default function BuscarEnderecoPage() {
     const descricaoRef = useRef(null);
     const sugestoesRef = useRef(null);
 
+    // 🔹 Título da página
+    useEffect(() => {
+        document.title = "Buscar Endereço";
+    }, []);
+
     // Fechar sugestões ao clicar fora
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -132,7 +137,7 @@ export default function BuscarEnderecoPage() {
                                     value={centroCusto}
                                     onChange={(e) => setCentroCusto(e.target.value)}
                                     placeholder="Ex: 315111"
-                                    className="md:w-48 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none"
+                                    className="md:w-48 px-2 py-2 border border-gray-400 rounded focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none"
                                 />
                             </div>
                             {/* Busca por Código */}
@@ -148,7 +153,7 @@ export default function BuscarEnderecoPage() {
                                         if (e.target.value) setDescricao("");
                                     }}
                                     placeholder="Ex: 11012000001"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none font-mono"
+                                    className="w-full px-2 py-2 border border-gray-400 rounded focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none font-mono"
                                 />
                             </div>
                         </div>
@@ -168,7 +173,7 @@ export default function BuscarEnderecoPage() {
                                     }}
                                     onFocus={() => sugestoes.length > 0 && setShowSugestoes(true)}
                                     placeholder="Ex: TRINCO 501"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none"
+                                    className="w-full px-2 py-2 border border-gray-400 rounded focus:ring-2 focus:ring-primary3 focus:border-transparent transition-all outline-none"
                                 />
                                 {loadingSugestoes && (
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
