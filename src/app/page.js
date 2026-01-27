@@ -3,6 +3,7 @@
 import { useState } from "react";
 import NavBar from "./components/ui/NavBar";
 import SelectSetorModal from "./components/system/SelectSetorModal";
+import Link from "next/link";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,12 +61,9 @@ export default function Home() {
               <div onClick={() => setModalOpen(true)}>
                 <MenuLink text="Controle de Endereçamento" />
               </div>
-              <MenuLink text="Recentes" />
-              <MenuLink text="Atualizações (35)" link />
-              <MenuLink text="Consultas (4)" link />
-              <MenuLink text="Relatorios (12)" link />
-              <MenuLink text="Miscelanea (15)" link />
-              <MenuLink text="Ajuda (3)" link />
+              <Link href={"/buscarendereco"}>
+                <MenuLink text="Buscar Endereço" />
+              </Link>
             </div>
           </div>
         </div>

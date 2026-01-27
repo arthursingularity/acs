@@ -37,8 +37,7 @@ body {
   /* Prefer Inter if available, fallback to Arial */
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  height: 100%;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   /* iOS-like text rendering */
 }
