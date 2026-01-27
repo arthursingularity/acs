@@ -721,35 +721,30 @@ export default function Home() {
       </div>
 
       {/* 🔹 CONTROLES DE ZOOM FLUTUANTES (Mobile-friendly) */}
-      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center space-y-2">
-        {/* Indicador de Zoom */}
-        <div className="bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full">
-          {Math.round(zoom * 100)}%
-        </div>
+      <div className="flex justify-center">
+        <div className="fixed bottom-4 z-50 space-y-2">
+          <div className="flex items-center">
+            {/* Indicador de Zoom */}
+            <div className="hidden bg-black/70 text-white text-xs font-bold px-3 h-[30px] flex items-center justify-center rounded-full">
+              {Math.round(zoom * 100)}%
+            </div>
 
-        {/* Botões de Zoom */}
-        <div className="flex flex-col space-y-1">
-          <button
-            onClick={() => setZoom(z => Math.min(3, z + 0.2))}
-            className="w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all border border-gray-200"
-            title="Aumentar zoom"
-          >
-            +
-          </button>
-          <button
-            onClick={() => setZoom(z => Math.max(0.3, z - 0.2))}
-            className="w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all border border-gray-200"
-            title="Diminuir zoom"
-          >
-            −
-          </button>
-          <button
-            onClick={() => setZoom(1)}
-            className="w-12 h-12 bg-primary3 shadow-lg rounded-full flex items-center justify-center text-xs font-bold text-white hover:bg-primary2 active:scale-95 transition-all"
-            title="Reset zoom"
-          >
-            100%
-          </button>
+            {/* Botões de Zoom */}
+            <button
+              onClick={() => setZoom(z => Math.max(0.3, z - 0.2))}
+              className="w-10 h-10 bg-primary shadow-lg rounded-lg buttonHover cursor-pointer flex items-center justify-center text-2xl font-bold text-white active:scale-95 transition-all border border-gray-200"
+              title="Diminuir zoom"
+            >
+              −
+            </button>
+            <button
+              onClick={() => setZoom(z => Math.min(3, z + 0.2))}
+              className="w-10 h-10 bg-primary shadow-lg rounded-lg buttonHover cursor-pointer flex items-center justify-center text-2xl font-bold text-white active:scale-95 transition-all border border-gray-200"
+              title="Aumentar zoom"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
 
