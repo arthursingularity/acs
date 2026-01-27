@@ -68,15 +68,49 @@ export default function AddressModal({
         if (tipo === "NIVEL" && altura) {
             const max = Number(altura);
 
-            const saved = localStorage.getItem(gavetaStorageKey);
+            // 🔹 PRIORIDADE 1: Carregar do initialData.enderecos (dados do banco)
+            if (initialData?.enderecos && Array.isArray(initialData.enderecos)) {
+                // Reconstruir os níveis a partir dos endereços salvos
+                const niveisMap = new Map();
 
-            if (saved) {
-                const parsed = JSON.parse(saved);
+                initialData.enderecos.forEach(end => {
+                    const nivelNum = end.nivel;
+                    if (end.divisoria) {
+                        // Endereço com divisória
+                        if (!niveisMap.has(nivelNum)) {
+                            niveisMap.set(nivelNum, {
+                                nivel: nivelNum,
+                                isDivisoria: true,
+                                d1: { produto: "", descricao: "", observacao: "" },
+                                d2: { produto: "", descricao: "", observacao: "" },
+                            });
+                        }
+                        const nivel = niveisMap.get(nivelNum);
+                        if (end.divisoria === 'D1') {
+                            nivel.d1 = { produto: end.produto || "", descricao: end.descricao || "", observacao: end.observacao || "" };
+                        } else if (end.divisoria === 'D2') {
+                            nivel.d2 = { produto: end.produto || "", descricao: end.descricao || "", observacao: end.observacao || "" };
+                        }
+                    } else {
+                        // Endereço sem divisória
+                        niveisMap.set(nivelNum, {
+                            nivel: nivelNum,
+                            isDivisoria: false,
+                            produto: end.produto || "",
+                            descricao: end.descricao || "",
+                            observacao: end.observacao || "",
+                        });
+                    }
+                });
 
+                // Criar array com todos os níveis
                 const niveis = Array.from({ length: max }, (_, i) => {
-                    if (parsed[i]) return parsed[i]; // pega do array salvo
+                    const nivelStr = String(i + 1);
+                    if (niveisMap.has(nivelStr)) {
+                        return niveisMap.get(nivelStr);
+                    }
                     return {
-                        nivel: String(i + 1),
+                        nivel: nivelStr,
                         produto: "",
                         descricao: "",
                         observacao: "",
@@ -85,16 +119,35 @@ export default function AddressModal({
 
                 setGavetaNiveis(niveis);
             } else {
-                const niveis = Array.from({ length: max }, (_, i) => ({
-                    nivel: String(i + 1),
-                    produto: "",
-                    descricao: "",
-                    observacao: "",
-                }));
+                // 🔹 PRIORIDADE 2: Tentar carregar do localStorage (fallback para compatibilidade)
+                const saved = localStorage.getItem(gavetaStorageKey);
 
-                setGavetaNiveis(niveis);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+
+                    const niveis = Array.from({ length: max }, (_, i) => {
+                        if (parsed[i]) return parsed[i];
+                        return {
+                            nivel: String(i + 1),
+                            produto: "",
+                            descricao: "",
+                            observacao: "",
+                        };
+                    });
+
+                    setGavetaNiveis(niveis);
+                } else {
+                    // 🔹 FALLBACK: Criar níveis vazios
+                    const niveis = Array.from({ length: max }, (_, i) => ({
+                        nivel: String(i + 1),
+                        produto: "",
+                        descricao: "",
+                        observacao: "",
+                    }));
+
+                    setGavetaNiveis(niveis);
+                }
             }
-
 
             setNivel("1");
             setShowGavetaPopup(true);
@@ -102,7 +155,7 @@ export default function AddressModal({
             setShowGavetaPopup(false);
             setGavetaNiveis([]);
         }
-    }, [tipo, altura, gavetaStorageKey]);
+    }, [tipo, altura, gavetaStorageKey, initialData]);
 
     useEffect(() => {
         if (initialData) {
