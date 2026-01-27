@@ -242,6 +242,69 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateViewport);
   }, []);
 
+  // 🔹 Detectar se é dispositivo touch
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  // 🔹 Suporte a Pinch-to-Zoom para mobile
+  const lastTouchDistance = useRef(null);
+  const lastTouchCenter = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !isTouchDevice) return;
+
+    const getDistance = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const getCenter = (touches) => ({
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    });
+
+    const onTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        lastTouchDistance.current = getDistance(e.touches);
+        lastTouchCenter.current = getCenter(e.touches);
+      }
+    };
+
+    const onTouchMove = (e) => {
+      if (e.touches.length === 2 && lastTouchDistance.current) {
+        e.preventDefault();
+
+        const newDistance = getDistance(e.touches);
+        const scale = newDistance / lastTouchDistance.current;
+
+        setZoom((z) => Math.min(Math.max(z * scale, 0.3), 3));
+
+        lastTouchDistance.current = newDistance;
+      }
+    };
+
+    const onTouchEnd = () => {
+      lastTouchDistance.current = null;
+      lastTouchCenter.current = null;
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [isTouchDevice]);
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -654,6 +717,39 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* 🔹 CONTROLES DE ZOOM FLUTUANTES (Mobile-friendly) */}
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center space-y-2">
+        {/* Indicador de Zoom */}
+        <div className="bg-black/70 text-white text-xs font-bold px-3 py-1 rounded-full">
+          {Math.round(zoom * 100)}%
+        </div>
+
+        {/* Botões de Zoom */}
+        <div className="flex flex-col space-y-1">
+          <button
+            onClick={() => setZoom(z => Math.min(3, z + 0.2))}
+            className="w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all border border-gray-200"
+            title="Aumentar zoom"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setZoom(z => Math.max(0.3, z - 0.2))}
+            className="w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl font-bold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all border border-gray-200"
+            title="Diminuir zoom"
+          >
+            −
+          </button>
+          <button
+            onClick={() => setZoom(1)}
+            className="w-12 h-12 bg-primary3 shadow-lg rounded-full flex items-center justify-center text-xs font-bold text-white hover:bg-primary2 active:scale-95 transition-all"
+            title="Reset zoom"
+          >
+            100%
+          </button>
         </div>
       </div>
 

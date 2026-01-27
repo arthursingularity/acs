@@ -1,5 +1,5 @@
 import React from "react";
-import { BLOCK_COLORS } from "./AdressModal";
+import { BLOCK_COLORS, LETTER_COLORS } from "./AdressModal";
 
 const GRID_SIZE = 200;
 
@@ -89,10 +89,14 @@ const Block = React.memo(function Block({
             font-bold
             ${tl} ${tr} ${bl} ${br}
             ${type === "letter"
-              ? "text-primary text-[58px] pt-[1px] hover:bg-primary hover:text-white"
+              ? "pt-[1px] hover:opacity-70 transition-opacity"
               : `${colorClass} text-[27px] text-white`
             }
           `}
+          style={type === "letter" ? {
+            fontSize: `${data.letterFontSize || 58}px`,
+            color: LETTER_COLORS[data.letterColor]?.bg || LETTER_COLORS.primary.bg
+          } : undefined}
         >
           {data.coluna}
         </div>

@@ -127,12 +127,9 @@ export default function LoginPage() {
                                 disabled={loading}
                                 className={`
                                     w-full flex justify-center py-2.5 px-4 border border-transparent rounded
-                                    font-bold text-black/80 transition-colors hover:bg-primary2 hover:text-white cursor-pointer
-                                    ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#A0A0A0]"}
+                                    font-bold tracking-wide text-black/80 transition-colors hover:bg-primary2 cursor-pointer
+                                    ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary text-white"}
                                 `}
-                            // Note: Image shows a gray button, likely meaning "disabled" until input or just style. 
-                            // I'll use a darker gray or the brand blue on hover to give feedback.
-                            // For accuracy to the image (which looks gray), I'll start with gray.
                             >
                                 {loading ? "Entrando..." : "Entrar"}
                             </button>

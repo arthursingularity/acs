@@ -15,6 +15,17 @@ export const BLOCK_COLORS = {
     orange: "bg-stamOrange hover:bg-orange-400",
 };
 
+// Cores para as letras de rua (valor hex para usar com style)
+export const LETTER_COLORS = {
+    primary: { bg: "#3DADFA", label: "Azul Claro" },
+    blue: { bg: "#0369a1", label: "Azul" },
+    green: { bg: "#16a34a", label: "Verde" },
+    red: { bg: "#dc2626", label: "Vermelho" },
+    orange: { bg: "#FF6600", label: "Laranja" },
+    purple: { bg: "#9333ea", label: "Roxo" },
+    black: { bg: "#171717", label: "Preto" },
+};
+
 export default function AddressModal({
     open,
     onClose,
@@ -36,6 +47,8 @@ export default function AddressModal({
     const [altura, setAltura] = useState("");
     const [observacao, setObservacao] = useState("");
     const [tipoCaixa, setTipoCaixa] = useState("");
+    const [letterFontSize, setLetterFontSize] = useState(58); // Tamanho padrão da letra da rua
+    const [letterColor, setLetterColor] = useState("primary"); // Cor padrão da letra da rua
     const produtoEncontrado = Boolean(descricao);
     const [showGavetaPopup, setShowGavetaPopup] = useState(false);
     const [gavetaNiveis, setGavetaNiveis] = useState([]);
@@ -111,6 +124,8 @@ export default function AddressModal({
             setDescricao(initialData.descricao || "");
             setObservacao(initialData.observacao || "");
             setTipoCaixa(initialData.tipoCaixa || "");
+            setLetterFontSize(initialData.letterFontSize || 58);
+            setLetterColor(initialData.letterColor || "primary");
         } else {
             setMode("endereco");
             setProduto("");
@@ -122,6 +137,8 @@ export default function AddressModal({
             setDescricao("")
             setObservacao("");
             setTipoCaixa("");
+            setLetterFontSize(58);
+            setLetterColor("primary");
         }
     }, [initialData, open]);
 
@@ -266,17 +283,65 @@ export default function AddressModal({
                 }
             >
                 {mode === "letter" && (
-                    <div>
-                        <label className="text-xs font-semibold text-gray-600">
-                            Letra da Rua
-                        </label>
-                        <Input
-                            className="w-full"
-                            value={coluna}
-                            onChange={(e) =>
-                                setColuna(onlyLettersUpper(e.target.value))
-                            }
-                        />
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">
+                                Letra da Rua
+                            </label>
+                            <Input
+                                className="w-full"
+                                value={coluna}
+                                onChange={(e) =>
+                                    setColuna(onlyLettersUpper(e.target.value))
+                                }
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">
+                                Tamanho da Letra no Grid
+                            </label>
+                            <div className="flex items-center space-x-2 mt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setLetterFontSize(prev => Math.max(20, prev - 20))}
+                                    className="w-10 h-10 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold border border-gray-300 transition-colors"
+                                    title="Diminuir 20px"
+                                >
+                                    −
+                                </button>
+                                <div className="flex-1 flex items-center justify-center bg-gray-100 h-10 rounded-lg border border-gray-300 font-bold text-primary3">
+                                    {letterFontSize}px
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setLetterFontSize(prev => Math.min(200, prev + 20))}
+                                    className="w-10 h-10 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold border border-gray-300 transition-colors"
+                                    title="Aumentar 20px"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-gray-600">
+                                Cor da Letra
+                            </label>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {Object.entries(LETTER_COLORS).map(([key, { bg, label }]) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        onClick={() => setLetterColor(key)}
+                                        className={`
+                                            w-8 h-8 rounded-lg border-2 buttonHover cursor-pointer
+                                            ${letterColor === key ? "ring-2 ring-offset-1 ring-primary scale-110" : ""}
+                                        `}
+                                        style={{ backgroundColor: bg }}
+                                        title={label}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
                 <div>
@@ -697,6 +762,8 @@ export default function AddressModal({
                                     type: "letter",          // ✅ ISSO É O PONTO-CHAVE
                                     coluna,                  // letra
                                     almo,
+                                    letterFontSize,          // Tamanho da fonte
+                                    letterColor,             // Cor da letra
                                 });
                                 return;
                             }

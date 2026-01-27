@@ -130,14 +130,14 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
                 <span className="text-gray-600 text-[11px] font-bold">Altura:</span>
                 <span className="text-primary3 font-bold text-xs w-6 text-center">{gridRows}</span>
                 <button
-                  onClick={() => onAdjustGrid(5, 0)}
+                  onClick={() => onAdjustGrid(1, 0)}
                   className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Adicionar 10 linhas"
                 >
                   +
                 </button>
                 <button
-                  onClick={() => onAdjustGrid(-5, 0)}
+                  onClick={() => onAdjustGrid(-1, 0)}
                   className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Remover 10 linhas"
                 >
@@ -151,14 +151,14 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
                 <span className="text-gray-600 text-[11px] font-bold">Largura:</span>
                 <span className="text-primary3 font-bold text-xs w-6 text-center">{gridCols}</span>
                 <button
-                  onClick={() => onAdjustGrid(0, 5)}
+                  onClick={() => onAdjustGrid(0, 1)}
                   className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Adicionar 10 colunas"
                 >
                   +
                 </button>
                 <button
-                  onClick={() => onAdjustGrid(0, -5)}
+                  onClick={() => onAdjustGrid(0, -1)}
                   className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Remover 10 colunas"
                 >
