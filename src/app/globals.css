@@ -30,6 +30,7 @@
   }
 }
 
+html,
 body {
   background: var(--background);
   color: var(--foreground);
@@ -37,10 +38,16 @@ body {
   /* Prefer Inter if available, fallback to Arial */
   margin: 0;
   padding: 0;
-  height: 100vh;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   /* iOS-like text rendering */
+  /* Prevent iOS bounce scroll and white space */
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
 }
 
 /* Base interactive transitions */
