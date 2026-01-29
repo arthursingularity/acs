@@ -498,6 +498,19 @@ export default function Home() {
 
   /* ---------------- EXCEL EXPORT ---------------- */
   const exportToExcel = async () => {
+    // Helper para lógica de ACABAMENTO
+    const getAcabamento = (descricao) => {
+      if (!descricao) return "";
+      const desc = descricao.toUpperCase();
+      if (desc.includes("INOX 430 - PRETO FOSCO")) return "INOX 430 - PRETO FOSCO";
+      if (desc.includes("INOX 430 - BRANCO")) return "INOX 430 - BRANCO";
+      if (desc.includes("INOX 304 - PRETO FOSCO")) return "INOX 304 - PRETO FOSCO";
+      if (desc.includes("INOX 304 - BRANCO")) return "INOX 304 - BRANCO";
+      if (desc.includes("INOX 430")) return "INOX 430";
+      if (desc.includes("INOX 304")) return "INOX 304";
+      return "";
+    };
+
     const rows = [];
 
     Object.values(gridData).forEach((item) => {
@@ -509,6 +522,7 @@ export default function Home() {
         rows.push({
           produto: item.produto,
           descricao: item.descricao,
+          acabamento: getAcabamento(item.descricao),
           rua: item.rua,
           coluna: item.coluna,
           nivel: item.nivel,
@@ -525,6 +539,7 @@ export default function Home() {
           rows.push({
             produto: g.produto,
             descricao: g.descricao,
+            acabamento: getAcabamento(g.descricao),
             rua: g.rua,
             coluna: g.coluna,
             nivel: g.nivel,
@@ -560,6 +575,7 @@ export default function Home() {
         { header: "NIVEL", key: "nivel", width: 8 },
         { header: "CODIGO", key: "codigo", width: 13 },
         { header: "TIPO DE ETIQUETA", key: "tipoCaixa", width: 18 },
+        { header: "ACABAMENTO", key: "acabamento", width: 25 },
         { header: "OBSERVACAO", key: "observacao", width: 18 },
       ];
 
@@ -587,6 +603,7 @@ export default function Home() {
 
       rows.forEach((row) => sheet.addRow(row));
 
+      // Centralizar colunas da C até a H (RUA até ACABAMENTO)
       ["C", "D", "E", "F", "G", "H"].forEach((col) => {
         sheet.getColumn(col).alignment = { horizontal: "center" };
       });
@@ -736,6 +753,43 @@ export default function Home() {
     );
   }
 
+  // 🔹 Funções de Inventário
+  const handleIniciarInventario = async () => {
+    try {
+      const response = await fetch('/api/inventario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setorCodigo: centrocusto })
+      });
+      if (response.ok) {
+        alert(`Inventário iniciado em ${descricaoSetor}`);
+      } else {
+        alert('Erro ao iniciar inventário');
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar inventário:', error);
+      alert('Erro ao iniciar inventário');
+    }
+  };
+
+  const handleFinalizarInventario = async () => {
+    try {
+      const response = await fetch('/api/inventario', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setorCodigo: centrocusto })
+      });
+      if (response.ok) {
+        alert(`Inventário finalizado em ${descricaoSetor}`);
+      } else {
+        alert('Erro ao finalizar inventário');
+      }
+    } catch (error) {
+      console.error('Erro ao finalizar inventário:', error);
+      alert('Erro ao finalizar inventário');
+    }
+  };
+
   return (
     <>
       <NavBar
@@ -746,11 +800,13 @@ export default function Home() {
         gridRows={gridRows}
         gridCols={gridCols}
         onAdjustGrid={handleAdjustGrid}
+        onIniciarInventario={handleIniciarInventario}
+        onFinalizarInventario={handleFinalizarInventario}
       />
 
       <div
         ref={containerRef}
-        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[128px] flex bg-white"
+        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[140px] pb-[70px] flex bg-white"
         onMouseMove={(e) => {
           if (e.ctrlKey && !isPanning.current) {
             e.currentTarget.style.cursor = "move";

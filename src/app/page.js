@@ -7,10 +7,44 @@ import Link from "next/link";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [hoveredSetor, setHoveredSetor] = useState(null);
+  const [inventarioStatus, setInventarioStatus] = useState({});
+
+  // Buscar status do inventário
+  const fetchInventarioStatus = async () => {
+    try {
+      const response = await fetch('/api/inventario');
+      if (response.ok) {
+        const data = await response.json();
+        setInventarioStatus(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar status do inventário:', error);
+    }
+  };
 
   useEffect(() => {
     document.title = "Home - Sistema de Endereçamento";
+    fetchInventarioStatus();
+
+    // Atualizar a cada 5 segundos para sincronizar com outros usuários
+    const interval = setInterval(fetchInventarioStatus, 5000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Função para determinar a imagem correta
+  const getImageSrc = (setorCodigo, folder, baseName) => {
+    const isHovered = hoveredSetor === setorCodigo;
+    const emInventario = inventarioStatus[setorCodigo];
+
+    if (isHovered) {
+      return `/imagens/${folder}/${baseName}hover.png`;
+    } else if (emInventario) {
+      return `/imagens/${folder}/${baseName}Inv.png`;
+    } else {
+      return `/imagens/${folder}/${baseName}White.png`;
+    }
+  };
 
   return (
     <div className="bg-gray-100 h-screen overflow-hidden flex flex-col">
@@ -18,17 +52,14 @@ export default function Home() {
       <NavBar almos="" setor="" centroCusto="" />
 
       {/* Main Layout Container - Adjust top margin for NavBar (approx 100px) */}
-      <div className="flex flex-1 mt-[102px] h-[calc(100vh-102px)]">
+      <div className="flex flex-1 mt-[101px] h-[calc(100vh-102px)]">
         <div>
           {/* Sidebar */}
           <div className="w-[240px] bg-[#EEEEEE] border-r border-gray-300 flex flex-col">
             {/* Logo Area */}
             <div className="border-[3px] border-black p-8 inline-block">
               <div className="flex flex-col items-center space-y-3">
-                <img src="/imagens/logo.png" alt="TOTVS" className="w-[100px]" />
-                <h1 className="text-red-600 font-bold text-4xl tracking-tighter" style={{ fontFamily: 'Arial, sans-serif' }}>
-                  ICS
-                </h1>
+                <img src="/imagens/logo.png" alt="TOTVS" className="" />
               </div>
             </div>
             {/* Module Header */}
@@ -76,7 +107,72 @@ export default function Home() {
         </div>
 
         {/* Main Workspace */}
-        <div className="flex-1 bg-white p-6 justify-center flex items-start pt-[50px]">
+        <div className="relative flex-1 bg-white justify-center flex items-center">
+          <Link href={"/319111"} className="absolute z-10 left-[340px] mt-[315px] w-[65.5px] ">
+            <img
+              src={getImageSrc('319111', 'Guarni', 'Guarni')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('319111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/324111"} className="absolute z-10 left-[142px] mb-[8px] w-[46.5px] ">
+            <img
+              src={getImageSrc('324111', 'Vidro', 'Vidro')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('324111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/316111"} className="absolute z-10 left-[142px] mt-[98px] w-[52px] ">
+            <img
+              src={getImageSrc('316111', 'B', 'B')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('316111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/313111"} className="absolute z-10 left-[142px] mt-[247px] w-[52px] ">
+            <img
+              src={getImageSrc('313111', 'Cad', 'Cad')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('313111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/323111"} className="absolute z-10 left-[193px] mt-[292px] w-[74.5px] ">
+            <img
+              src={getImageSrc('323111', 'Emb', 'Emb')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('323111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/314111"} className="absolute z-20 left-[242px] mt-[305px] w-[24px] ">
+            <img
+              src={getImageSrc('314111', 'Cil', 'Cil')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('314111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/317111"} className="absolute z-10 left-[245px] mt-[304px] w-[47px] ">
+            <img
+              src={getImageSrc('317111', 'C', 'C')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('317111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <Link href={"/315111"} className="absolute z-10 left-[291px] mt-[317px] w-[50px] ">
+            <img
+              src={getImageSrc('315111', 'A', 'A')}
+              className="cursor-pointer buttonAnimation"
+              onMouseEnter={() => setHoveredSetor('315111')}
+              onMouseLeave={() => setHoveredSetor(null)}
+            />
+          </Link>
+          <img src="/imagens/planta.png" className="absolute left-10 max-w-[1200px] max-h-[600px]" />
         </div>
       </div>
 

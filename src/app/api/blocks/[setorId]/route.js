@@ -44,12 +44,15 @@ export async function PUT(request, { params }) {
         const { setorId } = await params;
         const gridData = await request.json();
 
-        // Deletar todos os blocos existentes do setor
-        await prisma.block.deleteMany({
-            where: { setorId },
-        });
+        // 🛡️ PROTEÇÃO NIVEL 1: Impedir que um salvamento vazio ou inválido apague o banco de dados.
+        // Isso previne que bugs no frontend (ex: state não carregado) disparando auto-save limpem o setor.
+        if (!gridData || Object.keys(gridData).length === 0) {
+            console.warn(`[PROTEÇÃO] Tentativa de sobrescrever setor ${setorId} com grid vazio bloqueada.`);
+            return NextResponse.json({
+                error: 'O grid parece estar vazio. O salvamento foi bloqueado para prevenir perda total de dados.'
+            }, { status: 400 });
+        }
 
-        // Inserir novos blocos
         const blocksToCreate = Object.entries(gridData).map(([gridKey, data]) => ({
             gridKey,
             setorId,
@@ -68,11 +71,21 @@ export async function PUT(request, { params }) {
             enderecos: data.enderecos || null,
         }));
 
-        if (blocksToCreate.length > 0) {
-            await prisma.block.createMany({
-                data: blocksToCreate,
+        // 🛡️ PROTEÇÃO NIVEL 2: Transação Atômica
+        // Garante que a deleção dos dados antigos só seja confirmada se a inserção dos novos funcionar.
+        await prisma.$transaction(async (tx) => {
+            // 1. Deletar todos os blocos existentes do setor
+            await tx.block.deleteMany({
+                where: { setorId },
             });
-        }
+
+            // 2. Inserir novos blocos
+            if (blocksToCreate.length > 0) {
+                await tx.block.createMany({
+                    data: blocksToCreate,
+                });
+            }
+        });
 
         return NextResponse.json({ success: true, count: blocksToCreate.length });
     } catch (error) {

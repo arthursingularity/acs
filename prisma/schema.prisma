@@ -83,3 +83,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Status do Inventário por Setor (Planta)
+model InventarioSetor {
+  id           String   @id @default(cuid())
+  setorCodigo  String   @unique // "314111", "315111", "317111", etc.
+  emInventario Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

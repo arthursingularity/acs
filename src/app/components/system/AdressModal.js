@@ -54,6 +54,10 @@ export default function AddressModal({
     const [gavetaNiveis, setGavetaNiveis] = useState([]);
     const gavetaStorageKey = `gavetas_${almo}_${rua}_${coluna}`;
 
+    // Estados para autocomplete em NIVEL (por inputKey)
+    const [nivelSugestoes, setNivelSugestoes] = useState({});
+    const [nivelShowSugestoes, setNivelShowSugestoes] = useState({});
+
     useEffect(() => {
         if (mode === "letter") {
             setTipo("");
@@ -284,6 +288,33 @@ export default function AddressModal({
         setProduto(sugestao.codigo);
         setDescricao(sugestao.descricao);
         setShowSugestoes(false);
+    };
+
+    // 🔹 Funções para autocomplete em NIVEL
+    const handleNivelDescSearch = async (inputKey, value, updateItemFn, subObj) => {
+        updateItemFn('descricao', value.toUpperCase(), subObj);
+
+        if (value.length >= 2) {
+            try {
+                const res = await fetch(`/api/produtos?busca=${encodeURIComponent(value)}`);
+                if (res.ok) {
+                    const result = await res.json();
+                    setNivelSugestoes(prev => ({ ...prev, [inputKey]: result.sugestoes || [] }));
+                    setNivelShowSugestoes(prev => ({ ...prev, [inputKey]: true }));
+                }
+            } catch (err) {
+                console.error("Erro ao buscar sugestões:", err);
+            }
+        } else {
+            setNivelSugestoes(prev => ({ ...prev, [inputKey]: [] }));
+            setNivelShowSugestoes(prev => ({ ...prev, [inputKey]: false }));
+        }
+    };
+
+    const handleNivelSelectProduto = (inputKey, produto, updateItemFn, subObj) => {
+        updateItemFn('produto', produto.codigo, subObj);
+        updateItemFn('descricao', produto.descricao, subObj);
+        setNivelShowSugestoes(prev => ({ ...prev, [inputKey]: false }));
     };
 
     useEffect(() => {
@@ -683,6 +714,9 @@ export default function AddressModal({
                                                         const renderInputs = (data, prefix, subObj = null) => {
                                                             const isFound = Boolean(data.descricao);
                                                             const codeDisplay = subObj ? `${almo}${rua}${coluna}N${item.nivel}${subObj.toUpperCase()}` : `${almo}${rua}${coluna}N${item.nivel}`;
+                                                            const inputKey = `${item.nivel}-${subObj || 'main'}`;
+                                                            const localSugestoes = nivelSugestoes[inputKey] || [];
+                                                            const showLocalSugestoes = nivelShowSugestoes[inputKey] || false;
 
                                                             return (
                                                                 <div className="flex flex-col gap-1 w-full relative">
@@ -690,18 +724,33 @@ export default function AddressModal({
                                                                     <div className="flex space-x-1">
                                                                         <Input
                                                                             className="w-[118px] mb-1 pl-2"
-                                                                            placeholder={`Código`}
+                                                                            placeholder="Código"
                                                                             value={data.produto}
                                                                             onChange={(e) => updateItem('produto', e.target.value, subObj)}
                                                                         />
-                                                                        <div
-                                                                            className={`text-xs px-2 w-full pl-2 rounded cursor-default border mb-1 bg-gray-200 
-                                                                    flex items-center leading-[1.1]
-                                                                    ${isFound ? "text-primary3 font-bold tracking-wide border-black overflow-hidden text-[12px]" : "text-gray-600"}`}
-                                                                        >
-                                                                            <p className="text-left mt-[2px]">
-                                                                                {data.descricao || "Descrição do produto"}
-                                                                            </p>
+                                                                        <div className="relative flex-1 mb-1">
+                                                                            <Input
+                                                                                className={`w-full h-[34px] text-[12px] ${isFound ? "text-primary3 font-bold" : ""}`}
+                                                                                placeholder="Buscar produto..."
+                                                                                value={data.descricao || ""}
+                                                                                onChange={(e) => handleNivelDescSearch(inputKey, e.target.value, updateItem, subObj)}
+                                                                                onFocus={() => localSugestoes.length > 0 && setNivelShowSugestoes(prev => ({ ...prev, [inputKey]: true }))}
+                                                                                onBlur={() => setTimeout(() => setNivelShowSugestoes(prev => ({ ...prev, [inputKey]: false })), 200)}
+                                                                            />
+                                                                            {showLocalSugestoes && localSugestoes.length > 0 && (
+                                                                                <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-[120px] overflow-y-auto left-0">
+                                                                                    {localSugestoes.map((s, i) => (
+                                                                                        <div
+                                                                                            key={i}
+                                                                                            onMouseDown={() => handleNivelSelectProduto(inputKey, s, updateItem, subObj)}
+                                                                                            className="px-2 py-1.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                                                                        >
+                                                                                            <div className="text-[11px] font-bold text-gray-800 leading-[1.1]">{s.descricao}</div>
+                                                                                            <div className="text-[10px] text-gray-500">Cód: {s.codigo}</div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                     {/* Line 2: Obs + Actions */}
@@ -745,7 +794,7 @@ export default function AddressModal({
                                                                     <div className="nivelEtiqueta flex justify-between items-center mt-1">
                                                                         <div>
                                                                             <div className="flex border">
-                                                                                <div className={`bg-black ${etiquetaWidth[data.tipoCaixa || tipoCaixa] || "w-[106px] text-[9px]"} px-1 font-bold h-[35px] flex items-center justify-center`}>
+                                                                                <div className={`bg-black overflow-hidden px-2 ${etiquetaWidth[data.tipoCaixa || tipoCaixa] || "w-[106px]"} font-bold h-[35px] flex items-center justify-center`}>
                                                                                     <p className="leading-[1.1] text-white text-center">{data.descricao}</p>
                                                                                 </div>
                                                                                 <div className="qrCode w-[35px] h-[35px] bg-stamOrange">

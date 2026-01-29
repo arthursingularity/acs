@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
 
-export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid }) {
+export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario }) {
   const [openModal, setOpenModal] = useState(false);
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
@@ -44,8 +44,8 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
         <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[36px]">
           <div className="flex items-center h-full">
             <Link href="/">
-              <div>
-                <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
+              <div className="bg-white overflow-hidden rounded">
+                <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1 rounded buttonHover" />
               </div>
             </Link>
             {tabs.map((tab) => (
@@ -117,9 +117,16 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
                 Mudar Setor
               </button>
               <button
+                onClick={onIniciarInventario}
                 className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
               >
                 Iniciar Inv
+              </button>
+              <button
+                onClick={onFinalizarInventario}
+                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
+              >
+                Finalizar Inv
               </button>
               <button
                 onClick={onExportExcel}
