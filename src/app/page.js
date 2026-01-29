@@ -33,12 +33,13 @@ export default function Home() {
   }, []);
 
   // Função para determinar a imagem correta
+  // Função para determinar a imagem correta
   const getImageSrc = (setorCodigo, folder, baseName) => {
     const isHovered = hoveredSetor === setorCodigo;
     const emInventario = inventarioStatus[setorCodigo];
 
     if (isHovered) {
-      return `/imagens/${folder}/${baseName}hover.png`;
+      return `/imagens/${folder}/${baseName}Hover.png`;
     } else if (emInventario) {
       return `/imagens/${folder}/${baseName}Inv.png`;
     } else {
