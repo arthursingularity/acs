@@ -54,6 +54,10 @@ export default function AddressModal({
     const [gavetaNiveis, setGavetaNiveis] = useState([]);
     const gavetaStorageKey = `gavetas_${almo}_${rua}_${coluna}`;
 
+    // Estados para copiar/colar
+    const [copyFeedback, setCopyFeedback] = useState("");
+    const CLIPBOARD_KEY = "acs_block_clipboard";
+
     // Estados para autocomplete em NIVEL (por inputKey)
     const [nivelSugestoes, setNivelSugestoes] = useState({});
     const [nivelShowSugestoes, setNivelShowSugestoes] = useState({});
@@ -392,6 +396,67 @@ export default function AddressModal({
     const handleDelete = () => {
         localStorage.removeItem(gavetaStorageKey);
         onDelete();
+    };
+
+    // 🔹 Função para copiar dados do bloco atual
+    const handleCopy = () => {
+        const dataToCopy = {
+            mode,
+            tipo,
+            tipoCaixa,
+            altura,
+            rua,
+            produto,
+            descricao,
+            observacao,
+            blockColor,
+            letterFontSize,
+            letterColor,
+            gavetaNiveis: tipo === "NIVEL" ? gavetaNiveis : [],
+        };
+
+        localStorage.setItem(CLIPBOARD_KEY, JSON.stringify(dataToCopy));
+        setCopyFeedback("Copiado!");
+        setTimeout(() => setCopyFeedback(""), 2000);
+    };
+
+    // 🔹 Função para colar dados no bloco atual (mantém coluna sequencial)
+    const handlePaste = () => {
+        const saved = localStorage.getItem(CLIPBOARD_KEY);
+        if (!saved) {
+            setCopyFeedback("Nada para colar");
+            setTimeout(() => setCopyFeedback(""), 2000);
+            return;
+        }
+
+        try {
+            const data = JSON.parse(saved);
+
+            // Aplicar dados copiados (coluna é mantida pelo auto-incremento)
+            if (data.mode) setMode(data.mode);
+            if (data.tipo) setTipo(data.tipo);
+            if (data.tipoCaixa) setTipoCaixa(data.tipoCaixa);
+            if (data.altura) setAltura(data.altura);
+            if (data.rua) setRua(data.rua);
+            if (data.produto) setProduto(data.produto);
+            if (data.descricao) setDescricao(data.descricao);
+            if (data.observacao) setObservacao(data.observacao);
+            if (data.blockColor) setBlockColor(data.blockColor);
+            if (data.letterFontSize) setLetterFontSize(data.letterFontSize);
+            if (data.letterColor) setLetterColor(data.letterColor);
+
+            // Para tipo NIVEL, aplicar os níveis de gaveta
+            if (data.tipo === "NIVEL" && data.gavetaNiveis?.length > 0) {
+                setGavetaNiveis(data.gavetaNiveis);
+            }
+
+            setCopyFeedback("Colado!");
+            setTimeout(() => setCopyFeedback(""), 2000);
+        } catch (err) {
+            console.error("Erro ao colar dados:", err);
+            setCopyFeedback("Erro ao colar");
+            setTimeout(() => setCopyFeedback(""), 2000);
+        }
     };
 
     const enderecoCode =
@@ -915,28 +980,61 @@ export default function AddressModal({
                 </div>
 
                 <div className="flex justify-between items-center gap-2 mt-6">
-                    {initialData && (
+                    <div className="flex items-center gap-2">
+                        {initialData && (
+                            <Button
+                                onClick={handleDelete}
+                                variant="danger"
+                                className="px-5 py-1"
+                            >
+                                Excluir
+                            </Button>
+                        )}
+                        {!initialData && (
+                            <Button
+                                onClick={() =>
+                                    setMode((prev) =>
+                                        prev === "endereco" ? "letter" : "endereco"
+                                    )
+                                }
+                                variant="outline"
+                                className="px-3 py-1"
+                            >
+                                {mode === "endereco" ? "Definir Letra" : "Definir Endereço"}
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Botões de Copiar/Colar - Apenas Mobile */}
+                    <div className="flex items-center gap-1 md:hidden">
+                        {copyFeedback && (
+                            <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded animate-pulse">
+                                {copyFeedback}
+                            </span>
+                        )}
                         <Button
-                            onClick={handleDelete}
-                            variant="danger"
-                            className="px-5 py-1"
-                        >
-                            Excluir
-                        </Button>
-                    )}
-                    {!initialData && (
-                        <Button
-                            onClick={() =>
-                                setMode((prev) =>
-                                    prev === "endereco" ? "letter" : "endereco"
-                                )
-                            }
+                            onClick={handleCopy}
                             variant="outline"
-                            className="px-3 py-1"
+                            className="px-3 py-1 text-sm flex items-center gap-1"
+                            title="Copiar dados do bloco"
                         >
-                            {mode === "endereco" ? "Definir Letra" : "Definir Endereço"}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copiar
                         </Button>
-                    )}
+                        <Button
+                            onClick={handlePaste}
+                            variant="outline"
+                            className="px-3 py-1 text-sm flex items-center gap-1"
+                            title="Colar dados no bloco"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Colar
+                        </Button>
+                    </div>
                     <Button
                         onClick={() => {
                             if (mode === "letter") {

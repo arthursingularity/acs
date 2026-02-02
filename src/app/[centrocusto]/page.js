@@ -857,7 +857,7 @@ export default function Home() {
 
       {/* 🔹 CONTROLES DE ZOOM FLUTUANTES (Mobile-friendly) */}
       <div className="flex justify-center drop-shadow-xl">
-        <div className="fixed bottom-4 z-50 space-y-2">
+        <div className="fixed bottom-[180px] z-50 space-y-2">
           <div className="flex items-center">
             {/* Indicador de Zoom */}
             <div className="hidden bg-black/70 text-white text-xs font-bold px-3 h-[30px] flex items-center justify-center rounded-full">
