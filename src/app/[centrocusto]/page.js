@@ -11,7 +11,6 @@ import { useParams } from "next/navigation";
 const DEFAULT_COLS = 50;
 const DEFAULT_ROWS = 50;
 const CELL_SIZE = 50;
-const BUFFER = 3;
 
 /* 🔹 Helper para calcular próxima coluna (inteligente) */
 function getNextColumn(rua, gridData, lastInteraction) {
@@ -57,14 +56,12 @@ export default function Home() {
   };
 
   const [zoom, setZoom] = useState(getInitialZoom);
-  const [scroll, setScroll] = useState({ x: 0, y: 0 });
   const [gridData, setGridData] = useState({});
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [gridCols, setGridCols] = useState(DEFAULT_COLS);
   const [gridRows, setGridRows] = useState(DEFAULT_ROWS);
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [lastInteraction, setLastInteraction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [setor, setSetor] = useState(null);
@@ -230,18 +227,11 @@ export default function Home() {
     };
   }, []);
 
-  /* ---------------- SCROLL + ZOOM ---------------- */
+  /* ---------------- ZOOM ---------------- */
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
-    const onScroll = () => {
-      setScroll({
-        x: el.scrollLeft,
-        y: el.scrollTop,
-      });
-    };
 
     const onWheel = (e) => {
       if (!e.altKey) return;
@@ -274,28 +264,12 @@ export default function Home() {
       });
     };
 
-    el.addEventListener("scroll", onScroll);
     el.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
-      el.removeEventListener("scroll", onScroll);
       el.removeEventListener("wheel", onWheel);
     };
   }, [isLoading]);
-
-  useEffect(() => {
-    const updateViewport = () => {
-      setViewport({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    updateViewport();
-    window.addEventListener("resize", updateViewport);
-
-    return () => window.removeEventListener("resize", updateViewport);
-  }, []);
 
   // 🔹 Detectar se é dispositivo touch
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -429,41 +403,18 @@ export default function Home() {
     };
   }, [isLoading]);
 
-  /* ---------------- VIRTUALIZAÇÃO ---------------- */
+  /* ---------------- TODAS AS CÉLULAS (SEM VIRTUALIZAÇÃO) ---------------- */
 
   const visibleCells = useMemo(() => {
-    const viewportWidth = viewport.width;
-    const viewportHeight = viewport.height;
-
-    const startCol = Math.max(
-      0,
-      Math.floor(scroll.x / (CELL_SIZE * zoom)) - BUFFER
-    );
-
-    const endCol = Math.min(
-      gridCols,
-      Math.ceil((scroll.x + viewportWidth) / (CELL_SIZE * zoom)) + BUFFER
-    );
-
-    const startRow = Math.max(
-      0,
-      Math.floor(scroll.y / (CELL_SIZE * zoom)) - BUFFER
-    );
-
-    const endRow = Math.min(
-      gridRows,
-      Math.ceil((scroll.y + viewportHeight) / (CELL_SIZE * zoom)) + BUFFER
-    );
-
     const cells = [];
-    for (let row = startRow; row < endRow; row++) {
-      for (let col = startCol; col < endCol; col++) {
+    for (let row = 0; row < gridRows; row++) {
+      for (let col = 0; col < gridCols; col++) {
         const key = `${row}-${col}`;
         cells.push({ row, col, key });
       }
     }
     return cells;
-  }, [scroll.x, scroll.y, viewport.width, viewport.height, zoom, gridCols, gridRows]);
+  }, [gridCols, gridRows]);
 
   const handleAdjustGrid = useCallback((deltaRows, deltaCols) => {
     setGridRows(prev => Math.max(5, Math.min(500, prev + deltaRows)));
@@ -857,7 +808,10 @@ export default function Home() {
 
       {/* 🔹 CONTROLES DE ZOOM FLUTUANTES (Mobile-friendly) */}
       <div className="flex justify-center drop-shadow-xl">
-        <div className="fixed bottom-[180px] z-50 space-y-2">
+        <div
+          className="fixed z-50 space-y-2"
+          style={{ bottom: isTouchDevice ? '100px' : '24px' }}
+        >
           <div className="flex items-center">
             {/* Indicador de Zoom */}
             <div className="hidden bg-black/70 text-white text-xs font-bold px-3 h-[30px] flex items-center justify-center rounded-full">
