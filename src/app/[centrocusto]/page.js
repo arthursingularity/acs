@@ -810,14 +810,9 @@ export default function Home() {
       <div className="flex justify-center drop-shadow-xl">
         <div
           className="fixed z-50 space-y-2"
-          style={{ bottom: isTouchDevice ? '100px' : '24px' }}
+          style={{ bottom: isTouchDevice ? '230px' : '24px' }}
         >
           <div className="flex items-center">
-            {/* Indicador de Zoom */}
-            <div className="hidden bg-black/70 text-white text-xs font-bold px-3 h-[30px] flex items-center justify-center rounded-full">
-              {Math.round(zoom * 100)}%
-            </div>
-
             {/* Botões de Zoom */}
             <button
               onClick={() => {
