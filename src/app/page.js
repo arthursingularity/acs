@@ -60,7 +60,7 @@ export default function Home() {
             {/* Logo Area */}
             <div className="border-[3px] border-black p-8 inline-block">
               <div className="flex flex-col items-center space-y-3">
-                <img src="/imagens/logo.png" alt="TOTVS" className="" />
+                <img src="/imagens/logo.svg" alt="TOTVS" className="h-[160px]" />
               </div>
             </div>
             {/* Module Header */}
@@ -99,6 +99,9 @@ export default function Home() {
               </div>
               <Link href={"/buscarendereco"}>
                 <MenuLink text="Buscar Endereço" />
+              </Link>
+              <Link href={"/manutencao"}>
+                <MenuLink text="Manutenção" />
               </Link>
               <Link href={"/admin/produtos"}>
                 <MenuLink text="Admin" />

@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
 
-export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario }) {
+export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro }) {
   const [openModal, setOpenModal] = useState(false);
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
@@ -44,8 +44,8 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
         <div className="bg-primary2 pb-[1px] flex justify-between items-center h-[36px]">
           <div className="flex items-center h-full">
             <Link href="/">
-              <div className="bg-white overflow-hidden rounded">
-                <img src="/imagens/logo.png" className="w-[35px] border-1 border-primary p-1 rounded buttonHover" />
+              <div className="bg-primary-2 overflow-hidden rounded">
+                <img src="/imagens/stamS.png" className="w-[35px] border-1 border-primary p-1.5 rounded buttonHover" />
               </div>
             </Link>
             {tabs.map((tab) => (
@@ -97,7 +97,9 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
         </div>
 
         <div className="bg-blackGradient pl-1 pt-[1px] h-[30px] space-x-2 font-bold text-white tracking-wide flex items-center pl-3 text-[13px]">
-          {centroCusto ? (
+          {titulo ? (
+            <p>{titulo}</p>
+          ) : centroCusto ? (
             <p>
               Controle de endereçamento - Setor: {setor} - C. Custo: {centroCusto}
             </p>
@@ -106,6 +108,57 @@ export default function NavBar({ almo, setor, centroCusto, onExportExcel, gridRo
           )}
           <div className="hidden">{almo}</div>
         </div>
+
+        {/* Botões de Manutenção */}
+        {manutencaoButtons && (
+          <div className="bg-white h-[27px] font-bold tracking-wide flex items-center text-[13px] border-b border-gray-300">
+            <button
+              onClick={onIncluirOS}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Incluir
+            </button>
+            <button
+              onClick={onAlterarOS}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Alterar
+            </button>
+            <button
+              onClick={onAtribuirOS}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Atribuir
+            </button>
+            <button
+              onClick={() => window.open('/manutencao/mobile', '_blank')}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Web
+            </button>
+            <button
+              onClick={() => window.open('/manutencao/painel-tv', '_blank')}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Painel TV
+            </button>
+            <button
+              onClick={() => window.open('/manutencao/tecnicos', '_blank')}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Técnicos
+            </button>
+            <button
+              onClick={onFiltro}
+              className="border-2 border-primary3 h-full rounded text-primary3 pl-3 buttonHover2 flex items-center gap-1"
+            >
+              Filtro
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#0000A6">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {centroCusto && (
           <div className="bg-white h-[27px] font-bold tracking-wide flex items-center justify-between text-[13px] border-b border-gray-300">

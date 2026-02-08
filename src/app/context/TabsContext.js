@@ -15,6 +15,8 @@ export function TabsProvider({ children }) {
         if (path.includes("/admin/produtos")) return "Admin - Produtos";
         if (path.includes("/admin/setores")) return "Admin - Setores";
         if (path.includes("/admin/usuarios")) return "Admin - Usuários";
+        if (path.includes("/manutencao/tecnicos")) return "Análise de Técnicos";
+        if (path === "/manutencao" || path.startsWith("/manutencao/")) return "Gerenciamento O.S.";
         // Se for login ou home, talvez não queiramos adicionar, ou tratamos diferente
         // Mas se o usuário pediu tabs para páginas abertas:
         return "Controle de Endereçamento";

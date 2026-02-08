@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Função para converter campos de texto para maiúsculas
+const toUpperSafe = (value) => {
+    if (value && typeof value === 'string') {
+        return value.toUpperCase();
+    }
+    return value;
+};
+
 // GET - Buscar todos os blocos de um setor
 export async function GET(request, { params }) {
     try {
@@ -57,17 +65,17 @@ export async function PUT(request, { params }) {
             gridKey,
             setorId,
             type: data.type || 'endereco',
-            rua: data.rua || null,
-            coluna: data.coluna || null,
-            nivel: data.nivel || null,
-            tipo: data.tipo || null,
-            altura: data.altura || null,
-            produto: data.produto || null,
-            descricao: data.descricao || null,
-            observacao: data.observacao || null,
-            tipoCaixa: data.tipoCaixa || null,
+            rua: toUpperSafe(data.rua) || null,
+            coluna: toUpperSafe(data.coluna) || null,
+            nivel: toUpperSafe(data.nivel) || null,
+            tipo: toUpperSafe(data.tipo) || null,
+            altura: toUpperSafe(data.altura) || null,
+            produto: toUpperSafe(data.produto) || null,
+            descricao: toUpperSafe(data.descricao) || null,
+            observacao: toUpperSafe(data.observacao) || null,
+            tipoCaixa: toUpperSafe(data.tipoCaixa) || null,
             blockColor: data.blockColor || 'gray',
-            almo: data.almo || null,
+            almo: toUpperSafe(data.almo) || null,
             enderecos: data.enderecos || null,
         }));
 
@@ -104,41 +112,41 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ error: 'gridKey é obrigatório' }, { status: 400 });
         }
 
-        // Upsert - criar ou atualizar
+        // Upsert - criar ou atualizar (com conversão para maiúsculas)
         const block = await prisma.block.upsert({
             where: {
                 setorId_gridKey: { setorId, gridKey }
             },
             update: {
                 type: data.type || 'endereco',
-                rua: data.rua || null,
-                coluna: data.coluna || null,
-                nivel: data.nivel || null,
-                tipo: data.tipo || null,
-                altura: data.altura || null,
-                produto: data.produto || null,
-                descricao: data.descricao || null,
-                observacao: data.observacao || null,
-                tipoCaixa: data.tipoCaixa || null,
+                rua: toUpperSafe(data.rua) || null,
+                coluna: toUpperSafe(data.coluna) || null,
+                nivel: toUpperSafe(data.nivel) || null,
+                tipo: toUpperSafe(data.tipo) || null,
+                altura: toUpperSafe(data.altura) || null,
+                produto: toUpperSafe(data.produto) || null,
+                descricao: toUpperSafe(data.descricao) || null,
+                observacao: toUpperSafe(data.observacao) || null,
+                tipoCaixa: toUpperSafe(data.tipoCaixa) || null,
                 blockColor: data.blockColor || 'gray',
-                almo: data.almo || null,
+                almo: toUpperSafe(data.almo) || null,
                 enderecos: data.enderecos || null,
             },
             create: {
                 gridKey,
                 setorId,
                 type: data.type || 'endereco',
-                rua: data.rua || null,
-                coluna: data.coluna || null,
-                nivel: data.nivel || null,
-                tipo: data.tipo || null,
-                altura: data.altura || null,
-                produto: data.produto || null,
-                descricao: data.descricao || null,
-                observacao: data.observacao || null,
-                tipoCaixa: data.tipoCaixa || null,
+                rua: toUpperSafe(data.rua) || null,
+                coluna: toUpperSafe(data.coluna) || null,
+                nivel: toUpperSafe(data.nivel) || null,
+                tipo: toUpperSafe(data.tipo) || null,
+                altura: toUpperSafe(data.altura) || null,
+                produto: toUpperSafe(data.produto) || null,
+                descricao: toUpperSafe(data.descricao) || null,
+                observacao: toUpperSafe(data.observacao) || null,
+                tipoCaixa: toUpperSafe(data.tipoCaixa) || null,
                 blockColor: data.blockColor || 'gray',
-                almo: data.almo || null,
+                almo: toUpperSafe(data.almo) || null,
                 enderecos: data.enderecos || null,
             },
         });

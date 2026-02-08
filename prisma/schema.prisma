@@ -92,3 +92,206 @@ model InventarioSetor {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+// ============================================
+// SISTEMA DE MANUTENÇÃO
+// ============================================
+
+// Bens/Máquinas/Equipamentos
+model Bem {
+  id          String   @id @default(cuid())
+  codigo      String   @unique // Código do bem (pode ser lido via QR Code)
+  descricao   String   // Nome/descrição do equipamento
+  centroCusto String   // Centro de Custo onde o bem está
+  estacao     String?  // Estação de trabalho
+  localizacao String?  // Localização física
+  qrCode      String?  // QR Code único (se diferente do código)
+  status      String   @default("operacional") // operacional, em_manutencao, inativo
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  ordensServico OrdemServico[]
+
+  @@index([centroCusto])
+  @@index([codigo])
+}
+
+// Técnicos de Manutenção
+model Tecnico {
+  id           String   @id @default(cuid())
+  matricula    String   @unique
+  nome         String
+  especialidade String  // Elétrica, Mecânica, Geral
+  ativo        Boolean  @default(true)
+  telefone     String?
+  email        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relações
+  ordensServico OrdemServico[]
+  pausas        PausaOS[]
+}
+
+// Ordens de Serviço
+model OrdemServico {
+  id              String    @id @default(cuid())
+  numero          Int       @unique @default(autoincrement()) // Número sequencial da OS
+  
+  // Dados da Solicitação
+  bemId           String
+  bem             Bem       @relation(fields: [bemId], references: [id])
+  centroCusto     String
+  estacao         String?
+  tipoManutencao  String    // Elétrica, Mecânica, Avaliação
+  prioridade      String    @default("normal") // baixa, normal, alta, urgente
+  observacaoAbertura String?
+  solicitante     String    // Nome do solicitante
+  
+  // Status e Fluxo
+  status          String    @default("aberta") // aberta, em_analise, em_fila, em_execucao, pausada, concluida_tecnica, encerrada
+  
+  // Atribuição
+  tecnicoId       String?
+  tecnico         Tecnico?  @relation(fields: [tecnicoId], references: [id])
+  
+  // Datas do Fluxo
+  dataAbertura    DateTime  @default(now())
+  dataAtribuicao  DateTime?
+  dataInicio      DateTime? // Quando o técnico iniciou
+  dataFim         DateTime? // Quando o técnico finalizou
+  dataEncerramento DateTime? // Quando foi encerrada no sistema
+  
+  // Execução (preenchido pelo técnico)
+  problemaId      String?
+  problema        ProblemaOS? @relation(fields: [problemaId], references: [id])
+  causaId         String?
+  causa           CausaOS?  @relation(fields: [causaId], references: [id])
+  solucaoId       String?
+  solucao         SolucaoOS? @relation(fields: [solucaoId], references: [id])
+  observacaoTecnica String?
+  
+  // Extras
+  horaExtra       Boolean   @default(false)
+  statusFinalBem  String?   // operacional, restricao
+  
+  // Quem encerrou
+  encerradoPor    String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relações
+  pausas          PausaOS[]
+  anexos          AnexoOS[]
+  materiais       MaterialOS[]
+
+  @@index([status])
+  @@index([tecnicoId])
+  @@index([bemId])
+  @@index([centroCusto])
+  @@index([dataAbertura])
+}
+
+// Pausas nas Ordens de Serviço
+model PausaOS {
+  id              String   @id @default(cuid())
+  ordemServicoId  String
+  ordemServico    OrdemServico @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+  tecnicoId       String
+  tecnico         Tecnico  @relation(fields: [tecnicoId], references: [id])
+  
+  motivoPausaId   String
+  motivoPausa     MotivoPausa @relation(fields: [motivoPausaId], references: [id])
+  observacao      String?
+  
+  dataInicio      DateTime @default(now())
+  dataFim         DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ordemServicoId])
+}
+
+// Motivos de Pausa (tabela auxiliar)
+model MotivoPausa {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  descricao String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pausas    PausaOS[]
+}
+
+// Materiais/Peças utilizados na OS
+model MaterialOS {
+  id              String   @id @default(cuid())
+  ordemServicoId  String
+  ordemServico    OrdemServico @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+  
+  codigoProduto   String
+  descricao       String
+  quantidade      Float
+  unidade         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ordemServicoId])
+}
+
+// Anexos (fotos/vídeos) da OS
+model AnexoOS {
+  id              String   @id @default(cuid())
+  ordemServicoId  String
+  ordemServico    OrdemServico @relation(fields: [ordemServicoId], references: [id], onDelete: Cascade)
+  
+  tipo            String   // foto, video
+  url             String   // URL do arquivo
+  descricao       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ordemServicoId])
+}
+
+// Lista de Problemas (PCS - Problema)
+model ProblemaOS {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  descricao String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordensServico OrdemServico[]
+}
+
+// Lista de Causas (PCS - Causa)
+model CausaOS {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  descricao String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordensServico OrdemServico[]
+}
+
+// Lista de Soluções (PCS - Solução)
+model SolucaoOS {
+  id        String   @id @default(cuid())
+  codigo    String   @unique
+  descricao String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordensServico OrdemServico[]
+}

@@ -11,14 +11,34 @@ export default function Input({
     min,
     max,
     disabled = false,
-    onBlur
+    onBlur,
+    uppercase = true // Nova prop para controlar conversão automática
 }) {
+    // Handler para converter para maiúsculas automaticamente
+    const handleChange = (e) => {
+        if (uppercase && type === "text") {
+            // Criar um evento sintético com o valor em maiúsculas
+            const upperValue = e.target.value.toUpperCase();
+            const syntheticEvent = {
+                ...e,
+                target: {
+                    ...e.target,
+                    value: upperValue
+                }
+            };
+            onChange(syntheticEvent);
+        } else {
+            onChange(e);
+        }
+    };
+
     return (
         <input
             type={type}
             value={value}
-            onChange={onChange}
+            onChange={handleChange}
             placeholder={placeholder}
+            style={uppercase && type === "text" ? { textTransform: 'uppercase' } : {}}
             className={`
         border px-2 py-1 rounded 
         outline-none transition-all duration-200 ease-in-out
