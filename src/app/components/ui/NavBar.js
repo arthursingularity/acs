@@ -111,7 +111,7 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
 
         {/* Botões de Manutenção */}
         {manutencaoButtons && (
-          <div className="bg-white h-[27px] font-bold tracking-wide flex items-center text-[13px] border-b border-gray-300">
+          <div className="bg-white h-[25px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
             <button
               onClick={onIncluirOS}
               className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"

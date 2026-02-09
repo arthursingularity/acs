@@ -35,7 +35,24 @@ export async function GET(request) {
             orderBy: { codigo: "asc" },
         });
 
-        return NextResponse.json(bens);
+        // Buscar todos os setores para mapear centroCusto -> descricao
+        const setores = await prisma.setor.findMany({
+            select: { centroCusto: true, descricao: true }
+        });
+
+        // Criar mapa de centroCusto -> descricao
+        const setorMap = {};
+        for (const setor of setores) {
+            setorMap[setor.centroCusto] = setor.descricao;
+        }
+
+        // Adicionar localizacao baseada na descricao do centro de custo
+        const bensComLocalizacao = bens.map(bem => ({
+            ...bem,
+            localizacao: setorMap[bem.centroCusto] || bem.localizacao || ''
+        }));
+
+        return NextResponse.json(bensComLocalizacao);
     } catch (error) {
         console.error("Erro ao buscar bens:", error);
         return NextResponse.json({ error: "Erro ao buscar bens" }, { status: 500 });
@@ -46,7 +63,7 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { codigo, descricao, centroCusto, estacao, localizacao, qrCode, status } = body;
+        const { codigo, descricao, centroCusto, estacao, qrCode, status } = body;
 
         if (!codigo || !descricao || !centroCusto) {
             return NextResponse.json(
@@ -55,6 +72,14 @@ export async function POST(request) {
             );
         }
 
+        // Buscar a descrição do centro de custo para usar como localização
+        const setor = await prisma.setor.findUnique({
+            where: { centroCusto: centroCusto?.toUpperCase() },
+            select: { descricao: true }
+        });
+
+        const localizacaoFinal = setor?.descricao || '';
+
         // Converter campos de texto para maiúsculas
         const bem = await prisma.bem.create({
             data: {
@@ -62,7 +87,7 @@ export async function POST(request) {
                 descricao: descricao?.toUpperCase(),
                 centroCusto: centroCusto?.toUpperCase(),
                 estacao: estacao?.toUpperCase(),
-                localizacao: localizacao?.toUpperCase(),
+                localizacao: localizacaoFinal?.toUpperCase(),
                 qrCode: qrCode?.toUpperCase() || codigo?.toUpperCase(),
                 status: status || "operacional",
             },
@@ -89,13 +114,22 @@ export async function PUT(request) {
         }
 
         // Converter campos de texto para maiúsculas
-        const uppercaseFields = ['codigo', 'descricao', 'centroCusto', 'estacao', 'localizacao', 'qrCode'];
+        const uppercaseFields = ['codigo', 'descricao', 'centroCusto', 'estacao', 'qrCode'];
         const updateData = { ...data };
 
         for (const field of uppercaseFields) {
             if (updateData[field] && typeof updateData[field] === 'string') {
                 updateData[field] = updateData[field].toUpperCase();
             }
+        }
+
+        // Se centroCusto foi atualizado, buscar a nova descrição para localização
+        if (updateData.centroCusto) {
+            const setor = await prisma.setor.findUnique({
+                where: { centroCusto: updateData.centroCusto },
+                select: { descricao: true }
+            });
+            updateData.localizacao = setor?.descricao?.toUpperCase() || '';
         }
 
         const bem = await prisma.bem.update({

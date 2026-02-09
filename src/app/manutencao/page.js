@@ -475,6 +475,7 @@ export default function ManutencaoPage() {
                                 <th className="px-2 py-1 text-left font-bold text-black">Nº OS</th>
                                 <th className="px-2 py-1 text-left font-bold text-black">Equipamento/Bem</th>
                                 <th className="px-2 py-1 text-left font-bold text-black">Descrição do Bem</th>
+                                <th className="px-2 py-1 text-left font-bold text-black">Localização</th>
                                 <th className="px-2 py-1 text-left font-bold text-black">C.C.</th>
                                 <th className="px-2 py-1 text-left font-bold text-black">Tipo de Solicitação</th>
                                 <th className="px-2 py-1 text-left font-bold text-black">Observação</th>
@@ -504,11 +505,12 @@ export default function ManutencaoPage() {
                                     <td className="px-2 w-6 border-r border-[#CCCCCC] text-black">
                                         <span className={`w-4 h-4 rounded-full border block ${getStatusColor(ordem.status)}`} title={ordem.status}></span>
                                     </td>
-                                    <td className="px-2 w-6 py-[2px] border-r border-[#CCCCCC] text-black">
+                                    <td className="px-2 w-6 border-r border-[#CCCCCC] text-black">
                                         OS{String(ordem.numero).padStart(6, '0')}
                                     </td>
                                     <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.codigo || '-'}</td>
                                     <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.descricao || '-'}</td>
+                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.localizacao || '-'}</td>
                                     <td className="px-2 w-14 border-r border-[#CCCCCC] text-black">{ordem.centroCusto}</td>
                                     <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.tipoManutencao}</td>
                                     <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.observacaoAbertura}</td>
@@ -577,7 +579,7 @@ export default function ManutencaoPage() {
                 title="Nova Ordem de Serviço"
                 className="w-[500px]"
             >
-                <div className="space-y-4">
+                <div className="space-y-2">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Equipamento/Bem *
@@ -619,48 +621,36 @@ export default function ManutencaoPage() {
                         )}
                     </div>
 
+                    {novaOS.bemId && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="p-2 bg-gray-100 rounded border">
+                                <p className="text-xs text-gray-500 uppercase font-bold">Centro de Custo</p>
+                                <p className="text-sm font-medium">
+                                    {novaOS.centroCusto || '-'}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-gray-100 rounded border">
+                                <p className="text-xs text-gray-500 uppercase font-bold">Localização</p>
+                                <p className="text-sm font-medium">
+                                    {bens.find(b => b.id === novaOS.bemId)?.localizacao || '-'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Centro de Custo *
+                            Tipo de Solicitação *
                         </label>
-                        <Input
-                            value={novaOS.centroCusto}
-                            onChange={(e) => setNovaOS({ ...novaOS, centroCusto: e.target.value })}
-                            placeholder="Ex: 314111"
-                            className="w-full"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Tipo de Solicitação *
-                            </label>
-                            <select
-                                value={novaOS.tipoManutencao}
-                                onChange={(e) => setNovaOS({ ...novaOS, tipoManutencao: e.target.value })}
-                                className="w-full border rounded px-2 py-2"
-                            >
-                                <option value="AVALIAÇÃO">AVALIAÇÃO</option>
-                                <option value="MANUTENÇÃO ELÉTRICA">MANUTENÇÃO ELÉTRICA</option>
-                                <option value="MANUTENÇÃO MECÂNICA">MANUTENÇÃO MECÂNICA</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Prioridade
-                            </label>
-                            <select
-                                value={novaOS.prioridade}
-                                onChange={(e) => setNovaOS({ ...novaOS, prioridade: e.target.value })}
-                                className="w-full border rounded px-3 py-2"
-                            >
-                                <option value="BAIXA">BAIXA</option>
-                                <option value="NORMAL">NORMAL</option>
-                                <option value="ALTA">ALTA</option>
-                                <option value="URGENTE">URGENTE</option>
-                            </select>
-                        </div>
+                        <select
+                            value={novaOS.tipoManutencao}
+                            onChange={(e) => setNovaOS({ ...novaOS, tipoManutencao: e.target.value })}
+                            className="w-full border rounded px-2 py-2"
+                        >
+                            <option value="AVALIAÇÃO">AVALIAÇÃO</option>
+                            <option value="MANUTENÇÃO ELÉTRICA">MANUTENÇÃO ELÉTRICA</option>
+                            <option value="MANUTENÇÃO MECÂNICA">MANUTENÇÃO MECÂNICA</option>
+                        </select>
                     </div>
 
                     <div className="hidden">

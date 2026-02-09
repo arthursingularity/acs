@@ -99,6 +99,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full pl-10 pr-10 py-2.5 border border-gray-400 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary3 focus:border-primary3 sm:text-sm bg-white"
+                                    style={{ textTransform: 'none' }}
                                     required
                                 />
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600">
