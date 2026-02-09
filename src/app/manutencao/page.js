@@ -1028,7 +1028,7 @@ export default function ManutencaoPage() {
 
             {/* Modal QR Scanner */}
             {modalQRScanner && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex flex-col">
+                <div className="fixed inset-0 bg-black/80 z-[100] flex flex-col">
                     <div className="p-4 flex justify-between items-center">
                         <h3 className="text-white text-lg font-bold">Escanear QR Code</h3>
                         <button
