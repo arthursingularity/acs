@@ -178,6 +178,11 @@ export default function PainelTVPage() {
                                     <div className="mt-2 text-sm bg-black/20 rounded p-2">
                                         <div className="text-white/90">OS{String(tecnico.osAtual.numero).padStart(6, '0')}</div>
                                         <div className="text-gray-300 truncate">{tecnico.osAtual.bem}</div>
+                                        {tecnico.osAtual.localizacao && (
+                                            <div className="text-xs text-cyan-300">
+                                                {tecnico.osAtual.localizacao}
+                                            </div>
+                                        )}
                                         <div className="text-xs text-gray-400">
                                             ⏱️ {getTempoDecorrido(tecnico.osAtual.dataInicio)}
                                         </div>

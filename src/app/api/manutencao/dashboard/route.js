@@ -118,6 +118,8 @@ export async function GET(request) {
                 osAtual: osAtual ? {
                     numero: osAtual.numero,
                     bem: osAtual.bem?.descricao,
+                    localizacao: osAtual.bem?.localizacao || '',
+                    centroCusto: osAtual.centroCusto || '',
                     dataInicio: osAtual.dataInicio
                 } : null,
                 motivoPausa

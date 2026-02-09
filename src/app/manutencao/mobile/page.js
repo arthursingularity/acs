@@ -630,9 +630,6 @@ export default function MobileOSPage() {
                                             <span className="text-lg font-bold text-blue-600 block">
                                                 OS{String(ordem.numero).padStart(6, '0')}
                                             </span>
-                                            <div className="text-sm font-medium text-gray-700 mt-1">
-                                                {ordem.bem?.codigo || "Sem Código"}
-                                            </div>
                                         </div>
                                         <div className="text-right">
                                             <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${ordem.status === "em_fila" ? "bg-blue-100 text-blue-700" :
@@ -648,23 +645,37 @@ export default function MobileOSPage() {
                                     {/* Info Principal */}
                                     <div className="space-y-3 mb-4">
                                         <div>
-                                            <p className="text-gray-900 font-bold leading-tight text-base">
+                                            <div className="text-sm font-medium text-gray-700 mt-1">
+                                                {ordem.bem?.codigo || "Sem Código"}
+                                            </div>
+                                            <p className="text-gray-900 font-bold leading-tight text-xl">
                                                 {ordem.bem?.descricao || "Equipamento não identificado"}
                                             </p>
-                                            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">
-                                                {ordem.tipoManutencao}
-                                            </p>
                                         </div>
-
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-gray-500 uppercase">Prioridade:</span>
                                             <span className={`px-2 py-0.5 rounded text-[10px] text-white font-bold uppercase ${getPrioridadeColor(ordem.prioridade)}`}>
                                                 {ordem.prioridade || "NORMAL"}
                                             </span>
                                         </div>
+                                        {/* Localização e Centro de Custo */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="bg-gray-50 rounded p-2 space-y-1 border border-gray-300">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Localização</p>
+                                                <p className="text-xs text-gray-700 font-medium truncate">
+                                                    {ordem.bem?.localizacao || "-"}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded p-2 space-y-1 border border-gray-300">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Centro Custo</p>
+                                                <p className="text-xs text-gray-700 font-medium truncate">
+                                                    {ordem.centroCusto || "-"}
+                                                </p>
+                                            </div>
+                                        </div>
 
                                         {ordem.observacaoAbertura && (
-                                            <div className="bg-gray-50 rounded p-3 border border-gray-100 mt-2">
+                                            <div className="bg-gray-50 rounded p-3 border border-gray-300 mt-2">
                                                 <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-wide">Observação</p>
                                                 <p className="text-sm text-gray-700 leading-snug">
                                                     {ordem.observacaoAbertura}

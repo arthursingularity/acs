@@ -890,6 +890,10 @@ export default function ManutencaoPage() {
                                 <p className="text-xs text-gray-500 uppercase font-bold">Centro de Custo</p>
                                 <p>{osDetalhes.centroCusto}</p>
                             </div>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase font-bold">Localização</p>
+                                <p>{osDetalhes.bem?.localizacao || '-'}</p>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

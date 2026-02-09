@@ -265,7 +265,7 @@ export default function RecursosPage() {
                     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl">
                         {/* Header */}
                         <div className="bg-blackGradient text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
-                            <h3 className="font-bold text-lg">Nova Ordem de Serviço</h3>
+                            <h3 className="font-bold text-lg">Nova Solicitação de Serviço</h3>
                             <button
                                 onClick={() => setModalNovaOS(false)}
                                 className="text-white text-2xl hover:opacity-80"
@@ -330,6 +330,23 @@ export default function RecursosPage() {
                                     <p className="text-sm font-medium">
                                         {bens.find(b => b.id === novaOS.bemId)?.descricao || '-'}
                                     </p>
+                                </div>
+                            )}
+
+                            {novaOS.bemId && (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="p-2 bg-gray-100 rounded border">
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Centro de Custo</p>
+                                        <p className="text-sm font-medium">
+                                            {novaOS.centroCusto || '-'}
+                                        </p>
+                                    </div>
+                                    <div className="p-2 bg-gray-100 rounded border">
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Localização</p>
+                                        <p className="text-sm font-medium">
+                                            {bens.find(b => b.id === novaOS.bemId)?.localizacao || '-'}
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
