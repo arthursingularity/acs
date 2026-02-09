@@ -2,7 +2,6 @@ import "./globals.css";
 import { TabsProvider } from "./context/TabsContext";
 
 export const metadata = {
-  title: "Sistema de Controle de Endereçamento",
   description: "Sistema de controle de endereçamento de almoxarifado",
   manifest: "/manifest.json",
   appleWebApp: {

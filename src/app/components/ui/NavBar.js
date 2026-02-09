@@ -131,6 +131,12 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
               Atribuir
             </button>
             <button
+              onClick={() => window.open('/manutencao/bens', '_blank')}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Bens
+            </button>
+            <button
               onClick={() => window.open('/manutencao/mobile', '_blank')}
               className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
             >
@@ -147,6 +153,12 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
               className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
             >
               Técnicos
+            </button>
+            <button
+              onClick={() => window.open('/stamconecta', '_blank')}
+              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
+            >
+              Stam Conecta
             </button>
             <button
               onClick={onFiltro}
