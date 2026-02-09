@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "../components/ui/NavBar";
 import ModalWrapper from "../components/ui/ModalWrapper";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
+import { CameraIcon } from "@heroicons/react/24/outline";
 
 export default function ManutencaoPage() {
     const router = useRouter();
@@ -40,6 +41,10 @@ export default function ManutencaoPage() {
         observacaoAbertura: "",
         solicitante: ""
     });
+    const [modalQRScanner, setModalQRScanner] = useState(false);
+    const [scannerError, setScannerError] = useState("");
+    const scannerRef = useRef(null);
+    const html5QrCodeRef = useRef(null);
 
     const fetchOrdens = async () => {
         try {
@@ -96,6 +101,77 @@ export default function ManutencaoPage() {
     useEffect(() => {
         fetchOrdens();
     }, [filtroStatus]);
+
+    // Effect para gerenciar o scanner QR
+    useEffect(() => {
+        if (modalQRScanner && scannerRef.current) {
+            const startScanner = async () => {
+                try {
+                    const { Html5Qrcode } = await import("html5-qrcode");
+                    const html5QrCode = new Html5Qrcode("qr-reader");
+                    html5QrCodeRef.current = html5QrCode;
+
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        (decodedText) => {
+                            // QR Code lido com sucesso
+                            handleQRCodeScanned(decodedText);
+                        },
+                        (errorMessage) => {
+                            // Erro de leitura (normal, continua tentando)
+                        }
+                    );
+                } catch (err) {
+                    console.error("Erro ao iniciar scanner:", err);
+                    setScannerError("Erro ao acessar a câmera. Verifique as permissões.");
+                }
+            };
+
+            startScanner();
+        }
+
+        return () => {
+            if (html5QrCodeRef.current) {
+                html5QrCodeRef.current.stop().catch(err => console.log("Scanner já parado"));
+                html5QrCodeRef.current = null;
+            }
+        };
+    }, [modalQRScanner]);
+
+    const handleQRCodeScanned = (codigo) => {
+        // Buscar bem pelo código ou qrCode
+        const bemEncontrado = bens.find(
+            b => b.codigo.toUpperCase() === codigo.toUpperCase() ||
+                b.qrCode?.toUpperCase() === codigo.toUpperCase()
+        );
+
+        if (bemEncontrado) {
+            setNovaOS(prev => ({
+                ...prev,
+                bemId: bemEncontrado.id,
+                centroCusto: bemEncontrado.centroCusto
+            }));
+            setScannerError("");
+        } else {
+            setScannerError(`Equipamento "${codigo}" não encontrado no sistema.`);
+        }
+
+        // Fechar o modal do scanner
+        setModalQRScanner(false);
+    };
+
+    const openQRScanner = () => {
+        setScannerError("");
+        setModalQRScanner(true);
+    };
+
+    const closeQRScanner = () => {
+        setModalQRScanner(false);
+    };
 
     // Handlers para NavBar
     const handleIncluirOS = () => {
@@ -584,33 +660,46 @@ export default function ManutencaoPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Equipamento/Bem *
                         </label>
-                        <select
-                            value={novaOS.bemId}
-                            onChange={(e) => {
-                                const bemSelecionado = bens.find(b => b.id === e.target.value);
-                                if (bemSelecionado) {
-                                    setNovaOS(prev => ({
-                                        ...prev,
-                                        bemId: bemSelecionado.id,
-                                        centroCusto: bemSelecionado.centroCusto
-                                    }));
-                                } else {
-                                    setNovaOS(prev => ({
-                                        ...prev,
-                                        bemId: "",
-                                        centroCusto: ""
-                                    }));
-                                }
-                            }}
-                            className="w-full border rounded px-3 py-2"
-                        >
-                            <option value="">Selecione um equipamento...</option>
-                            {bens.map((bem) => (
-                                <option key={bem.id} value={bem.id}>
-                                    {bem.codigo}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="flex gap-2">
+                            <select
+                                value={novaOS.bemId}
+                                onChange={(e) => {
+                                    const bemSelecionado = bens.find(b => b.id === e.target.value);
+                                    if (bemSelecionado) {
+                                        setNovaOS(prev => ({
+                                            ...prev,
+                                            bemId: bemSelecionado.id,
+                                            centroCusto: bemSelecionado.centroCusto
+                                        }));
+                                    } else {
+                                        setNovaOS(prev => ({
+                                            ...prev,
+                                            bemId: "",
+                                            centroCusto: ""
+                                        }));
+                                    }
+                                }}
+                                className="flex-1 border rounded px-3 py-2"
+                            >
+                                <option value="">Selecione um equipamento...</option>
+                                {bens.map((bem) => (
+                                    <option key={bem.id} value={bem.id}>
+                                        {bem.codigo}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                type="button"
+                                onClick={openQRScanner}
+                                className="px-3 py-2 bg-primary3 text-white rounded hover:bg-primary4 transition-colors flex items-center justify-center"
+                                title="Escanear QR Code"
+                            >
+                                <CameraIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                        {scannerError && (
+                            <p className="text-red-500 text-sm mt-1">{scannerError}</p>
+                        )}
                         {novaOS.bemId && (
                             <div className="mt-2 p-2 bg-gray-100 rounded border">
                                 <p className="text-xs text-gray-500 uppercase font-bold">Descrição do Equipamento</p>
@@ -936,6 +1025,33 @@ export default function ManutencaoPage() {
                     </div>
                 )}
             </ModalWrapper>
+
+            {/* Modal QR Scanner */}
+            {modalQRScanner && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex flex-col">
+                    <div className="p-4 flex justify-between items-center">
+                        <h3 className="text-white text-lg font-bold">Escanear QR Code</h3>
+                        <button
+                            onClick={closeQRScanner}
+                            className="text-white text-2xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center p-4">
+                        <div
+                            id="qr-reader"
+                            ref={scannerRef}
+                            className="w-full max-w-md bg-black rounded-lg overflow-hidden"
+                        />
+                    </div>
+                    <div className="p-4 text-center">
+                        <p className="text-white/80 text-sm">
+                            Aponte a câmera para o QR Code do equipamento
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

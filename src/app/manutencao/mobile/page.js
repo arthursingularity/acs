@@ -362,7 +362,7 @@ export default function MobileOSPage() {
                 </div>
 
                 {/* Conteúdo */}
-                <div className="flex-1 overflow-auto p-4 space-y-4">
+                <div className="flex-1 overflow-auto p-4 pb-48 space-y-4">
                     {/* Info do Bem */}
                     <div className="bg-white rounded-xl p-4 shadow">
                         <div className="text-xs text-gray-500 uppercase font-bold">Bem / Máquina</div>
@@ -400,7 +400,7 @@ export default function MobileOSPage() {
                 </div>
 
                 {/* Ações */}
-                <div className="p-4 bg-white border-t space-y-3">
+                <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white border-t space-y-3 z-40">
                     {isPausada ? (
                         <button
                             onClick={handleRetomarOS}
@@ -454,111 +454,115 @@ export default function MobileOSPage() {
 
                 {/* Modal Finalizar */}
                 {modalFinalizar && (
-                    <div className="fixed inset-0 bg-black/50 flex items-end z-50 overflow-auto">
-                        <div className="bg-white w-full rounded-t-3xl p-6 max-h-[90vh] overflow-auto">
-                            <h3 className="text-lg font-bold mb-4">Finalizar OS{String(osAtiva.numero).padStart(6, '0')}</h3>
+                    <div className="fixed inset-0 bg-black/50 z-50">
+                        <div className="bg-white w-full h-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] flex flex-col">
+                            <div className="p-4 border-b">
+                                <h3 className="text-lg font-bold">Finalizar OS{String(osAtiva.numero).padStart(6, '0')}</h3>
+                            </div>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Problema *
-                                    </label>
-                                    <select
-                                        value={formFinalizar.problemaId}
-                                        onChange={(e) => setFormFinalizar({ ...formFinalizar, problemaId: e.target.value })}
-                                        className="w-full border rounded-xl px-4 py-3"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {pcsData.problemas.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="flex-1 overflow-auto p-4">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Problema *
+                                        </label>
+                                        <select
+                                            value={formFinalizar.problemaId}
+                                            onChange={(e) => setFormFinalizar({ ...formFinalizar, problemaId: e.target.value })}
+                                            className="w-full border rounded-xl px-4 py-3"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {pcsData.problemas.map((p) => (
+                                                <option key={p.id} value={p.id}>{p.descricao}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Causa *
-                                    </label>
-                                    <select
-                                        value={formFinalizar.causaId}
-                                        onChange={(e) => setFormFinalizar({ ...formFinalizar, causaId: e.target.value })}
-                                        className="w-full border rounded-xl px-4 py-3"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {pcsData.causas.map((c) => (
-                                            <option key={c.id} value={c.id}>{c.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Causa *
+                                        </label>
+                                        <select
+                                            value={formFinalizar.causaId}
+                                            onChange={(e) => setFormFinalizar({ ...formFinalizar, causaId: e.target.value })}
+                                            className="w-full border rounded-xl px-4 py-3"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {pcsData.causas.map((c) => (
+                                                <option key={c.id} value={c.id}>{c.descricao}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Solução *
-                                    </label>
-                                    <select
-                                        value={formFinalizar.solucaoId}
-                                        onChange={(e) => setFormFinalizar({ ...formFinalizar, solucaoId: e.target.value })}
-                                        className="w-full border rounded-xl px-4 py-3"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {pcsData.solucoes.map((s) => (
-                                            <option key={s.id} value={s.id}>{s.descricao}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Solução *
+                                        </label>
+                                        <select
+                                            value={formFinalizar.solucaoId}
+                                            onChange={(e) => setFormFinalizar({ ...formFinalizar, solucaoId: e.target.value })}
+                                            className="w-full border rounded-xl px-4 py-3"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {pcsData.solucoes.map((s) => (
+                                                <option key={s.id} value={s.id}>{s.descricao}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Observação
-                                    </label>
-                                    <textarea
-                                        value={formFinalizar.observacaoTecnica}
-                                        onChange={(e) => setFormFinalizar({ ...formFinalizar, observacaoTecnica: e.target.value.toUpperCase() })}
-                                        placeholder="Detalhes adicionais..."
-                                        className="w-full border rounded-xl px-4 py-3 h-24"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Observação
+                                        </label>
+                                        <textarea
+                                            value={formFinalizar.observacaoTecnica}
+                                            onChange={(e) => setFormFinalizar({ ...formFinalizar, observacaoTecnica: e.target.value.toUpperCase() })}
+                                            placeholder="Detalhes adicionais..."
+                                            className="w-full border rounded-xl px-4 py-3 h-24"
+                                        />
+                                    </div>
 
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                    <span className="font-medium">Hora Extra?</span>
-                                    <button
-                                        onClick={() => setFormFinalizar({ ...formFinalizar, horaExtra: !formFinalizar.horaExtra })}
-                                        className={`w-12 h-6 rounded-full transition-colors ${formFinalizar.horaExtra ? "bg-green-500" : "bg-gray-300"
-                                            }`}
-                                    >
-                                        <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${formFinalizar.horaExtra ? "translate-x-6" : "translate-x-0.5"
-                                            }`} />
-                                    </button>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Status Final do Bem
-                                    </label>
-                                    <div className="flex space-x-3">
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                        <span className="font-medium">Hora Extra?</span>
                                         <button
-                                            onClick={() => setFormFinalizar({ ...formFinalizar, statusFinalBem: "operacional" })}
-                                            className={`flex-1 py-3 rounded-xl font-medium ${formFinalizar.statusFinalBem === "operacional"
-                                                ? "bg-green-500 text-white"
-                                                : "bg-gray-100 text-gray-700"
+                                            onClick={() => setFormFinalizar({ ...formFinalizar, horaExtra: !formFinalizar.horaExtra })}
+                                            className={`w-12 h-6 rounded-full transition-colors ${formFinalizar.horaExtra ? "bg-green-500" : "bg-gray-300"
                                                 }`}
                                         >
-                                            ✅ Operacional
+                                            <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${formFinalizar.horaExtra ? "translate-x-6" : "translate-x-0.5"
+                                                }`} />
                                         </button>
-                                        <button
-                                            onClick={() => setFormFinalizar({ ...formFinalizar, statusFinalBem: "restricao" })}
-                                            className={`flex-1 py-3 rounded-xl font-medium ${formFinalizar.statusFinalBem === "restricao"
-                                                ? "bg-yellow-500 text-white"
-                                                : "bg-gray-100 text-gray-700"
-                                                }`}
-                                        >
-                                            ⚠️ Com Restrição
-                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Status Final do Bem
+                                        </label>
+                                        <div className="flex space-x-3">
+                                            <button
+                                                onClick={() => setFormFinalizar({ ...formFinalizar, statusFinalBem: "operacional" })}
+                                                className={`flex-1 py-3 rounded-xl font-medium ${formFinalizar.statusFinalBem === "operacional"
+                                                    ? "bg-green-500 text-white"
+                                                    : "bg-gray-100 text-gray-700"
+                                                    }`}
+                                            >
+                                                ✅ Operacional
+                                            </button>
+                                            <button
+                                                onClick={() => setFormFinalizar({ ...formFinalizar, statusFinalBem: "restricao" })}
+                                                className={`flex-1 py-3 rounded-xl font-medium ${formFinalizar.statusFinalBem === "restricao"
+                                                    ? "bg-yellow-500 text-white"
+                                                    : "bg-gray-100 text-gray-700"
+                                                    }`}
+                                            >
+                                                ⚠️ Com Restrição
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-3">
+                            <div className="p-4 border-t space-y-3">
                                 <button
                                     onClick={handleFinalizarOS}
                                     className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg"
