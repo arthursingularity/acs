@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CameraIcon, ArrowLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
+import Button from "@/app/components/ui/Button";
 
 export default function RecursosPage() {
     const router = useRouter();
@@ -263,7 +264,7 @@ export default function RecursosPage() {
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl">
                         {/* Header */}
-                        <div className="bg-stamOrange text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                        <div className="bg-blackGradient text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
                             <h3 className="font-bold text-lg">Nova Ordem de Serviço</h3>
                             <button
                                 onClick={() => setModalNovaOS(false)}
@@ -311,7 +312,7 @@ export default function RecursosPage() {
                                     <button
                                         type="button"
                                         onClick={openQRScanner}
-                                        className="px-3 py-2 bg-stamOrange text-white rounded hover:bg-orange-600 transition-colors flex items-center justify-center"
+                                        className="px-3 py-2 bg-primary3 text-white rounded hover:bg-orange-600 transition-colors flex items-center justify-center"
                                         title="Escanear QR Code"
                                     >
                                         <CameraIcon className="h-5 w-5" />
@@ -364,18 +365,12 @@ export default function RecursosPage() {
 
                             {/* Botões */}
                             <div className="flex justify-between pt-2">
-                                <button
-                                    onClick={() => setModalNovaOS(false)}
-                                    className="px-4 py-2 border-2 border-stamOrange text-stamOrange rounded-lg font-bold hover:bg-orange-50 transition-colors"
-                                >
+                                <Button variant="outline" className="px-3 py-1" onClick={() => setModalNovaOS(false)}>
                                     Cancelar
-                                </button>
-                                <button
-                                    onClick={handleCriarOS}
-                                    className="px-4 py-2 bg-stamOrange text-white rounded-lg font-bold hover:bg-orange-600 transition-colors"
-                                >
+                                </Button>
+                                <Button variant="primary" className="px-3 py-1" onClick={handleCriarOS}>
                                     Criar OS
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
