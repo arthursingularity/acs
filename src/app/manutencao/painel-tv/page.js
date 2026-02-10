@@ -264,8 +264,11 @@ export default function PainelTVPage() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="text-white font-bold">OS{String(ordem.numero).padStart(6, '0')}</div>
-                                            <div className="text-green-200 text-sm truncate max-w-[180px]">
+                                            <div className="text-green-200 text-sm truncate max-w-[230px]">
                                                 {ordem.bem?.descricao}
+                                            </div>
+                                            <div className="text-cyan-300 text-sm truncate max-w-[200px]">
+                                                {ordem.bem?.localizacao}
                                             </div>
                                         </div>
                                         <div className="text-right">

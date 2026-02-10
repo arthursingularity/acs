@@ -116,7 +116,7 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
             <NavBarButton onClick={onIncluirOS}>Incluir</NavBarButton>
             <NavBarButton onClick={onAlterarOS}>Alterar</NavBarButton>
             <NavBarButton onClick={onAtribuirOS}>Atribuir</NavBarButton>
-            <NavBarButton href="/manutencao/bens">Bens</NavBarButton>
+            <NavBarButton href="/manutencao/bens">Equipamentos/Bens</NavBarButton>
             <NavBarButton href="/manutencao/mobile">Web</NavBarButton>
             <NavBarButton href="/manutencao/painel-tv">Painel TV</NavBarButton>
             <NavBarButton href="/manutencao/tecnicos">Técnicos</NavBarButton>

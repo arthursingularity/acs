@@ -109,6 +109,9 @@ export default function Home() {
               <Link href={"/stamconecta"}>
                 <MenuLink text="Stam Conecta" />
               </Link>
+              <Link href={"/manutencao/mobile"}>
+                <MenuLink text="Sistema Técnicos" />
+              </Link>
               <Link href={"/admin/produtos"}>
                 <MenuLink text="Admin" />
               </Link>

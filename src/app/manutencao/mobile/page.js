@@ -350,9 +350,18 @@ export default function MobileOSPage() {
                 {/* Header */}
                 <div className={`${isPausada ? "bg-orange-500" : "bg-green-600"} p-4 text-white`}>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <div className="text-sm opacity-80">OS em {isPausada ? "Pausa" : "Execução"}</div>
-                            <div className="text-2xl font-bold">OS{String(osAtiva.numero).padStart(6, '0')}</div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setViewMode("lista")}
+                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 active:bg-white/30 transition-colors"
+                                title="Voltar para lista"
+                            >
+                                <span className="text-xl font-bold">←</span>
+                            </button>
+                            <div>
+                                <div className="text-sm opacity-80">OS em {isPausada ? "Pausa" : "Execução"}</div>
+                                <div className="text-2xl font-bold">OS{String(osAtiva.numero).padStart(6, '0')}</div>
+                            </div>
                         </div>
                         <div className="text-right">
                             <div className="text-3xl font-mono font-bold">{getTempoDecorrido(osAtiva.dataInicio)}</div>
@@ -370,17 +379,21 @@ export default function MobileOSPage() {
                         <div className="text-sm text-gray-500">{osAtiva.bem?.codigo}</div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white rounded-xl p-4 shadow">
+                    <div className="flex gap-4">
+                        <div className="bg-white w-full rounded-xl p-4 shadow">
+                            <div className="text-xs text-gray-500 uppercase font-bold">Localização</div>
+                            <div className="font-bold">{osAtiva.bem?.localizacao}</div>
+                        </div>
+                        <div className="bg-white w-[50%] rounded-xl p-4 shadow">
                             <div className="text-xs text-gray-500 uppercase font-bold">Centro Custo</div>
                             <div className="font-bold">{osAtiva.centroCusto}</div>
                         </div>
-                        <div className="bg-white rounded-xl p-4 shadow">
-                            <div className="text-xs text-gray-500 uppercase font-bold">Tipo</div>
-                            <div className="font-bold">{osAtiva.tipoManutencao}</div>
-                        </div>
-                    </div>
 
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow">
+                        <div className="text-xs text-gray-500 uppercase font-bold">Tipo</div>
+                        <div className="font-bold">{osAtiva.tipoManutencao}</div>
+                    </div>
                     {osAtiva.observacaoAbertura && (
                         <div className="bg-white rounded-xl p-4 shadow">
                             <div className="text-xs text-gray-500 uppercase font-bold">Observação</div>
@@ -606,6 +619,26 @@ export default function MobileOSPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Banner OS em andamento */}
+            {osAtiva && (osAtiva.status === "em_execucao" || osAtiva.status === "pausada") && (
+                <button
+                    onClick={() => setViewMode("execucao")}
+                    className={`w-full p-3 text-white font-bold flex items-center justify-between active:opacity-90 transition-opacity ${osAtiva.status === "pausada" ? "bg-orange-500" : "bg-green-600"
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="text-lg">{osAtiva.status === "pausada" ? "⏸️" : "▶️"}</span>
+                        <div className="text-left">
+                            <div className="text-sm opacity-90">
+                                OS{String(osAtiva.numero).padStart(6, '0')} - {osAtiva.status === "pausada" ? "Pausada" : "Em Execução"}
+                            </div>
+                            <div className="text-xs opacity-75">{osAtiva.bem?.descricao}</div>
+                        </div>
+                    </div>
+                    <span className="text-sm">Voltar →</span>
+                </button>
+            )}
 
             {/* Lista de OS */}
             <div className="p-4">
