@@ -225,7 +225,7 @@ export default function OrdensPage() {
             <div className="bg-primary2 h-[36px] flex items-center justify-between px-4">
                 <div className="flex items-center space-x-4">
                     <Link href="/manutencao">
-                        <img src="/imagens/logo.png" className="w-[35px] bg-white p-1 rounded cursor-pointer hover:opacity-90" />
+                        <img src="/imagens/stamS.png" className="w-[35px] bg-white p-1 rounded cursor-pointer hover:opacity-90" />
                     </Link>
                     <h1 className="text-white font-bold">Ordens de Serviço</h1>
                 </div>

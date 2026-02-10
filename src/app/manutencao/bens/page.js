@@ -5,6 +5,8 @@ import Link from "next/link";
 import ModalWrapper from "../../components/ui/ModalWrapper";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import DataTable from "../../components/ui/DataTable";
+import NavBar from "@/app/components/ui/NavBar";
 
 export default function BensPage() {
     const [bens, setBens] = useState([]);
@@ -143,9 +145,9 @@ export default function BensPage() {
 
     const getStatusBadge = (status) => {
         const badges = {
-            operacional: { bg: "bg-green-100", text: "text-green-800", label: "Operacional" },
-            em_manutencao: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Em Manutenção" },
-            inativo: { bg: "bg-gray-100", text: "text-gray-800", label: "Inativo" }
+            operacional: { text: "text-green-600", label: "Operacional" },
+            em_manutencao: { text: "text-yellow-600", label: "Em Manutenção" },
+            inativo: { text: "text-gray-600", label: "Inativo" }
         };
         const badge = badges[status] || badges.operacional;
         return (
@@ -162,21 +164,10 @@ export default function BensPage() {
 
     return (
         <div className="bg-gray-100 h-screen overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="bg-primary2 h-[36px] flex items-center justify-between px-4">
-                <div className="flex items-center space-x-4">
-                    <Link href="/manutencao">
-                        <img src="/imagens/logo.png" className="w-[35px] bg-white p-1 rounded cursor-pointer hover:opacity-90" />
-                    </Link>
-                    <h1 className="text-white font-bold">Bens / Máquinas</h1>
-                </div>
-                <Link href="/manutencao" className="text-white text-sm hover:underline">
-                    ← Voltar
-                </Link>
-            </div>
+            <NavBar/>
 
             {/* Toolbar */}
-            <div className="bg-white border-b p-3 flex items-center justify-between">
+            <div className="bg-white border-b p-3 flex items-center justify-between mt-[103px]">
                 <div className="flex items-center space-x-4">
                     <Button
                         variant="primary"
@@ -214,66 +205,40 @@ export default function BensPage() {
 
             {/* Lista */}
             <div className="flex-1 overflow-auto p-4">
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary3"></div>
-                    </div>
-                ) : bens.length === 0 ? (
-                    <div className="text-center text-gray-500 mt-20">
-                        <p className="text-4xl mb-4">🏭</p>
-                        <p>Nenhum bem cadastrado</p>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Código</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Descrição</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">C.C.</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Estação</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Localização</th>
-                                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                                    <th className="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {bens.map((bem) => (
-                                    <tr key={bem.id} className="border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-mono font-bold text-primary3">{bem.codigo}</td>
-                                        <td className="px-4 py-3">{bem.descricao}</td>
-                                        <td className="px-4 py-3">{bem.centroCusto}</td>
-                                        <td className="px-4 py-3">{bem.estacao || "-"}</td>
-                                        <td className="px-4 py-3">{bem.localizacao || "-"}</td>
-                                        <td className="px-4 py-3">{getStatusBadge(bem.status)}</td>
-                                        <td className="px-4 py-3 text-center">
-                                            <div className="flex items-center justify-center space-x-2">
-                                                <button
-                                                    onClick={() => handleVerHistorico(bem)}
-                                                    className="text-blue-600 hover:underline text-sm"
-                                                >
-                                                    Histórico
-                                                </button>
-                                                <button
-                                                    onClick={() => handleEditar(bem)}
-                                                    className="text-primary3 hover:underline text-sm"
-                                                >
-                                                    Editar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeletar(bem.id)}
-                                                    className="text-red-500 hover:underline text-sm"
-                                                >
-                                                    Excluir
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <DataTable
+                        loading={loading}
+                        emptyIcon="🏭"
+                        emptyMessage="Nenhum bem cadastrado"
+                        data={bens}
+                        columns={[
+                            {
+                                key: "codigo",
+                                label: "Código",
+                                render: (val) => <span className="font-mono font-bold text-primary3">{val}</span>
+                            },
+                            { key: "descricao", label: "Descrição" },
+                            { key: "centroCusto", label: "C.C." },
+                            { key: "localizacao", label: "Localização" },
+                            {
+                                key: "status",
+                                label: "Status",
+                                render: (val) => getStatusBadge(val)
+                            },
+                            {
+                                key: "id",
+                                label: "Ações",
+                                render: (val, row) => (
+                                    <div className="flex items-center space-x-4 w-20">
+                                        <button onClick={(e) => { e.stopPropagation(); handleVerHistorico(row); }} className="border border-primary3 h-[17px] text-[11px] flex items-center rounded text-primary3 px-2 buttonHover2">Histórico</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleEditar(row); }} className="text-primary3 hover:underline text-sm cursor-pointer">Editar</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeletar(row.id); }} className="text-red-500 hover:underline text-sm">Excluir</button>
+                                    </div>
+                                )
+                            }
+                        ]}
+                    />
+                </div>
             </div>
 
             {/* Modal Cadastro/Edição */}

@@ -757,7 +757,7 @@ export default function Home() {
 
       <div
         ref={containerRef}
-        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[140px] pb-[70px] flex bg-white"
+        className="w-full h-[calc(100vh-128px)] overflow-auto relative select-none mt-[135px] pb-[70px] flex bg-white"
         onMouseMove={(e) => {
           if (e.ctrlKey && !isPanning.current) {
             e.currentTarget.style.cursor = "move";

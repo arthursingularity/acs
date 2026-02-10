@@ -13,15 +13,17 @@ export default function RecursosPage() {
     const [setorCodigo, setSetorCodigo] = useState("");
     const [userName, setUserName] = useState("");
 
-    // Modal Nova OS
+    // Modal Nova SS (Solicitação de Serviço)
     const [modalNovaOS, setModalNovaOS] = useState(false);
     const [novaOS, setNovaOS] = useState({
         bemId: "",
         centroCusto: "",
         tipoManutencao: "AVALIAÇÃO",
+        tipoManutencaoCategoria: "CORRETIVA",
         prioridade: "NORMAL",
         observacaoAbertura: "",
-        solicitante: ""
+        solicitante: "",
+        tipo: "SS"
     });
 
     // QR Scanner
@@ -133,9 +135,11 @@ export default function RecursosPage() {
             bemId: "",
             centroCusto: setorCodigo,
             tipoManutencao: "AVALIAÇÃO",
+            tipoManutencaoCategoria: "CORRETIVA",
             prioridade: "NORMAL",
             observacaoAbertura: "",
-            solicitante: userName
+            solicitante: userName,
+            tipo: "SS"
         });
         setScannerError("");
         setModalNovaOS(true);
@@ -155,23 +159,26 @@ export default function RecursosPage() {
             });
 
             if (response.ok) {
+                const data = await response.json();
                 setModalNovaOS(false);
-                alert("Ordem de Serviço criada com sucesso!");
+                alert(`Solicitação de Serviço SS${String(data.numero).padStart(6, '0')} criada com sucesso!`);
                 setNovaOS({
                     bemId: "",
                     centroCusto: setorCodigo,
                     tipoManutencao: "AVALIAÇÃO",
+                    tipoManutencaoCategoria: "CORRETIVA",
                     prioridade: "NORMAL",
                     observacaoAbertura: "",
-                    solicitante: userName
+                    solicitante: userName,
+                    tipo: "SS"
                 });
             } else {
                 const error = await response.json();
-                alert(error.error || "Erro ao criar ordem");
+                alert(error.error || "Erro ao criar solicitação");
             }
         } catch (error) {
-            console.error("Erro ao criar OS:", error);
-            alert("Erro ao criar ordem de serviço");
+            console.error("Erro ao criar SS:", error);
+            alert("Erro ao criar solicitação de serviço");
         }
     };
 
@@ -386,7 +393,7 @@ export default function RecursosPage() {
                                     Cancelar
                                 </Button>
                                 <Button variant="primary" className="px-3 py-1" onClick={handleCriarOS}>
-                                    Criar OS
+                                    Criar SS
                                 </Button>
                             </div>
                         </div>

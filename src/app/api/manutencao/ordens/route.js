@@ -14,6 +14,7 @@ export async function GET(request) {
         const prioridade = searchParams.get("prioridade");
         const numero = searchParams.get("numero");
         const limit = searchParams.get("limit");
+        const tipo = searchParams.get("tipo"); // SS ou OS
 
         let where = {};
 
@@ -29,6 +30,7 @@ export async function GET(request) {
         if (bemId) where.bemId = bemId;
         if (prioridade) where.prioridade = prioridade;
         if (numero) where.numero = parseInt(numero);
+        if (tipo) where.tipo = tipo;
 
         const ordens = await prisma.ordemServico.findMany({
             where,
@@ -63,7 +65,7 @@ export async function GET(request) {
         });
 
         // Ordenar por prioridade (urgente > alta > normal > baixa)
-        const prioridadeOrdem = { urgente: 4, alta: 3, normal: 2, baixa: 1 };
+        const prioridadeOrdem = { URGENTE: 4, ALTA: 3, NORMAL: 2, BAIXA: 1, urgente: 4, alta: 3, normal: 2, baixa: 1 };
         ordens.sort((a, b) => {
             const prioA = prioridadeOrdem[a.prioridade] || 0;
             const prioB = prioridadeOrdem[b.prioridade] || 0;
@@ -87,9 +89,11 @@ export async function POST(request) {
             centroCusto,
             estacao,
             tipoManutencao,
+            tipoManutencaoCategoria,
             prioridade,
             observacaoAbertura,
-            solicitante
+            solicitante,
+            tipo // "SS" ou "OS"
         } = body;
 
         if (!bemId || !centroCusto || !tipoManutencao || !solicitante) {
@@ -106,10 +110,12 @@ export async function POST(request) {
                 centroCusto: centroCusto?.toUpperCase(),
                 estacao: estacao?.toUpperCase(),
                 tipoManutencao: tipoManutencao?.toUpperCase(),
-                prioridade: prioridade || "normal",
+                tipoManutencaoCategoria: tipoManutencaoCategoria?.toUpperCase() || "CORRETIVA",
+                prioridade: prioridade || "NORMAL",
                 observacaoAbertura: observacaoAbertura?.toUpperCase(),
                 solicitante: solicitante?.toUpperCase(),
-                status: "aberta"
+                status: "aberta",
+                tipo: tipo?.toUpperCase() || "OS"
             },
             include: {
                 bem: true
@@ -134,7 +140,7 @@ export async function PUT(request) {
         }
 
         // Converter campos de texto para maiúsculas
-        const uppercaseFields = ['centroCusto', 'estacao', 'tipoManutencao', 'observacaoAbertura',
+        const uppercaseFields = ['centroCusto', 'estacao', 'tipoManutencao', 'tipoManutencaoCategoria', 'observacaoAbertura',
             'solicitante', 'observacaoTecnica', 'statusFinalBem', 'encerradoPor'];
         let updateData = { ...data };
 
@@ -146,11 +152,24 @@ export async function PUT(request) {
 
         // Ações especiais
         if (acao === "atribuir" && data.tecnicoId) {
+            // Buscar a ordem atual para verificar se é SS
+            const ordemAtual = await prisma.ordemServico.findUnique({ where: { id } });
+
             updateData = {
                 ...updateData,
                 status: "em_fila",
                 dataAtribuicao: new Date()
             };
+
+            // Se for SS, converter para OS ao atribuir técnico
+            if (ordemAtual && ordemAtual.tipo === "SS") {
+                updateData.tipo = "OS";
+            }
+
+            // Se a prioridade foi enviada na atribuição, incluir
+            if (data.prioridade) {
+                updateData.prioridade = data.prioridade.toUpperCase();
+            }
         } else if (acao === "iniciar") {
             updateData = {
                 ...updateData,
@@ -179,6 +198,14 @@ export async function PUT(request) {
                 status: "encerrada",
                 dataEncerramento: new Date()
             };
+        }
+
+        // Se estiver editando e atribuindo técnico a uma SS, converter para OS
+        if (acao === "editar" && data.tecnicoId) {
+            const ordemAtual = await prisma.ordemServico.findUnique({ where: { id } });
+            if (ordemAtual && ordemAtual.tipo === "SS" && !ordemAtual.tecnicoId) {
+                updateData.tipo = "OS";
+            }
         }
 
         const ordem = await prisma.ordemServico.update({

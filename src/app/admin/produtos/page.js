@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import DataTable from "../../components/ui/DataTable";
 
 export default function ProdutosPage() {
     const [produtos, setProdutos] = useState([]);
@@ -144,27 +145,23 @@ export default function ProdutosPage() {
             {/* Lista de Produtos */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs text-black uppercase tracking-wider">Código</th>
-                                <th className="px-6 py-3 text-left text-xs text-black uppercase tracking-wider">Descrição</th>
-                                <th className="px-6 py-3 text-right text-xs text-black uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {paginated.map((p) => (
-                                <tr key={p.id}>
-                                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{p.codigo}</td>
-                                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{p.descricao}</td>
-                                    <td className="px-6 py-2 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                        <button onClick={() => handleEdit(p)} className="border-2 border-primary3 h-[27px] rounded text-primary3 px-2 buttonHover2">Editar</button>
-                                        <button onClick={() => handleDelete(p.codigo)} className="text-red-600 hover:text-red-900">Excluir</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <DataTable
+                        data={paginated}
+                        columns={[
+                            { key: "codigo", label: "Código" },
+                            { key: "descricao", label: "Descrição" },
+                            {
+                                key: "id",
+                                label: "Ações",
+                                render: (val, row) => (
+                                    <div className="text-right w-[1px] flex space-x-5 h-4">
+                                        <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="border border-primary3 h-[17px] text-[11px] flex items-center rounded text-primary3 px-2 buttonHover2">Editar</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(row.codigo); }} className="text-red-600 hover:text-red-900 cursor-pointer">Excluir</button>
+                                    </div>
+                                )
+                            }
+                        ]}
+                    />
                 </div>
 
                 {/* Paginação */}

@@ -138,6 +138,7 @@ model Tecnico {
 model OrdemServico {
   id              String    @id @default(cuid())
   numero          Int       @unique @default(autoincrement()) // Número sequencial da OS
+  tipo            String    @default("OS") // "SS" (Solicitação de Serviço) ou "OS" (Ordem de Serviço)
   
   // Dados da Solicitação
   bemId           String
@@ -145,6 +146,7 @@ model OrdemServico {
   centroCusto     String
   estacao         String?
   tipoManutencao  String    // Elétrica, Mecânica, Avaliação
+  tipoManutencaoCategoria String @default("CORRETIVA") // PREVENTIVA ou CORRETIVA
   prioridade      String    @default("normal") // baixa, normal, alta, urgente
   observacaoAbertura String?
   solicitante     String    // Nome do solicitante
@@ -192,6 +194,7 @@ model OrdemServico {
   @@index([bemId])
   @@index([centroCusto])
   @@index([dataAbertura])
+  @@index([tipo])
 }
 
 // Pausas nas Ordens de Serviço

@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import NavBar from "@/app/components/ui/NavBar";
 import ModalWrapper from "@/app/components/ui/ModalWrapper";
+import DataTable from "@/app/components/ui/DataTable";
 
 export default function TecnicosPage() {
     const [tecnicos, setTecnicos] = useState([]);
@@ -341,71 +342,61 @@ export default function TecnicosPage() {
                                         <h3 className="font-bold text-gray-800">Histórico de Serviços</h3>
                                     </div>
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-gray-50 text-gray-500 uppercase font-medium">
-                                                <tr>
-                                                    <th className="px-6 py-2">Data</th>
-                                                    <th className="px-6 py-2">OS</th>
-                                                    <th className="px-6 py-2">Equipamento</th>
-                                                    <th className="px-6 py-2">Tipo</th>
-                                                    <th className="px-6 py-2">Tempo</th>
-                                                    <th className="px-6 py-2">Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100">
-                                                {loadingOrdens ? (
-                                                    <tr>
-                                                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">Carregando histórico...</td>
-                                                    </tr>
-                                                ) : ordens.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">Nenhum serviço encontrado neste período.</td>
-                                                    </tr>
-                                                ) : (
-                                                    ordens.map((os) => {
-                                                        const tempo = calcularTempoLiquido(os);
-                                                        return (
-                                                            <tr
-                                                                key={os.id}
-                                                                className="hover:bg-gray-50 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    console.log("Clique na linha", os.id);
-                                                                    handleVisualizarOS(os);
-                                                                }}
-                                                            >
-                                                                <td className="px-6 py-2 text-gray-600">
-                                                                    {new Date(os.dataFim || os.dataAbertura).toLocaleDateString('pt-BR')}
-                                                                </td>
-                                                                <td className="px-6 py-2 font-medium text-gray-900">
-                                                                    OS{String(os.numero).padStart(6, '0')}
-                                                                </td>
-                                                                <td className="px-6 py-2 text-gray-600">
-                                                                    <div className="font-medium">{os.bem?.codigo || "-"}</div>
-                                                                    <div className="text-xs text-gray-400 truncate max-w-[200px]">{os.bem?.descricao}</div>
-                                                                </td>
-                                                                <td className="px-6 py-2">
-                                                                    <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
-                                                                        {os.tipoManutencao}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-6 py-2 font-mono font-medium text-blue-600">
-                                                                    {formatarTempo(tempo)}
-                                                                </td>
-                                                                <td className="px-6 py-2">
-                                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${os.status === 'concluida_tecnica' ? 'bg-green-100 text-green-700' :
-                                                                        os.status === 'encerrada' ? 'bg-gray-100 text-gray-700' :
-                                                                            'bg-blue-100 text-blue-700'
-                                                                        }`}>
-                                                                        {os.status === 'concluida_tecnica' ? 'Concluída' :
-                                                                            os.status === 'encerrada' ? 'Encerrada' : os.status}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                )}
-                                            </tbody>
-                                        </table>
+                                        <DataTable
+                                            loading={loadingOrdens}
+                                            emptyMessage="Nenhum serviço encontrado neste período."
+                                            data={ordens}
+                                            onSelect={(os) => handleVisualizarOS(os)}
+                                            columns={[
+                                                {
+                                                    key: "dataFim",
+                                                    label: "Data",
+                                                    render: (val, row) => new Date(val || row.dataAbertura).toLocaleDateString('pt-BR')
+                                                },
+                                                {
+                                                    key: "numero",
+                                                    label: "OS",
+                                                    render: (val) => `OS${String(val).padStart(6, '0')}`
+                                                },
+                                                {
+                                                    key: "bem.codigo",
+                                                    label: "Equipamento",
+                                                    render: (val, row) => (
+                                                        <div>
+                                                            <div className="font-medium">{val || "-"}</div>
+                                                            <div className="text-xs text-gray-400 truncate max-w-[200px]">{row.bem?.descricao}</div>
+                                                        </div>
+                                                    )
+                                                },
+                                                {
+                                                    key: "tipoManutencao",
+                                                    label: "Tipo",
+                                                    render: (val) => (
+                                                        <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">{val}</span>
+                                                    )
+                                                },
+                                                {
+                                                    key: "id",
+                                                    label: "Tempo",
+                                                    render: (val, row) => (
+                                                        <span className="font-mono font-medium text-blue-600">{formatarTempo(calcularTempoLiquido(row))}</span>
+                                                    )
+                                                },
+                                                {
+                                                    key: "status",
+                                                    label: "Status",
+                                                    render: (val) => (
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${val === 'concluida_tecnica' ? 'bg-green-100 text-green-700' :
+                                                            val === 'encerrada' ? 'bg-gray-100 text-gray-700' :
+                                                                'bg-blue-100 text-blue-700'
+                                                            }`}>
+                                                            {val === 'concluida_tecnica' ? 'Concluída' :
+                                                                val === 'encerrada' ? 'Encerrada' : val}
+                                                        </span>
+                                                    )
+                                                }
+                                            ]}
+                                        />
                                     </div>
                                 </div>
                             </div>

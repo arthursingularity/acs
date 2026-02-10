@@ -94,6 +94,9 @@ export default function Home() {
 
             {/* Menu Links */}
             <div className="flex-1 overflow-y-auto py-2">
+              <Link href={"/almoxarifado"}>
+                <MenuLink text="Almoxarifado" />
+              </Link>
               <div onClick={() => setModalOpen(true)}>
                 <MenuLink text="Controle de Endereçamento" />
               </div>

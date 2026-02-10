@@ -3,8 +3,9 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
+import NavBarButton from "./NavBarButton";
 
-export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro }) {
+export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, almoxarifadoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro }) {
   const [openModal, setOpenModal] = useState(false);
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
@@ -111,94 +112,34 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
 
         {/* Botões de Manutenção */}
         {manutencaoButtons && (
-          <div className="bg-white h-[25px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
-            <button
-              onClick={onIncluirOS}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Incluir
-            </button>
-            <button
-              onClick={onAlterarOS}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Alterar
-            </button>
-            <button
-              onClick={onAtribuirOS}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Atribuir
-            </button>
-            <button
-              onClick={() => window.open('/manutencao/bens', '_blank')}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Bens
-            </button>
-            <button
-              onClick={() => window.open('/manutencao/mobile', '_blank')}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Web
-            </button>
-            <button
-              onClick={() => window.open('/manutencao/painel-tv', '_blank')}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Painel TV
-            </button>
-            <button
-              onClick={() => window.open('/manutencao/tecnicos', '_blank')}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Técnicos
-            </button>
-            <button
-              onClick={() => window.open('/stamconecta', '_blank')}
-              className="border-2 border-primary3 h-full rounded text-primary3 px-3 buttonHover2"
-            >
-              Stam Conecta
-            </button>
-            <button
-              onClick={onFiltro}
-              className="border-2 border-primary3 h-full rounded text-primary3 pl-3 buttonHover2 flex items-center gap-1"
-            >
-              Filtro
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#0000A6">
-                <path d="M7 10l5 5 5-5z" />
-              </svg>
-            </button>
+          <div className="bg-white h-[24px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
+            <NavBarButton onClick={onIncluirOS}>Incluir</NavBarButton>
+            <NavBarButton onClick={onAlterarOS}>Alterar</NavBarButton>
+            <NavBarButton onClick={onAtribuirOS}>Atribuir</NavBarButton>
+            <NavBarButton href="/manutencao/bens">Bens</NavBarButton>
+            <NavBarButton href="/manutencao/mobile">Web</NavBarButton>
+            <NavBarButton href="/manutencao/painel-tv">Painel TV</NavBarButton>
+            <NavBarButton href="/manutencao/tecnicos">Técnicos</NavBarButton>
+            <NavBarButton href="/stamconecta">Stam Conecta</NavBarButton>
+            <NavBarButton onClick={onFiltro} hasDropdown>Filtro</NavBarButton>
+          </div>
+        )}
+
+        {/* Botões de Almoxarifado */}
+        {almoxarifadoButtons && (
+          <div className="bg-white h-[24px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
+            <NavBarButton>Cadastrar Produto</NavBarButton>
+            <NavBarButton>Alterar Produto</NavBarButton>
           </div>
         )}
 
         {centroCusto && (
-          <div className="bg-white h-[27px] font-bold tracking-wide flex items-center justify-between text-[13px] border-b border-gray-300">
+          <div className="bg-white h-[24px] font-bold tracking-wide flex items-center justify-between text-[11px] border-b border-gray-300">
             <div>
-              <button
-                onClick={() => setOpenModal(true)}
-                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-              >
-                Mudar Setor
-              </button>
-              <button
-                onClick={onIniciarInventario}
-                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-              >
-                Iniciar Inv
-              </button>
-              <button
-                onClick={onFinalizarInventario}
-                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-              >
-                Finalizar Inv
-              </button>
-              <button
-                onClick={onExportExcel}
-                className="border-2 border-primary3 h-full rounded text-primary3 px-2 buttonHover2"
-              >
-                Excel
-              </button>
+              <NavBarButton onClick={() => setOpenModal(true)}>Mudar Setor</NavBarButton>
+              <NavBarButton onClick={onIniciarInventario}>Iniciar Inv</NavBarButton>
+              <NavBarButton onClick={onFinalizarInventario}>Finalizar Inv</NavBarButton>
+              <NavBarButton onClick={onExportExcel}>Excel</NavBarButton>
             </div>
             {/* Controles de Grid */}
             <div className="flex items-center space-x-2 px-2 border-l border-r border-gray-200 h-full mx-2">
@@ -207,14 +148,14 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
                 <span className="text-primary3 font-bold text-xs w-6 text-center">{gridRows}</span>
                 <button
                   onClick={() => onAdjustGrid(1, 0)}
-                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  className="w-5 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Adicionar 10 linhas"
                 >
                   +
                 </button>
                 <button
                   onClick={() => onAdjustGrid(-1, 0)}
-                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  className="w-5 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Remover 10 linhas"
                 >
                   -
@@ -228,14 +169,14 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
                 <span className="text-primary3 font-bold text-xs w-6 text-center">{gridCols}</span>
                 <button
                   onClick={() => onAdjustGrid(0, 1)}
-                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  className="w-5 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Adicionar 10 colunas"
                 >
                   +
                 </button>
                 <button
                   onClick={() => onAdjustGrid(0, -1)}
-                  className="w-5 h-5 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
+                  className="w-5 h-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold border"
                   title="Remover 10 colunas"
                 >
                   -

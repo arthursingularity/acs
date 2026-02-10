@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import DataTable from "../../components/ui/DataTable";
 
 export default function SetoresPage() {
     const [setores, setSetores] = useState([]);
@@ -116,29 +117,24 @@ export default function SetoresPage() {
 
             {/* Lista de Setores */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Centro de Custo</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Almoxarifado</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {setores.map((setor) => (
-                            <tr key={setor.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{setor.centroCusto}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{setor.descricao}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{setor.almoxarifado}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                    <button onClick={() => handleEdit(setor)} className="text-blue-600 hover:text-blue-900">Editar</button>
-                                    <button onClick={() => handleDelete(setor.centroCusto)} className="text-red-600 hover:text-red-900">Excluir</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <DataTable
+                    data={setores}
+                    columns={[
+                        { key: "centroCusto", label: "Centro de Custo" },
+                        { key: "descricao", label: "Descrição" },
+                        { key: "almoxarifado", label: "Almoxarifado" },
+                        {
+                            key: "id",
+                            label: "Ações",
+                            render: (val, row) => (
+                                <div className="text-right space-x-3">
+                                    <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="text-blue-600 hover:text-blue-900">Editar</button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(row.centroCusto); }} className="text-red-600 hover:text-red-900">Excluir</button>
+                                </div>
+                            )
+                        }
+                    ]}
+                />
             </div>
         </div>
     );

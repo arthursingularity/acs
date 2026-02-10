@@ -202,7 +202,7 @@ export default function ConfiguracoesPage() {
             <div className="bg-primary2 h-[36px] flex items-center justify-between px-4">
                 <div className="flex items-center space-x-4">
                     <Link href="/manutencao">
-                        <img src="/imagens/logo.png" className="w-[35px] bg-white p-1 rounded cursor-pointer hover:opacity-90" />
+                        <img src="/imagens/stamS.png" className="w-[35px] bg-white p-1 rounded cursor-pointer hover:opacity-90" />
                     </Link>
                     <h1 className="text-white font-bold">Configurações de Manutenção</h1>
                 </div>
@@ -216,8 +216,8 @@ export default function ConfiguracoesPage() {
                 <button
                     onClick={() => setActiveTab("motivos")}
                     className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "motivos"
-                            ? "border-primary3 text-primary3"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-primary3 text-primary3"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
                         }`}
                 >
                     Motivos de Pausa
@@ -225,8 +225,8 @@ export default function ConfiguracoesPage() {
                 <button
                     onClick={() => setActiveTab("pcs")}
                     className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === "pcs"
-                            ? "border-primary3 text-primary3"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-primary3 text-primary3"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
                         }`}
                 >
                     Problema / Causa / Solução

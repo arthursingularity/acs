@@ -49,10 +49,10 @@ export default function PainelTVPage() {
     };
 
     const getPrioridadeColor = (prioridade) => {
-        switch (prioridade) {
-            case "urgente": return "bg-red-500 text-white animate-pulse";
+        switch (prioridade?.toLowerCase()) {
+            case "urgente": return "bg-red-500 text-white";
             case "alta": return "bg-orange-500 text-white";
-            case "normal": return "bg-blue-500 text-white";
+            case "normal": return "bg-blue-500 text-black";
             case "baixa": return "bg-gray-400 text-white";
             default: return "bg-gray-400 text-white";
         }
@@ -222,13 +222,18 @@ export default function PainelTVPage() {
                                         </span>
                                         <div>
                                             <div className="text-white font-bold">OS{String(ordem.numero).padStart(6, '0')}</div>
-                                            <div className="text-gray-300 text-sm truncate max-w-[200px]">
+                                            <div className="text-white text-sm truncate max-w-[220px]">
                                                 {ordem.bem?.descricao}
+                                            </div>
+                                            <div className="text-cyan-300 text-sm truncate max-w-[200px]">
+                                                {ordem.bem?.localizacao}
+                                            </div>
+                                            <div className="text-gray-300 text-[11px]">
+                                                {ordem.tipoManutencao}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-right text-xs text-gray-400">
-                                        <div>{ordem.tipoManutencao}</div>
+                                    <div className="text-right text-lg font-medium text-cyan-300">
                                         <div>{ordem.tecnico?.nome || "Não atribuído"}</div>
                                     </div>
                                 </div>

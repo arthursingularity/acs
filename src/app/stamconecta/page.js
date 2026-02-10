@@ -73,10 +73,10 @@ export default function StamConecta() {
             </div>
 
             {/* Setor Banner - Clicável para selecionar setor */}
-            <div className="mx-6 mb-6">
+            <div className="mb-6">
                 <button
                     onClick={handleOpenSetorModal}
-                    className="w-full bg-white border-l-4 border-green-500 py-3 px-4 shadow-md hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="w-full bg-red-100 py-3 rounded border-2 border-red-500 shadow-md hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                     <p className="text-center font-bold text-gray-800 text-sm tracking-wide">
                         {setor || "CLIQUE PARA SELECIONAR O SETOR"}

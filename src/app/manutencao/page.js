@@ -7,6 +7,7 @@ import ModalWrapper from "../components/ui/ModalWrapper";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
+import DataTable from "../components/ui/DataTable";
 import { CameraIcon } from "@heroicons/react/24/outline";
 
 export default function ManutencaoPage() {
@@ -18,6 +19,7 @@ export default function ManutencaoPage() {
     const [bens, setBens] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtroStatus, setFiltroStatus] = useState("todas");
+    const [filtroTipo, setFiltroTipo] = useState("todas");
     const [modalFiltro, setModalFiltro] = useState(false);
     const [modalNovaOS, setModalNovaOS] = useState(false);
     const [modalDetalhes, setModalDetalhes] = useState(false);
@@ -31,12 +33,14 @@ export default function ManutencaoPage() {
         bemId: "",
         prioridade: "",
         tipoManutencao: "",
+        tipoManutencaoCategoria: "",
         tecnicoId: ""
     });
     const [novaOS, setNovaOS] = useState({
         bemId: "",
         centroCusto: "",
         tipoManutencao: "AVALIAÇÃO",
+        tipoManutencaoCategoria: "CORRETIVA",
         prioridade: "NORMAL",
         observacaoAbertura: "",
         solicitante: ""
@@ -46,11 +50,21 @@ export default function ManutencaoPage() {
     const scannerRef = useRef(null);
     const html5QrCodeRef = useRef(null);
 
+    const [atribuirPrioridade, setAtribuirPrioridade] = useState("NORMAL");
+    const [atribuirTecnicoId, setAtribuirTecnicoId] = useState("");
+
     const fetchOrdens = async () => {
         try {
             let url = "/api/manutencao/ordens";
+            const params = [];
             if (filtroStatus !== "todas") {
-                url += `?status=${filtroStatus}`;
+                params.push(`status=${filtroStatus}`);
+            }
+            if (filtroTipo !== "todas") {
+                params.push(`tipo=${filtroTipo}`);
+            }
+            if (params.length > 0) {
+                url += `?${params.join('&')}`;
             }
             const response = await fetch(url);
             if (response.ok) {
@@ -100,7 +114,7 @@ export default function ManutencaoPage() {
 
     useEffect(() => {
         fetchOrdens();
-    }, [filtroStatus]);
+    }, [filtroStatus, filtroTipo]);
 
     // Effect para gerenciar o scanner QR
     useEffect(() => {
@@ -202,14 +216,16 @@ export default function ManutencaoPage() {
         if (osSelecionada) {
             if (osSelecionada.status === "aberta" && !osSelecionada.tecnicoId) {
                 setOsDetalhes(osSelecionada);
+                setAtribuirPrioridade(osSelecionada.prioridade || "NORMAL");
+                setAtribuirTecnicoId("");
                 setModalAtribuir(true);
             } else if (osSelecionada.tecnicoId) {
                 alert("Esta OS já possui um técnico atribuído");
             } else {
-                alert("Apenas OSs abertas podem ser atribuídas");
+                alert("Apenas SSs/OSs abertas podem ser atribuídas");
             }
         } else {
-            alert("Selecione uma OS para atribuir");
+            alert("Selecione uma SS/OS para atribuir");
         }
     };
 
@@ -233,6 +249,7 @@ export default function ManutencaoPage() {
                     centroCusto: "",
                     estacao: "",
                     tipoManutencao: "Avaliação",
+                    tipoManutencaoCategoria: "CORRETIVA",
                     prioridade: "normal",
                     observacaoAbertura: "",
                     solicitante: localStorage.getItem("username") || "Sistema"
@@ -249,12 +266,12 @@ export default function ManutencaoPage() {
         }
     };
 
-    const handleAtribuir = async (ordemId, tecnicoId) => {
+    const handleAtribuir = async (ordemId, tecnicoId, prioridade) => {
         try {
             const response = await fetch("/api/manutencao/ordens", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: ordemId, tecnicoId, acao: "atribuir" })
+                body: JSON.stringify({ id: ordemId, tecnicoId, prioridade, acao: "atribuir" })
             });
 
             if (response.ok) {
@@ -348,6 +365,7 @@ export default function ManutencaoPage() {
                 bemId: osDetalhes.bemId || "",
                 prioridade: osDetalhes.prioridade || "normal",
                 tipoManutencao: osDetalhes.tipoManutencao || "AVALIAÇÃO",
+                tipoManutencaoCategoria: osDetalhes.tipoManutencaoCategoria || "CORRETIVA",
                 tecnicoId: osDetalhes.tecnicoId || ""
             });
             setSearchBemDetalhes(osDetalhes.bem?.descricao || "");
@@ -361,6 +379,7 @@ export default function ManutencaoPage() {
             bemId: "",
             prioridade: "",
             tipoManutencao: "",
+            tipoManutencaoCategoria: "",
             tecnicoId: ""
         });
         setSearchBemDetalhes("");
@@ -390,6 +409,9 @@ export default function ManutencaoPage() {
             }
             if (dadosEdicao.tipoManutencao && dadosEdicao.tipoManutencao !== osDetalhes.tipoManutencao) {
                 updateData.tipoManutencao = dadosEdicao.tipoManutencao;
+            }
+            if (dadosEdicao.tipoManutencaoCategoria && dadosEdicao.tipoManutencaoCategoria !== osDetalhes.tipoManutencaoCategoria) {
+                updateData.tipoManutencaoCategoria = dadosEdicao.tipoManutencaoCategoria;
             }
             if (dadosEdicao.tecnicoId !== osDetalhes.tecnicoId) {
                 updateData.tecnicoId = dadosEdicao.tecnicoId || null;
@@ -425,7 +447,7 @@ export default function ManutencaoPage() {
         if (!osDetalhes?.id) return;
 
         const confirmacao = window.confirm(
-            `Tem certeza que deseja EXCLUIR a OS ${String(osDetalhes.numero).padStart(6, '0')}?\n\nEsta ação não pode ser desfeita.`
+            `Tem certeza que deseja EXCLUIR a ${osDetalhes.tipo || 'OS'} ${osDetalhes.tipo || 'OS'}${String(osDetalhes.numero).padStart(6, '0')}?\n\nEsta ação não pode ser desfeita.`
         );
 
         if (!confirmacao) return;
@@ -533,85 +555,77 @@ export default function ManutencaoPage() {
             />
 
             {/* Tabela de Ordens de Serviço */}
-            <div className="tabelaNova flex-1 overflow-auto mt-[130px]">
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary3"></div>
-                    </div>
-                ) : ordens.length === 0 ? (
-                    <div className="text-center text-gray-500 mt-20">
-                        <p className="text-4xl mb-4">📋</p>
-                        <p>Nenhuma ordem de serviço encontrada</p>
-                    </div>
-                ) : (
-                    <table className="w-full border-collapse text-[12px]" style={{ fontFamily: 'Segoe UI, Tahoma, sans-serif' }}>
-                        <thead>
-                            <tr className="bg-[#E5E5E5] border-[#ccc]">
-                                <th className="px-2 py-1 text-left font-bold text-black"></th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Nº OS</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Equipamento/Bem</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Descrição do Bem</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Localização</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">C.C.</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Tipo de Solicitação</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Observação</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Prioridade</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Status</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Técnico Responsável</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Abertura</th>
-                                <th className="px-2 py-1 text-left font-bold text-black">Solicitante</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ordens.map((ordem, index) => (
-                                <tr
-                                    key={ordem.id}
-                                    className={`border-b font-medium text-[12px] border-[#ddd] cursor-pointer ${osSelecionada?.id === ordem.id
-                                        ? 'bg-primary'
-                                        : index % 2 === 0
-                                            ? 'bg-[#FBFBFB]'
-                                            : 'bg-[#EEEEEE]'
-                                        } buttonHover`}
-                                    onClick={() => handleSelectOS(ordem)}
-                                    onDoubleClick={() => {
-                                        setOsDetalhes(ordem);
-                                        setModalDetalhes(true);
-                                    }}
-                                >
-                                    <td className="px-2 w-6 border-r border-[#CCCCCC] text-black">
-                                        <span className={`w-4 h-4 rounded-full border block ${getStatusColor(ordem.status)}`} title={ordem.status}></span>
-                                    </td>
-                                    <td className="px-2 w-6 border-r border-[#CCCCCC] text-black">
-                                        OS{String(ordem.numero).padStart(6, '0')}
-                                    </td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.codigo || '-'}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.descricao || '-'}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.bem?.localizacao || '-'}</td>
-                                    <td className="px-2 w-14 border-r border-[#CCCCCC] text-black">{ordem.centroCusto}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.tipoManutencao}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.observacaoAbertura}</td>
-                                    <td className={`px-2 border-r border-[#CCCCCC] font-medium ${ordem.prioridade === 'URGENTE' ? 'text-red-500' :
-                                        ordem.prioridade === 'ALTA' ? 'text-orange-400' :
-                                            ordem.prioridade === 'NORMAL' ? 'text-black' :
-                                                ordem.prioridade === 'BAIXA' ? 'text-green-400' : 'text-black'
-                                        }`}>{ordem.prioridade}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">
-                                        {ordem.status === "aberta" ? "Aberta" :
-                                            ordem.status === "em_fila" ? "Na Fila" :
-                                                ordem.status === "em_execucao" ? "Em Execução" :
-                                                    ordem.status === "pausada" ? "Pausada" :
-                                                        ordem.status === "concluida_tecnica" ? "Concluída" :
-                                                            ordem.status === "encerrada" ? "Encerrada" :
-                                                                ordem.status === "cancelada" ? "Cancelada" : ordem.status}
-                                    </td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.tecnico?.nome || '-'}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{formatDate(ordem.dataAbertura)}</td>
-                                    <td className="px-2 border-r border-[#CCCCCC] text-black">{ordem.solicitante || '-'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+            <div className="tabelaNova flex-1 overflow-auto mt-[128px]">
+                <DataTable
+                    loading={loading}
+                    emptyMessage="Nenhuma ordem de serviço encontrada"
+                    selectedId={osSelecionada?.id}
+                    onSelect={handleSelectOS}
+                    onDoubleClick={(ordem) => {
+                        setOsDetalhes(ordem);
+                        setModalDetalhes(true);
+                    }}
+                    data={ordens}
+                    columns={[
+                        {
+                            key: "status",
+                            label: "",
+                            width: "w-6",
+                            render: (val) => (
+                                <span className={`w-4 h-4 rounded-full border block ${getStatusColor(val)}`} title={val}></span>
+                            )
+                        },
+                        {
+                            key: "numero",
+                            label: "Nº",
+                            width: "w-6",
+                            render: (val, row) => `${row?.tipo || 'OS'}${String(val).padStart(6, '0')}`
+                        },
+                        { key: "bem.codigo", label: "Equipamento/Bem" },
+                        { key: "bem.descricao", label: "Descrição do Bem" },
+                        { key: "bem.localizacao", label: "Localização" },
+                        { key: "centroCusto", label: "C.C.", width: "w-14" },
+                        { key: "tipoManutencao", label: "Tipo de Solicitação" },
+                        {
+                            key: "tipoManutencaoCategoria",
+                            label: "Manutenção",
+                            render: (val) => {
+                                const color = val === 'PREVENTIVA' ? 'text-blue-600' : 'text-orange-600';
+                                return <span className={`font-bold text-xs ${color}`}>{val || 'CORRETIVA'}</span>;
+                            }
+                        },
+                        { key: "observacaoAbertura", label: "Observação" },
+                        {
+                            key: "prioridade",
+                            label: "Prioridade",
+                            render: (val) => {
+                                const color = val === 'URGENTE' ? 'text-red-500' :
+                                    val === 'ALTA' ? 'text-orange-400' :
+                                        val === 'BAIXA' ? 'text-green-400' : 'text-black';
+                                return <span className={`font-medium ${color}`}>{val}</span>;
+                            }
+                        },
+                        {
+                            key: "status",
+                            label: "Status",
+                            render: (val) => {
+                                const labels = {
+                                    aberta: "Aberta", em_fila: "Na Fila", em_execucao: "Em Execução",
+                                    pausada: "Pausada", concluida_tecnica: "Concluída",
+                                    encerrada: "Encerrada", cancelada: "Cancelada"
+                                };
+                                return labels[val] || val;
+                            }
+                        },
+                        { key: "tecnico.nome", label: "Técnico Responsável" },
+                        {
+                            key: "dataAbertura",
+                            label: "Abertura",
+                            render: (val) => formatDate(val)
+                        },
+                        { key: "solicitante", label: "Solicitante" }
+                    ]}
+                />
             </div>
 
             {/* Modal de Filtro */}
@@ -621,30 +635,59 @@ export default function ManutencaoPage() {
                 title="Filtrar Ordens de Serviço"
                 className="w-[400px]"
             >
-                <div className="space-y-3">
-                    {[
-                        { value: "todas", label: "Todas" },
-                        { value: "aberta", label: "Abertas" },
-                        { value: "em_fila", label: "Na Fila" },
-                        { value: "em_execucao", label: "Em Execução" },
-                        { value: "pausada", label: "Pausadas" },
-                        { value: "concluida_tecnica", label: "Concluídas" },
-                        { value: "encerrada", label: "Encerradas" }
-                    ].map(option => (
-                        <button
-                            key={option.value}
-                            onClick={() => {
-                                setFiltroStatus(option.value);
-                                setModalFiltro(false);
-                            }}
-                            className={`w-full text-left p-3 rounded-lg border transition-colors ${filtroStatus === option.value
-                                ? 'bg-primary3 text-white border-primary3'
-                                : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                                }`}
-                        >
-                            {option.label}
-                        </button>
-                    ))}
+                <div className="space-y-4">
+                    {/* Filtro por Tipo (SS/OS) */}
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold mb-2">Tipo</p>
+                        <div className="flex gap-2">
+                            {[
+                                { value: "todas", label: "Todas" },
+                                { value: "SS", label: "SS - Solicitações" },
+                                { value: "OS", label: "OS - Ordens" }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => setFiltroTipo(option.value)}
+                                    className={`flex-1 text-center p-2 rounded-lg border transition-colors text-sm ${filtroTipo === option.value
+                                        ? 'bg-primary3 text-white border-primary3'
+                                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filtro por Status */}
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase font-bold mb-2">Status</p>
+                        <div className="space-y-2">
+                            {[
+                                { value: "todas", label: "Todas" },
+                                { value: "aberta", label: "Abertas" },
+                                { value: "em_fila", label: "Na Fila" },
+                                { value: "em_execucao", label: "Em Execução" },
+                                { value: "pausada", label: "Pausadas" },
+                                { value: "concluida_tecnica", label: "Concluídas" },
+                                { value: "encerrada", label: "Encerradas" }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => {
+                                        setFiltroStatus(option.value);
+                                        setModalFiltro(false);
+                                    }}
+                                    className={`w-full text-left p-3 rounded-lg border transition-colors ${filtroStatus === option.value
+                                        ? 'bg-primary3 text-white border-primary3'
+                                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </ModalWrapper>
 
@@ -742,6 +785,20 @@ export default function ManutencaoPage() {
                         </select>
                     </div>
 
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tipo de Manutenção *
+                        </label>
+                        <select
+                            value={novaOS.tipoManutencaoCategoria}
+                            onChange={(e) => setNovaOS({ ...novaOS, tipoManutencaoCategoria: e.target.value })}
+                            className="w-full border rounded px-2 py-2"
+                        >
+                            <option value="CORRETIVA">CORRETIVA</option>
+                            <option value="PREVENTIVA">PREVENTIVA</option>
+                        </select>
+                    </div>
+
                     <div className="hidden">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Solicitante *
@@ -781,30 +838,72 @@ export default function ManutencaoPage() {
             <ModalWrapper
                 isOpen={modalAtribuir}
                 onClose={() => setModalAtribuir(false)}
-                title={`Atribuir Técnico - OS${osDetalhes?.numero ? String(osDetalhes.numero).padStart(6, '0') : ''}`}
-                className="w-[400px]"
+                title={`Atribuir Técnico - ${osDetalhes?.tipo || 'OS'}${osDetalhes?.numero ? String(osDetalhes.numero).padStart(6, '0') : ''}`}
+                className="w-[450px]"
             >
                 <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                        Selecione o técnico para atribuir a esta ordem de serviço:
-                    </p>
+                    {osDetalhes?.tipo === 'SS' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="text-sm text-blue-800 font-medium">
+                                ⚠️ Ao atribuir um técnico, esta SS será convertida em OS automaticamente.
+                            </p>
+                        </div>
+                    )}
 
-                    <div className="space-y-2">
-                        {tecnicos.filter(t => t.ativo).map((tecnico) => (
-                            <div
-                                key={tecnico.id}
-                                onClick={() => handleAtribuir(osDetalhes?.id, tecnico.id)}
-                                className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer flex items-center justify-between"
-                            >
-                                <div>
-                                    <div className="font-medium">{tecnico.nome}</div>
-                                    <div className="text-xs text-gray-500">{tecnico.matricula} - {tecnico.especialidade}</div>
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                    {tecnico._count?.ordensServico || 0} OS ativas
-                                </div>
-                            </div>
-                        ))}
+                    {/* Prioridade */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Prioridade *
+                        </label>
+                        <select
+                            value={atribuirPrioridade}
+                            onChange={(e) => setAtribuirPrioridade(e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                        >
+                            <option value="BAIXA">BAIXA</option>
+                            <option value="NORMAL">NORMAL</option>
+                            <option value="ALTA">ALTA</option>
+                            <option value="URGENTE">URGENTE</option>
+                        </select>
+                    </div>
+
+                    {/* Técnico */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Técnico Responsável *
+                        </label>
+                        <select
+                            value={atribuirTecnicoId}
+                            onChange={(e) => setAtribuirTecnicoId(e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                        >
+                            <option value="">Selecione um técnico...</option>
+                            {tecnicos.filter(t => t.ativo).map((tecnico) => (
+                                <option key={tecnico.id} value={tecnico.id}>
+                                    {tecnico.nome} - {tecnico.especialidade}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Botões */}
+                    <div className="flex justify-between pt-2">
+                        <Button variant="outline" className="px-4 py-2" onClick={() => setModalAtribuir(false)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="primary"
+                            className="px-4 py-2"
+                            onClick={() => {
+                                if (!atribuirTecnicoId) {
+                                    alert("Selecione um técnico");
+                                    return;
+                                }
+                                handleAtribuir(osDetalhes?.id, atribuirTecnicoId, atribuirPrioridade);
+                            }}
+                        >
+                            {osDetalhes?.tipo === 'SS' ? 'Converter em OS e Atribuir' : 'Atribuir Técnico'}
+                        </Button>
                     </div>
                 </div>
             </ModalWrapper>
@@ -816,7 +915,7 @@ export default function ManutencaoPage() {
                     setModalDetalhes(false);
                     cancelarEdicaoOS();
                 }}
-                title={`Ordem de Serviço OS${osDetalhes?.numero ? String(osDetalhes.numero).padStart(6, '0') : ''}`}
+                title={`${osDetalhes?.tipo === 'SS' ? 'Solicitação de Serviço' : 'Ordem de Serviço'} ${osDetalhes?.tipo || 'OS'}${osDetalhes?.numero ? String(osDetalhes.numero).padStart(6, '0') : ''}`}
                 className="w-[700px]"
             >
                 {osDetalhes && (
@@ -913,6 +1012,28 @@ export default function ManutencaoPage() {
                                     <p>{osDetalhes.tipoManutencao}</p>
                                 )}
                             </div>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase font-bold">Tipo Manutenção</p>
+                                {editandoOS ? (
+                                    <select
+                                        value={dadosEdicao.tipoManutencaoCategoria}
+                                        onChange={(e) => setDadosEdicao({ ...dadosEdicao, tipoManutencaoCategoria: e.target.value })}
+                                        className="w-full border rounded px-2 py-1 text-sm"
+                                    >
+                                        <option value="CORRETIVA">CORRETIVA</option>
+                                        <option value="PREVENTIVA">PREVENTIVA</option>
+                                    </select>
+                                ) : (
+                                    <p>
+                                        <span className={`font-bold text-xs ${osDetalhes.tipoManutencaoCategoria === 'PREVENTIVA' ? 'text-blue-600' : 'text-orange-600'}`}>
+                                            {osDetalhes.tipoManutencaoCategoria || 'CORRETIVA'}
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-gray-500 uppercase font-bold">Solicitante</p>
                                 <p>{osDetalhes.solicitante}</p>
