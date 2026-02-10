@@ -150,6 +150,8 @@ export default function ProdutosPage() {
                         columns={[
                             { key: "codigo", label: "Código" },
                             { key: "descricao", label: "Descrição" },
+                            { key: "centroCusto", label: "C. Custo", width: "w-[100px]" },
+                            { key: "saldo", label: "Saldo", width: "w-[80px]", render: (val) => val || 0 },
                             {
                                 key: "id",
                                 label: "Ações",

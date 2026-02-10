@@ -141,7 +141,7 @@ export default function UsersPage() {
                             key: "role",
                             label: "Nível",
                             render: (val) => (
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${val === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${val === 'admin' ? 'text-purple-800' : 'text-green-600'}`}>
                                     {val}
                                 </span>
                             )

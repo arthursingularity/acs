@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import NavBar from "./components/ui/NavBar";
 import SelectSetorModal from "./components/system/SelectSetorModal";
+import ModalWrapper from "./components/ui/ModalWrapper";
 import Link from "next/link";
 
 export default function Home() {
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalAlmoxarifado, setModalAlmoxarifado] = useState(false);
   const [hoveredSetor, setHoveredSetor] = useState(null);
   const [inventarioStatus, setInventarioStatus] = useState({});
 
@@ -94,9 +98,9 @@ export default function Home() {
 
             {/* Menu Links */}
             <div className="flex-1 overflow-y-auto py-2">
-              <Link href={"/almoxarifado"}>
+              <div onClick={() => setModalAlmoxarifado(true)}>
                 <MenuLink text="Almoxarifado" />
-              </Link>
+              </div>
               <div onClick={() => setModalOpen(true)}>
                 <MenuLink text="Controle de Endereçamento" />
               </div>
@@ -193,6 +197,38 @@ export default function Home() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
       />
+
+      {/* Modal Almoxarifado */}
+      <ModalWrapper
+        isOpen={modalAlmoxarifado}
+        onClose={() => setModalAlmoxarifado(false)}
+        title="Escolha o Almoxarifado"
+        className="w-[420px]"
+      >
+        <div className="flex flex-col">
+          <p className="text-sm font-bold text-gray-500 mb-3">Selecione o almoxarifado:</p>
+          <div className="space-y-2">
+            {[
+              { nome: "ELÉTRICA", centroCusto: "111111", rota: "/almoxarifado/111111" },
+              { nome: "MECÂNICA", centroCusto: "222222", rota: "/almoxarifado/222222" }
+            ].map((almo) => (
+              <div
+                key={almo.rota}
+                onClick={() => {
+                  setModalAlmoxarifado(false);
+                  router.push(almo.rota);
+                }}
+                className="p-4 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors flex justify-between items-center"
+              >
+                <div>
+                  <span className="font-bold text-gray-800 text-lg">{almo.nome}</span>
+                </div>
+                <span className="text-sm text-gray-500 font-medium">C.C. {almo.centroCusto}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ModalWrapper>
     </div>
   );
 }

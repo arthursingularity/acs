@@ -7,6 +7,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const codigo = searchParams.get('codigo');
         const busca = searchParams.get('busca');
+        const centroCusto = searchParams.get('centroCusto');
 
         if (codigo) {
             // Buscar produto específico por código
@@ -21,10 +22,15 @@ export async function GET(request) {
             return NextResponse.json(produto);
         }
 
+        // Montar filtro
+        const where = {};
+        if (centroCusto) where.centroCusto = centroCusto;
+
         if (busca && busca.length >= 2) {
             // Buscar produtos por descrição (para autocomplete)
             const produtos = await prisma.produto.findMany({
                 where: {
+                    ...where,
                     descricao: {
                         contains: busca.toUpperCase(),
                     },
@@ -38,6 +44,7 @@ export async function GET(request) {
 
         // Buscar todos
         const produtos = await prisma.produto.findMany({
+            where,
             orderBy: { codigo: 'asc' },
         });
 
@@ -51,10 +58,15 @@ export async function GET(request) {
 // POST - Criar novo produto
 export async function POST(request) {
     try {
-        const { codigo, descricao } = await request.json();
+        const { codigo, descricao, centroCusto, saldo } = await request.json();
 
         const produto = await prisma.produto.create({
-            data: { codigo, descricao },
+            data: {
+                codigo,
+                descricao,
+                centroCusto: centroCusto || "315111",
+                saldo: saldo || 0,
+            },
         });
 
         return NextResponse.json(produto);
@@ -64,22 +76,48 @@ export async function POST(request) {
     }
 }
 
-// PUT - Atualizar ou criar múltiplos produtos (bulk upsert)
+// PUT - Atualizar produto ou bulk upsert
 export async function PUT(request) {
     try {
-        const produtos = await request.json();
+        const body = await request.json();
 
-        const results = await Promise.all(
-            produtos.map(p =>
-                prisma.produto.upsert({
-                    where: { codigo: p.codigo || p.produto },
-                    update: { descricao: p.descricao },
-                    create: { codigo: p.codigo || p.produto, descricao: p.descricao },
-                })
-            )
-        );
+        // Se for array, bulk upsert
+        if (Array.isArray(body)) {
+            const results = await Promise.all(
+                body.map(p =>
+                    prisma.produto.upsert({
+                        where: { codigo: p.codigo || p.produto },
+                        update: {
+                            descricao: p.descricao,
+                            ...(p.centroCusto && { centroCusto: p.centroCusto }),
+                            ...(p.saldo !== undefined && { saldo: p.saldo }),
+                        },
+                        create: {
+                            codigo: p.codigo || p.produto,
+                            descricao: p.descricao,
+                            centroCusto: p.centroCusto || "315111",
+                            saldo: p.saldo || 0,
+                        },
+                    })
+                )
+            );
 
-        return NextResponse.json({ success: true, count: results.length });
+            return NextResponse.json({ success: true, count: results.length });
+        }
+
+        // Se for objeto único, atualizar
+        const { id, codigo, descricao, centroCusto, saldo } = body;
+        const updateData = {};
+        if (descricao !== undefined) updateData.descricao = descricao;
+        if (centroCusto !== undefined) updateData.centroCusto = centroCusto;
+        if (saldo !== undefined) updateData.saldo = parseInt(saldo);
+
+        const produto = await prisma.produto.update({
+            where: { codigo: codigo || undefined, id: id || undefined },
+            data: updateData,
+        });
+
+        return NextResponse.json(produto);
     } catch (error) {
         console.error('Erro ao atualizar produtos:', error);
         return NextResponse.json({ error: 'Erro ao atualizar produtos' }, { status: 500 });

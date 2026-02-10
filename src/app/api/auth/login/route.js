@@ -28,7 +28,7 @@ export async function POST(request) {
             .setExpirationTime('8h')
             .sign(secret);
 
-        const response = NextResponse.json({ success: true, user: { username: user.username, role: user.role } });
+        const response = NextResponse.json({ success: true, user: { username: user.username, name: user.name, role: user.role } });
 
         // Set Cookie
         response.cookies.set('auth_token', token, {

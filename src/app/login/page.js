@@ -29,8 +29,12 @@ export default function LoginPage() {
             });
 
             if (res.ok) {
+                const data = await res.json();
                 // Save user info to localStorage
                 localStorage.setItem("username", username);
+                if (data.user?.name) {
+                    localStorage.setItem("nome", data.user.name);
+                }
                 router.push("/");
             } else {
                 const data = await res.json();

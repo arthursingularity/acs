@@ -25,11 +25,15 @@ model Setor {
 
 // Produtos
 model Produto {
-  id        String   @id @default(cuid())
-  codigo    String   @unique
-  descricao String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  codigo      String   @unique
+  descricao   String
+  centroCusto String   @default("315111") // Centro de custo do almoxarifado
+  saldo       Int      @default(0)        // Quantidade em estoque
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([centroCusto])
 }
 
 // Blocos do Grid (endereços)
