@@ -71,7 +71,7 @@ export default function MobileOSPage() {
         }
     };
 
-    const fetchOrdens = async () => {
+    const fetchOrdens = async (autoRedirect = false) => {
         if (!tecnicoSelecionado) return;
         try {
             const response = await fetch(`/api/manutencao/ordens?tecnicoId=${tecnicoSelecionado.id}&status=em_fila,em_execucao,pausada`);
@@ -83,7 +83,13 @@ export default function MobileOSPage() {
                 const osEmAndamento = data.find(os => os.status === "em_execucao" || os.status === "pausada");
                 if (osEmAndamento) {
                     setOsAtiva(osEmAndamento);
-                    setViewMode("execucao");
+                    // Só redireciona automaticamente na primeira carga
+                    if (autoRedirect) {
+                        setViewMode("execucao");
+                    }
+                } else {
+                    // Se não tem mais OS ativa, volta para lista
+                    setOsAtiva(null);
                 }
             }
         } catch (error) {
@@ -139,10 +145,10 @@ export default function MobileOSPage() {
 
     useEffect(() => {
         if (tecnicoSelecionado) {
-            fetchOrdens();
+            fetchOrdens(true); // autoRedirect na primeira carga
             localStorage.setItem("tecnicoMobileId", tecnicoSelecionado.id);
 
-            const interval = setInterval(fetchOrdens, 15000);
+            const interval = setInterval(() => fetchOrdens(false), 15000); // sem redirect nos refreshes
             return () => clearInterval(interval);
         }
     }, [tecnicoSelecionado]);

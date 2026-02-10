@@ -878,7 +878,23 @@ export default function ManutencaoPage() {
                             className="w-full border rounded px-3 py-2"
                         >
                             <option value="">Selecione um técnico...</option>
-                            {tecnicos.filter(t => t.ativo).map((tecnico) => (
+                            {tecnicos.filter(t => {
+                                if (!t.ativo) return false;
+                                const tipo = osDetalhes?.tipoManutencao?.toUpperCase() || "";
+                                const esp = t.especialidade?.toUpperCase() || "";
+                                // Técnicos "Geral" aparecem em qualquer tipo
+                                if (esp === "GERAL") return true;
+                                // Manutenção Elétrica → só técnicos de Elétrica
+                                if (tipo.includes("ELÉTRICA") || tipo.includes("ELETRICA")) {
+                                    return esp.includes("ELÉTRICA") || esp.includes("ELETRICA");
+                                }
+                                // Manutenção Mecânica → só técnicos de Mecânica
+                                if (tipo.includes("MECÂNICA") || tipo.includes("MECANICA")) {
+                                    return esp.includes("MECÂNICA") || esp.includes("MECANICA");
+                                }
+                                // Avaliação ou outros → todos os técnicos
+                                return true;
+                            }).map((tecnico) => (
                                 <option key={tecnico.id} value={tecnico.id}>
                                     {tecnico.nome} - {tecnico.especialidade}
                                 </option>
