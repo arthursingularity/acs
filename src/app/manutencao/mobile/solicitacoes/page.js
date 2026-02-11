@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SolicitacoesMobilePage() {
+function SolicitacoesMobileContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tecnicoId = searchParams.get("tecnicoId");
@@ -234,5 +234,13 @@ export default function SolicitacoesMobilePage() {
                 </button>
             </div>
         </div>
+    );
+}
+
+export default function SolicitacoesMobilePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100"><div className="text-2xl">⏳</div></div>}>
+            <SolicitacoesMobileContent />
+        </Suspense>
     );
 }
