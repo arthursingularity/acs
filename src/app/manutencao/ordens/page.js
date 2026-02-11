@@ -72,7 +72,6 @@ export default function OrdensPage() {
 
     useEffect(() => {
         document.title = "Ordens de Serviço";
-        fetchOrdens();
         fetchTecnicos();
         fetchBens();
 
@@ -83,13 +82,13 @@ export default function OrdensPage() {
             setNovaOS(prev => ({ ...prev, solicitante: username }));
             setModalNovaOS(true);
         }
-
-        const interval = setInterval(fetchOrdens, 30000);
-        return () => clearInterval(interval);
     }, []);
 
+    // Buscar ordens quando filtro muda + auto-refresh a cada 30s
     useEffect(() => {
         fetchOrdens();
+        const interval = setInterval(fetchOrdens, 30000);
+        return () => clearInterval(interval);
     }, [filtroStatus]);
 
     const handleCriarOS = async () => {

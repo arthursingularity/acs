@@ -27,6 +27,13 @@ export default function MobileOSPage() {
         statusFinalBem: "operacional"
     });
 
+    // Estados para solicitação ao almoxarifado
+    const [modalSolicitarPeca, setModalSolicitarPeca] = useState(false);
+    const [searchPeca, setSearchPeca] = useState("");
+    const [pecaSelecionada, setPecaSelecionada] = useState(null);
+    const [quantidadePeca, setQuantidadePeca] = useState(1);
+    const [sugestoesPecas, setSugestoesPecas] = useState([]);
+
     const [tempoAtual, setTempoAtual] = useState(new Date());
     const [timeOffset, setTimeOffset] = useState(0);
 
@@ -314,6 +321,59 @@ export default function MobileOSPage() {
         }
     };
 
+    // Funções para solicitação de peças
+    const fetchSugestoesPecas = async (busca) => {
+        if (busca.length < 2) {
+            setSugestoesPecas([]);
+            return;
+        }
+        try {
+            const res = await fetch(`/api/produtos?busca=${encodeURIComponent(busca)}&centroCusto=204131,204111`);
+            if (res.ok) {
+                const data = await res.json();
+                setSugestoesPecas(data.sugestoes || []);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar peças:", error);
+        }
+    };
+
+    const handleSolicitarPeca = async () => {
+        const qtd = parseInt(quantidadePeca);
+        if (!pecaSelecionada || !qtd || qtd < 1) {
+            alert("Selecione uma peça e informe uma quantidade válida.");
+            return;
+        }
+        try {
+            const res = await fetch("/api/almoxarifado/solicitacoes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    produtoId: pecaSelecionada.id,
+                    tecnicoId: tecnicoSelecionado.id,
+                    ordemServicoId: osAtiva?.id || null,
+                    bemDescricao: osAtiva?.bem?.descricao || null,
+                    bemLocalizacao: osAtiva?.bem?.localizacao || null,
+                    centroCusto: osAtiva?.centroCusto || null,
+                    quantidade: qtd,
+                }),
+            });
+            if (res.ok) {
+                alert(`Solicitação de ${quantidadePeca}x ${pecaSelecionada.descricao} enviada!`);
+                setModalSolicitarPeca(false);
+                setSearchPeca("");
+                setPecaSelecionada(null);
+                setQuantidadePeca(1);
+                setSugestoesPecas([]);
+            } else {
+                alert("Erro ao enviar solicitação.");
+            }
+        } catch (error) {
+            console.error("Erro:", error);
+            alert("Erro ao enviar solicitação.");
+        }
+    };
+
     // Tela de seleção de técnico
     if (!tecnicoSelecionado) {
         return (
@@ -359,7 +419,7 @@ export default function MobileOSPage() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setViewMode("lista")}
-                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 active:bg-white/30 transition-colors"
+                                className="w-10 h-10 flex cursor-pointer buttonHover items-center justify-center rounded-full bg-white/20 active:bg-white/30 transition-colors"
                                 title="Voltar para lista"
                             >
                                 <span className="text-xl font-bold">←</span>
@@ -420,10 +480,16 @@ export default function MobileOSPage() {
 
                 {/* Ações */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white border-t space-y-3 z-40">
+                    <button
+                        onClick={() => setModalSolicitarPeca(true)}
+                        className="w-full cursor-pointer bg-primary3 buttonHover text-white py-3 rounded-xl font-bold text-base active:scale-98 transition-transform"
+                    >
+                        Solicitar ao Almoxarifado
+                    </button>
                     {isPausada ? (
                         <button
                             onClick={handleRetomarOS}
-                            className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg active:scale-98 transition-transform"
+                            className="w-full cursor-pointer buttonHover bg-green-600 text-white py-4 rounded-xl font-bold text-lg active:scale-98 transition-transform"
                         >
                             Retomar Execução
                         </button>
@@ -443,6 +509,7 @@ export default function MobileOSPage() {
                             </button>
                         </>
                     )}
+
                 </div>
 
                 {/* Modal Pausa */}
@@ -598,6 +665,107 @@ export default function MobileOSPage() {
                         </div>
                     </div>
                 )}
+
+                {/* Modal Solicitar Peça ao Almoxarifado */}
+                {modalSolicitarPeca && (
+                    <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+                        <div className="bg-white w-full rounded-t-3xl p-6 animate-slide-up max-h-[85vh] flex flex-col">
+                            <h3 className="text-lg font-bold mb-4">Solicitar ao Almoxarifado</h3>
+
+                            <div className="flex-1 overflow-auto space-y-4">
+                                {/* Buscar Peça */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Peça / Produto *</label>
+                                    <input
+                                        type="text"
+                                        value={searchPeca}
+                                        onChange={(e) => {
+                                            const val = e.target.value.toUpperCase();
+                                            setSearchPeca(val);
+                                            setPecaSelecionada(null);
+                                            fetchSugestoesPecas(val);
+                                        }}
+                                        placeholder="Digite o nome da peça..."
+                                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base"
+                                    />
+
+                                    {/* Sugestões */}
+                                    {sugestoesPecas.length > 0 && !pecaSelecionada && (
+                                        <div className="mt-1 border border-gray-200 rounded-xl bg-white shadow-lg max-h-48 overflow-auto">
+                                            {sugestoesPecas.map((peca) => (
+                                                <button
+                                                    key={peca.id}
+                                                    onClick={() => {
+                                                        setPecaSelecionada(peca);
+                                                        setSearchPeca(peca.descricao);
+                                                        setSugestoesPecas([]);
+                                                    }}
+                                                    className="w-full text-left p-3 border-b border-gray-100 active:bg-gray-100"
+                                                >
+                                                    <div className="font-medium text-sm">{peca.descricao}</div>
+                                                    <div className="text-xs text-gray-500">{peca.codigo} • Saldo: {peca.saldo || 0}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Peça selecionada */}
+                                    {pecaSelecionada && (
+                                        <div className="mt-2 bg-green-50 border border-green-200 rounded-xl p-3">
+                                            <div className="text-xs text-green-600 uppercase font-bold">Peça Selecionada</div>
+                                            <div className="font-bold text-green-800">{pecaSelecionada.descricao}</div>
+                                            <div className="text-sm text-green-700">{pecaSelecionada.codigo}</div>
+                                            <div className="text-sm text-green-700">Saldo: {pecaSelecionada.saldo || 0}</div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Quantidade */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantidade *</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={quantidadePeca}
+                                        onChange={(e) => setQuantidadePeca(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base text-center font-bold text-xl"
+                                    />
+                                </div>
+
+                                {/* Info da OS */}
+                                {osAtiva && (
+                                    <div className="bg-gray-50 rounded-xl p-3 border">
+                                        <div className="text-xs text-gray-500 uppercase font-bold mb-1">Para a OS</div>
+                                        <div className="text-sm font-medium">OS{String(osAtiva.numero).padStart(6, '0')} - {osAtiva.bem?.descricao}</div>
+                                        <div className="text-xs text-gray-500">{osAtiva.bem?.localizacao}</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-2 mt-4">
+                                <button
+                                    onClick={handleSolicitarPeca}
+                                    disabled={!pecaSelecionada}
+                                    className={`w-full cursor-pointer buttonHover py-4 rounded-xl font-bold text-lg ${pecaSelecionada ? 'bg-primary3 text-white active:scale-98' : 'bg-gray-200 text-gray-400'} transition-transform`}
+                                >
+                                    Enviar Solicitação
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setModalSolicitarPeca(false);
+                                        setSearchPeca("");
+                                        setPecaSelecionada(null);
+                                        setQuantidadePeca(1);
+                                        setSugestoesPecas([]);
+                                    }}
+                                    className="w-full cursor-pointer py-3 text-gray-600 font-medium"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -624,6 +792,15 @@ export default function MobileOSPage() {
                         Trocar
                     </button>
                 </div>
+                {/* Botões de navegação */}
+                <div className="flex gap-2 mt-2">
+                    <button
+                        onClick={() => router.push('/manutencao/mobile/solicitacoes?tecnicoId=' + tecnicoSelecionado.id)}
+                        className="flex-1 bg-white/20 text-white py-2 rounded-lg text-sm font-medium active:bg-white/30 transition-colors"
+                    >
+                        Solicitações
+                    </button>
+                </div>
             </div>
 
             {/* Banner OS em andamento */}
@@ -647,7 +824,7 @@ export default function MobileOSPage() {
             )}
 
             {/* Lista de OS */}
-            <div className="p-4">
+            <div className="p-4 pb-24">
                 <h2 className="text-lg font-bold text-gray-800 mb-3">Suas Ordens de Serviço</h2>
 
                 {ordens.length === 0 ? (

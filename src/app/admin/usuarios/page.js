@@ -7,6 +7,9 @@ import DataTable from "../../components/ui/DataTable";
 
 export default function UsersPage() {
     const [users, setUsers] = useState([]);
+    const [requests, setRequests] = useState([]);
+
+    // Form Usuários
     const [formData, setFormData] = useState({
         username: "",
         password: "",
@@ -17,14 +20,25 @@ export default function UsersPage() {
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
-        fetchUsers();
-        document.title = "Gerenciar Usuários - Admin";
+        fetchData();
+        document.title = "Gerenciar Usuários";
     }, []);
+
+    const fetchData = async () => {
+        await Promise.all([fetchUsers(), fetchRequests()]);
+    };
 
     const fetchUsers = async () => {
         const res = await fetch("/api/users");
         if (res.ok) setUsers(await res.json());
     };
+
+    const fetchRequests = async () => {
+        const res = await fetch("/api/auth/register-request");
+        if (res.ok) setRequests(await res.json());
+    };
+
+    // --- Gestão de Usuários ---
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -51,7 +65,7 @@ export default function UsersPage() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Tem certeza?")) return;
+        if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
         await fetch(`/api/users?id=${id}`, { method: "DELETE" });
         fetchUsers();
     };
@@ -71,12 +85,95 @@ export default function UsersPage() {
         setFormData({ username: "", password: "", name: "", role: "user" });
     };
 
+    // --- Gestão de Solicitações ---
+
+    const handleApprove = async (reqId) => {
+        if (!confirm("Aprovar solicitação e criar usuário?")) return;
+        try {
+            const res = await fetch("/api/auth/register-request", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: reqId }),
+            });
+            if (res.ok) {
+                fetchData(); // Atualiza users e requests
+            } else {
+                alert("Erro ao aprovar solicitação");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleReject = async (reqId) => {
+        if (!confirm("Recusar solicitação?")) return;
+        try {
+            const res = await fetch(`/api/auth/register-request?id=${reqId}`, { method: "DELETE" });
+            if (res.ok) {
+                fetchRequests();
+            } else {
+                alert("Erro ao recusar solicitação");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <div>
             <h2 className="text-2xl font-bold mb-6">Gerenciar Usuários</h2>
 
+            {/* Seção de Solicitações Pendentes */}
+            {requests.length > 0 && (
+                <div className="mb-8">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+                        <h3 className="font-bold mb-2">Solicitações de Cadastro Pendentes</h3>
+                        <div className="bg-white rounded border border-gray-300 overflow-hidden">
+                            <table
+                                className="w-full border-collapse text-[12px]"
+                                style={{ fontFamily: "Segoe UI, Tahoma, sans-serif" }}
+                            >
+                                <thead className="datatable-thead">
+                                    <tr className="bg-[#E5E5E5] ">
+                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Nome</th>
+                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Usuário</th>
+                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Data da Solicitação</th>
+                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="">
+                                    {requests.map((req) => (
+                                        <tr key={req.id} className="border-b font-medium text-[12px] border-[#ddd] cursor-pointer buttonHover bg-white">
+                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.name}</td>
+                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.username}</td>
+                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">
+                                                {new Date(req.createdAt).toLocaleDateString('pt-BR')}
+                                            </td>
+                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">
+                                                <button
+                                                    onClick={() => handleApprove(req.id)}
+                                                    className="text-white cursor-pointer bg-primary3 buttonHover px-2 py-[3px] rounded text-xs font-bold transition-colors"
+                                                >
+                                                    Aceitar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReject(req.id)}
+                                                    className="text-red-500 cursor-pointer px-3 py-1 text-xs buttonHover font-bold"
+                                                >
+                                                    Recusar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Form de Criação/Edição */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
+            <div className="bg-white p-6 rounded-lg mb-8 border border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">{editingId ? "Editar Usuário" : "Novo Usuário"}</h3>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
@@ -131,7 +228,7 @@ export default function UsersPage() {
             </div>
 
             {/* Lista de Usuários */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+            <div className="bg-white rounded-lg overflow-hidden border border-gray-300">
                 <DataTable
                     data={users}
                     columns={[
@@ -150,7 +247,7 @@ export default function UsersPage() {
                             key: "id",
                             label: "Ações",
                             render: (val, row) => (
-                                <div className="text-right space-x-3">
+                                <div className="text-left space-x-3">
                                     <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="text-blue-600 hover:text-blue-900">Editar</button>
                                     <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="text-red-600 hover:text-red-900">Excluir</button>
                                 </div>

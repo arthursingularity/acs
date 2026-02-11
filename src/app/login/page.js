@@ -141,6 +141,16 @@ export default function LoginPage() {
                             >
                                 {loading ? "Entrando..." : "Entrar"}
                             </button>
+
+                            <div className="text-center mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push("/cadastro")}
+                                    className="text-sm cursor-pointer font-bold text-primary2 tracking-wide hover:text-[#1890ff] underline"
+                                >
+                                    Solicitar cadastro
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -28,7 +28,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    document.title = "Home - Sistema de Endereçamento";
+    document.title = "Sistema Interno - Suprimentos";
     fetchInventarioStatus();
 
     // Atualizar a cada 5 segundos para sincronizar com outros usuários
@@ -108,13 +108,13 @@ export default function Home() {
                 <MenuLink text="Buscar Endereço" />
               </Link>
               <Link href={"/manutencao"}>
-                <MenuLink text="Manutenção" />
+                <MenuLink text="Gerenciamento O.S." />
               </Link>
               <Link href={"/stamconecta"}>
                 <MenuLink text="Stam Conecta" />
               </Link>
               <Link href={"/manutencao/mobile"}>
-                <MenuLink text="Sistema Técnicos" />
+                <MenuLink text="Web" />
               </Link>
               <Link href={"/admin/produtos"}>
                 <MenuLink text="Admin" />
@@ -206,11 +206,10 @@ export default function Home() {
         className="w-[420px]"
       >
         <div className="flex flex-col">
-          <p className="text-sm font-bold text-gray-500 mb-3">Selecione o almoxarifado:</p>
           <div className="space-y-2">
             {[
-              { nome: "ELÉTRICA", centroCusto: "111111", rota: "/almoxarifado/111111" },
-              { nome: "MECÂNICA", centroCusto: "222222", rota: "/almoxarifado/222222" }
+              { nome: "MANUTENCAO ELETRICA", centroCusto: "204131", rota: "/almoxarifado/204131" },
+              { nome: "MANUTENCAO MECANICA", centroCusto: "204111", rota: "/almoxarifado/204111" }
             ].map((almo) => (
               <div
                 key={almo.rota}
@@ -221,7 +220,7 @@ export default function Home() {
                 className="p-4 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors flex justify-between items-center"
               >
                 <div>
-                  <span className="font-bold text-gray-800 text-lg">{almo.nome}</span>
+                  <span className="font-bold text-gray-800">{almo.nome}</span>
                 </div>
                 <span className="text-sm text-gray-500 font-medium">C.C. {almo.centroCusto}</span>
               </div>

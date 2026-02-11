@@ -5,7 +5,7 @@ import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
 import NavBarButton from "./NavBarButton";
 
-export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, almoxarifadoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro, onCadastrarProduto, onAlterarProduto, onGerarSaldo }) {
+export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, almoxarifadoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro, onCadastrarProduto, onAlterarProduto, onNecessidades }) {
   const [openModal, setOpenModal] = useState(false);
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
@@ -122,6 +122,7 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
             <NavBarButton href="/manutencao/tecnicos">Técnicos</NavBarButton>
             <NavBarButton href="/stamconecta">Stam Conecta</NavBarButton>
             <NavBarButton onClick={onFiltro} hasDropdown>Filtro</NavBarButton>
+            <NavBarButton onClick={() => window.location.reload()}>Atualizar</NavBarButton>
           </div>
         )}
 
@@ -129,7 +130,7 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
           <div className="bg-white h-[24px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
             <NavBarButton onClick={onCadastrarProduto}>Cadastrar Produto</NavBarButton>
             <NavBarButton onClick={onAlterarProduto}>Alterar</NavBarButton>
-            <NavBarButton onClick={onGerarSaldo}>Gerar Saldo</NavBarButton>
+            <NavBarButton onClick={onNecessidades}>Necessidades</NavBarButton>
           </div>
         )}
 

@@ -33,6 +33,8 @@ model Produto {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  solicitacoes SolicitacaoAlmoxarifado[]
+
   @@index([centroCusto])
 }
 
@@ -88,6 +90,15 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+// Solicitações de Cadastro (Pendente de Aprovação)
+model RegistrationRequest {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
 // Status do Inventário por Setor (Planta)
 model InventarioSetor {
   id           String   @id @default(cuid())
@@ -136,6 +147,7 @@ model Tecnico {
   // Relações
   ordensServico OrdemServico[]
   pausas        PausaOS[]
+  solicitacoes  SolicitacaoAlmoxarifado[]
 }
 
 // Ordens de Serviço
@@ -301,4 +313,43 @@ model SolucaoOS {
   updatedAt DateTime @updatedAt
 
   ordensServico OrdemServico[]
+}
+
+// ============================================
+// SOLICITAÇÕES AO ALMOXARIFADO
+// ============================================
+
+model SolicitacaoAlmoxarifado {
+  id                 String       @id @default(cuid())
+  
+  // Produto solicitado
+  produtoId          String
+  produto            Produto      @relation(fields: [produtoId], references: [id])
+  
+  // Técnico que solicitou
+  tecnicoId          String
+  tecnico            Tecnico      @relation(fields: [tecnicoId], references: [id])
+  
+  // OS relacionada (opcional)
+  ordemServicoId     String?
+  
+  // Info do equipamento/bem (snap do momento da solicitacao)
+  bemDescricao       String?
+  bemLocalizacao     String?
+  centroCusto        String?      // Centro de custo do equipamento
+  
+  // Quantidades
+  quantidade         Int          // Quantidade solicitada pelo técnico
+  quantidadeAtendida Int          @default(0) // Quantidade já atendida pelo almoxarifado
+  
+  // Status: pendente, parcial, atendida, cancelada
+  status             String       @default("pendente")
+  
+  criadoEm           DateTime     @default(now())
+  atualizadoEm       DateTime     @updatedAt
+
+  @@index([produtoId])
+  @@index([tecnicoId])
+  @@index([status])
+  @@index([centroCusto])
 }

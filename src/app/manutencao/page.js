@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "../components/ui/NavBar";
 import ModalWrapper from "../components/ui/ModalWrapper";
@@ -52,6 +52,7 @@ export default function ManutencaoPage() {
 
     const [atribuirPrioridade, setAtribuirPrioridade] = useState("NORMAL");
     const [atribuirTecnicoId, setAtribuirTecnicoId] = useState("");
+    const [usuarios, setUsuarios] = useState([]);
 
     const fetchOrdens = async () => {
         try {
@@ -104,16 +105,28 @@ export default function ManutencaoPage() {
 
     useEffect(() => {
         document.title = "Gerenciamento O.S.";
-        fetchOrdens();
         fetchTecnicos();
         fetchBens();
-
-        const interval = setInterval(fetchOrdens, 30000);
-        return () => clearInterval(interval);
     }, []);
 
+    const fetchUsuarios = async () => {
+        try {
+            const res = await fetch("/api/users");
+            if (res.ok) {
+                const data = await res.json();
+                setUsuarios(data);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar usuários:", error);
+        }
+    };
+
+    // Buscar ordens quando filtros mudam + auto-refresh a cada 30s
     useEffect(() => {
         fetchOrdens();
+        fetchUsuarios();
+        const interval = setInterval(fetchOrdens, 30000);
+        return () => clearInterval(interval);
     }, [filtroStatus, filtroTipo]);
 
     // Effect para gerenciar o scanner QR
@@ -209,8 +222,27 @@ export default function ManutencaoPage() {
     };
 
     const handleFiltro = () => {
-        setModalFiltro(true);
+        setModalFiltro(prev => !prev);
     };
+
+    // Fechar dropdown de filtro ao clicar fora
+    const filtroDropdownRef = useRef(null);
+    useEffect(() => {
+        if (!modalFiltro) return;
+        const handleClickOutside = (e) => {
+            if (filtroDropdownRef.current && !filtroDropdownRef.current.contains(e.target)) {
+                setModalFiltro(false);
+            }
+        };
+        // Delay para não fechar imediatamente ao clicar no botão
+        const timer = setTimeout(() => {
+            document.addEventListener("mousedown", handleClickOutside);
+        }, 0);
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [modalFiltro]);
 
     const handleAtribuirOS = () => {
         if (osSelecionada) {
@@ -555,7 +587,7 @@ export default function ManutencaoPage() {
             />
 
             {/* Tabela de Ordens de Serviço */}
-            <div className="tabelaNova flex-1 overflow-auto mt-[128px]">
+            <div className="tabelaNova flex-1 overflow-hidden mt-[128px]">
                 <DataTable
                     loading={loading}
                     emptyMessage="Nenhuma ordem de serviço encontrada"
@@ -572,7 +604,7 @@ export default function ManutencaoPage() {
                             label: "",
                             width: "w-6",
                             render: (val) => (
-                                <span className={`w-4 h-4 rounded-full border block ${getStatusColor(val)}`} title={val}></span>
+                                <span className={`w-[14px] h-[14px] rounded-full border block ${getStatusColor(val)}`} title={val}></span>
                             )
                         },
                         {
@@ -623,73 +655,78 @@ export default function ManutencaoPage() {
                             label: "Abertura",
                             render: (val) => formatDate(val)
                         },
-                        { key: "solicitante", label: "Solicitante" }
+                        {
+                            key: "solicitante",
+                            label: "Solicitante",
+                            render: (val) => {
+                                // Tenta encontrar usuário pelo nome completo para mostrar o username
+                                const user = usuarios.find(u => u.name?.toUpperCase() === val?.toUpperCase());
+                                return user ? user.username.toUpperCase() : val;
+                            }
+                        }
                     ]}
                 />
             </div>
 
-            {/* Modal de Filtro */}
-            <ModalWrapper
-                isOpen={modalFiltro}
-                onClose={() => setModalFiltro(false)}
-                title="Filtrar Ordens de Serviço"
-                className="w-[400px]"
-            >
-                <div className="space-y-4">
-                    {/* Filtro por Tipo (SS/OS) */}
-                    <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold mb-2">Tipo</p>
-                        <div className="flex gap-2">
-                            {[
-                                { value: "todas", label: "Todas" },
-                                { value: "SS", label: "SS - Solicitações" },
-                                { value: "OS", label: "OS - Ordens" }
-                            ].map(option => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => setFiltroTipo(option.value)}
-                                    className={`flex-1 text-center p-2 rounded-lg border transition-colors text-sm ${filtroTipo === option.value
-                                        ? 'bg-primary3 text-white border-primary3'
-                                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                                        }`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
+            {/* Dropdown de Filtro - estilo ERP */}
+            {modalFiltro && (
+                <div
+                    ref={filtroDropdownRef}
+                    className="fixed z-[999] bg-white border border-gray-400 shadow-lg"
+                    style={{ top: '126px', left: '600px', minWidth: '200px', maxWidth: '200px' }}
+                >
+                    {/* Seção Tipo */}
+                    <div className="border-b border-gray-300">
+                        <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white border-b border-gray-300">TIPO</div>
+                        {[
+                            { value: "todas", label: "Todas" },
+                            { value: "SS", label: "SS - Solicitações" },
+                            { value: "OS", label: "OS - Ordens" }
+                        ].map(option => (
+                            <button
+                                key={option.value}
+                                onClick={() => {
+                                    setFiltroTipo(option.value);
+                                    setModalFiltro(false);
+                                }}
+                                className={`w-full text-left font-bold cursor-pointer px-3 py-[5px] text-[12px] border-b border-gray-100 transition-colors ${filtroTipo === option.value
+                                    ? 'bg-primarySoft'
+                                    : 'hover:bg-primarySoft'
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
                     </div>
-
-                    {/* Filtro por Status */}
+                    {/* Seção Status */}
                     <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold mb-2">Status</p>
-                        <div className="space-y-2">
-                            {[
-                                { value: "todas", label: "Todas" },
-                                { value: "aberta", label: "Abertas" },
-                                { value: "em_fila", label: "Na Fila" },
-                                { value: "em_execucao", label: "Em Execução" },
-                                { value: "pausada", label: "Pausadas" },
-                                { value: "concluida_tecnica", label: "Concluídas" },
-                                { value: "encerrada", label: "Encerradas" }
-                            ].map(option => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => {
-                                        setFiltroStatus(option.value);
-                                        setModalFiltro(false);
-                                    }}
-                                    className={`w-full text-left p-3 rounded-lg border transition-colors ${filtroStatus === option.value
-                                        ? 'bg-primary3 text-white border-primary3'
-                                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                                        }`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
+                        <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white border-b border-gray-300">STATUS</div>
+                        {[
+                            { value: "todas", label: "Todas" },
+                            { value: "aberta", label: "Abertas" },
+                            { value: "em_fila", label: "Na Fila" },
+                            { value: "em_execucao", label: "Em Execução" },
+                            { value: "pausada", label: "Pausadas" },
+                            { value: "concluida_tecnica", label: "Concluídas" },
+                            { value: "encerrada", label: "Encerradas" }
+                        ].map(option => (
+                            <button
+                                key={option.value}
+                                onClick={() => {
+                                    setFiltroStatus(option.value);
+                                    setModalFiltro(false);
+                                }}
+                                className={`w-full text-left cursor-pointer font-bold px-3 py-[5px] text-[12px] border-b border-gray-100 transition-colors ${filtroStatus === option.value
+                                    ? 'bg-primarySoft'
+                                    : 'hover:bg-primarySoft'
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
-            </ModalWrapper>
+            )}
 
             {/* Modal Nova OS */}
             <ModalWrapper

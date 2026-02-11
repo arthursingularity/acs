@@ -148,9 +148,9 @@ export default function ProdutosPage() {
                     <DataTable
                         data={paginated}
                         columns={[
-                            { key: "codigo", label: "Código" },
-                            { key: "descricao", label: "Descrição" },
-                            { key: "centroCusto", label: "C. Custo", width: "w-[100px]" },
+                            { key: "codigo", label: "Código", width: "w-[1px]" },
+                            { key: "descricao", label: "Descrição", width: "w-[600px]" },
+                            { key: "centroCusto", label: "C. Custo", width: "w-[50px]" },
                             { key: "saldo", label: "Saldo", width: "w-[80px]", render: (val) => val || 0 },
                             {
                                 key: "id",

@@ -9,8 +9,8 @@ import Input from "../../components/ui/Input";
 import DataTable from "../../components/ui/DataTable";
 
 const ALMOXARIFADOS = {
-    "111111": { nome: "ELÉTRICA", centroCusto: "111111" },
-    "222222": { nome: "MECÂNICA", centroCusto: "222222" },
+    "204131": { nome: "MANUTENCAO ELETRICA", centroCusto: "204131" },
+    "204111": { nome: "MANUTENCAO MECANICA", centroCusto: "204111" },
 };
 
 export default function AlmoxarifadoPage() {
@@ -41,9 +41,23 @@ export default function AlmoxarifadoPage() {
     const [page, setPage] = useState(1);
     const itemsPerPage = 50;
 
+    // Necessidades (solicitações ao almoxarifado)
+    const [necessidades, setNecessidades] = useState([]); // agrupado por produtoId
+    const [modalNecessidades, setModalNecessidades] = useState(false);
+    const [necessidadeDetalhe, setNecessidadeDetalhe] = useState(null); // produto selecionado no modal
+    const [qtdAtender, setQtdAtender] = useState({});
+
     useEffect(() => {
-        document.title = `Almoxarifado ${almoInfo.nome}`;
+        document.title = `${almoInfo.nome}`;
         fetchProdutos();
+        fetchNecessidades();
+
+        // Auto-refresh a cada 30s
+        const interval = setInterval(() => {
+            fetchProdutos();
+            fetchNecessidades();
+        }, 30000);
+        return () => clearInterval(interval);
     }, [centroCusto]);
 
     useEffect(() => {
@@ -68,6 +82,30 @@ export default function AlmoxarifadoPage() {
             setLoading(false);
         }
     };
+
+    const fetchNecessidades = async () => {
+        try {
+            const res = await fetch(`/api/almoxarifado/solicitacoes?centroCusto=${centroCusto}&tipo=necessidades`);
+            if (res.ok) {
+                const data = await res.json();
+                setNecessidades(data);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar necessidades:", error);
+        }
+    };
+
+    // Mapeia produtoId -> total pendente para a coluna
+    const necessidadesMap = {};
+    necessidades.forEach(n => {
+        necessidadesMap[n.produtoId] = n.totalSolicitado - n.totalAtendido;
+    });
+
+    // Adiciona coluna necessidade aos produtos filtrados
+    const produtosComNecessidade = filtered.map(p => ({
+        ...p,
+        necessidade: necessidadesMap[p.id] || 0,
+    }));
 
     // ---- Cadastrar / Editar Produto ----
     const handleOpenCadastrar = () => {
@@ -151,17 +189,6 @@ export default function AlmoxarifadoPage() {
         }
     };
 
-    // ---- Gerar Saldo ----
-    const handleOpenGerarSaldo = () => {
-        if (!produtoAtivo) {
-            alert("Selecione um produto na tabela para gerar saldo.");
-            return;
-        }
-        setProdutoSelecionado(produtoAtivo);
-        setNovoSaldo(String(produtoAtivo.saldo || 0));
-        setModalSaldo(true);
-    };
-
     const handleSalvarSaldo = async () => {
         if (!produtoSelecionado) return;
         const saldoInt = parseInt(novoSaldo);
@@ -191,24 +218,64 @@ export default function AlmoxarifadoPage() {
         }
     };
 
-    const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    // ---- Necessidades ----
+    const handleOpenNecessidades = () => {
+        setNecessidadeDetalhe(null);
+        setQtdAtender({});
+        setModalNecessidades(true);
+    };
+
+    const handleAtenderSolicitacao = async (solicitacaoId, qtd) => {
+        if (!qtd || qtd < 1) {
+            alert("Informe uma quantidade válida.");
+            return;
+        }
+        try {
+            const res = await fetch("/api/almoxarifado/solicitacoes", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: solicitacaoId,
+                    acao: "atender",
+                    quantidadeAtender: parseInt(qtd),
+                }),
+            });
+            if (res.ok) {
+                fetchNecessidades();
+                fetchProdutos(); // Atualizar saldo
+                setQtdAtender(prev => ({ ...prev, [solicitacaoId]: "" }));
+            } else {
+                const errData = await res.json();
+                alert(errData.error || "Erro ao atender solicitação.");
+            }
+        } catch (error) {
+            console.error("Erro:", error);
+            alert("Erro ao atender solicitação.");
+        }
+    };
+
+    const formatDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    };
+
+    const paginated = produtosComNecessidade.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
     return (
         <div className="bg-gray-100 h-screen overflow-hidden flex flex-col">
             <NavBar
-                titulo={`Almoxarifado ${almoInfo.nome} - C. Custo: ${almoInfo.centroCusto}`}
+                titulo={`${almoInfo.nome} - C. Custo: ${almoInfo.centroCusto}`}
                 almoxarifadoButtons
                 onCadastrarProduto={handleOpenCadastrar}
                 onAlterarProduto={handleOpenAlterar}
-                onGerarSaldo={handleOpenGerarSaldo}
+                onNecessidades={handleOpenNecessidades}
             />
 
             {/* Conteúdo */}
             <div className="flex-1 mt-[128px] overflow-hidden flex flex-col">
 
                 {/* Tabela */}
-                <div className="flex-1 overflow-auto tabelaNova">
+                <div className="flex-1 overflow-hidden tabelaNova">
                     <DataTable
                         data={paginated}
                         columns={[
@@ -227,6 +294,18 @@ export default function AlmoxarifadoPage() {
                                 width: "w-[100px]",
                                 render: (val) => val || 0,
                             },
+                            {
+                                key: "necessidade",
+                                label: "Necessidades",
+                                width: "w-[120px]",
+                                render: (val) => val > 0 ? (
+                                    <span>
+                                        {val}
+                                    </span>
+                                ) : (
+                                    <span>0</span>
+                                ),
+                            },
                         ]}
                         onSelect={(row) => setProdutoAtivo(row)}
                         selectedId={produtoAtivo?.id}
@@ -234,36 +313,6 @@ export default function AlmoxarifadoPage() {
                         emptyMessage="Nenhum produto cadastrado neste almoxarifado"
                     />
                 </div>
-
-                {/* Paginação */}
-                {totalPages > 1 && (
-                    <div className="px-4 py-2 border-t border-gray-300 bg-white flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                            Mostrando {paginated.length} de {filtered.length} produtos
-                        </span>
-                        <div className="flex space-x-2">
-                            <Button
-                                variant="outline"
-                                disabled={page === 1}
-                                onClick={() => setPage(p => p - 1)}
-                                className="h-7 text-xs px-3"
-                            >
-                                Anterior
-                            </Button>
-                            <div className="flex items-center px-3 text-sm">
-                                Página {page} de {totalPages}
-                            </div>
-                            <Button
-                                variant="outline"
-                                disabled={page >= totalPages}
-                                onClick={() => setPage(p => p + 1)}
-                                className="h-7 text-xs px-3"
-                            >
-                                Próxima
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* ==================== MODAIS ==================== */}
@@ -302,7 +351,7 @@ export default function AlmoxarifadoPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Saldo Inicial
+                            Saldo
                         </label>
                         <Input
                             type="number"
@@ -390,6 +439,139 @@ export default function AlmoxarifadoPage() {
                         </div>
                     </div>
                 )}
+            </ModalWrapper>
+
+            {/* Modal Necessidades */}
+            <ModalWrapper
+                isOpen={modalNecessidades}
+                onClose={() => { setModalNecessidades(false); setNecessidadeDetalhe(null); }}
+                title="Necessidades"
+                className="w-[700px] max-h-[80vh]"
+            >
+                <div className="max-h-[65vh] overflow-auto">
+                    {necessidades.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            Nenhuma necessidade pendente.
+                        </div>
+                    ) : !necessidadeDetalhe ? (
+                        /* Lista de produtos com necessidades */
+                        <div className="space-y-2">
+                            <p className="text-sm text-gray-500 mb-3">
+                                Clique em um produto para ver os solicitantes:
+                            </p>
+                            {necessidades.map((n) => {
+                                const pendente = n.totalSolicitado - n.totalAtendido;
+                                if (pendente <= 0) return null;
+                                return (
+                                    <button
+                                        key={n.produtoId}
+                                        onClick={() => setNecessidadeDetalhe(n)}
+                                        className="w-full cursor-pointer text-left p-3 bg-gray-50 rounded border hover:bg-blue-50 hover:border-blue-300 transition-colors flex justify-between items-center"
+                                    >
+                                        <div>
+                                            <div className="font-bold text-gray-800 text-sm">{n.produtoDescricao}</div>
+                                            <div className="text-xs text-gray-500">Cód: {n.produtoCodigo}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold text-sm">
+                                                {pendente} pend.
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        /* Detalhe: solicitantes do produto selecionado */
+                        <div>
+                            <div className="bg-gray-50 rounded p-3 border mb-4">
+                                <p className="text-xs text-gray-500 font-bold uppercase">Produto</p>
+                                <p className="font-bold text-gray-800">{necessidadeDetalhe.produtoDescricao}</p>
+                                <p className="text-xs text-gray-500">Cód: {necessidadeDetalhe.produtoCodigo}</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                {necessidadeDetalhe.solicitacoes
+                                    .filter(s => s.status === "pendente" || s.status === "parcial")
+                                    .map((sol) => {
+                                        const restante = sol.quantidade - sol.quantidadeAtendida;
+                                        return (
+                                            <div key={sol.id} className="border rounded-lg p-3 bg-white">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <div className="font-bold text-sm text-gray-800">
+                                                            {sol.tecnico?.nome}
+                                                        </div>
+                                                        {sol.bemDescricao && (
+                                                            <div className="mt-1 text-sm text-gray-800 font-bold">
+                                                                Equipamento: {sol.bemDescricao}
+                                                            </div>
+                                                        )}
+                                                        {sol.bemLocalizacao && (
+                                                            <div className="text-xs text-gray-500">
+                                                                Local: {sol.bemLocalizacao}
+                                                            </div>
+                                                        )}
+                                                        {sol.centroCusto && (
+                                                            <div className="text-xs text-gray-500">
+                                                                C.C: {sol.centroCusto}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${sol.status === "pendente" ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"}`}>
+                                                            {sol.status === "pendente" ? "Pendente" : "Parcial"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-2 text-center mb-3">
+                                                    <div className="bg-gray-50 rounded p-2 border">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase">Solicitado</div>
+                                                        <div className="text-lg font-bold text-gray-800">{sol.quantidade}</div>
+                                                    </div>
+                                                    <div className="bg-gray-50 rounded p-2 border">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase">Atendido</div>
+                                                        <div className="text-lg font-bold text-green-600">{sol.quantidadeAtendida}</div>
+                                                    </div>
+                                                    <div className="bg-gray-50 rounded p-2 border">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase">Restante</div>
+                                                        <div className="text-lg font-bold text-red-600">{restante}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-[10px] text-gray-400 mb-2">
+                                                    {formatDate(sol.criadoEm)}
+                                                </div>
+
+                                                <div className="flex gap-2 items-center">
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        max={restante}
+                                                        value={qtdAtender[sol.id] || ""}
+                                                        onChange={(e) => setQtdAtender(prev => ({
+                                                            ...prev,
+                                                            [sol.id]: e.target.value
+                                                        }))}
+                                                        placeholder={`Qtd (max ${restante})`}
+                                                        className="flex-1 text-center font-bold"
+                                                    />
+                                                    <Button
+                                                        variant="primary"
+                                                        className="px-4 py-2 text-xs whitespace-nowrap"
+                                                        onClick={() => handleAtenderSolicitacao(sol.id, qtdAtender[sol.id])}
+                                                    >
+                                                        Atender
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </ModalWrapper>
         </div>
     );

@@ -5,7 +5,7 @@ export async function middleware(request) {
     const token = request.cookies.get('auth_token')?.value;
 
     // Rotas públicas (não precisam de login)
-    const publicRoutes = ['/login', '/api/auth/login', '/_next', '/favicon.ico'];
+    const publicRoutes = ['/login', '/cadastro', '/api/auth/login', '/api/auth/register-request', '/_next', '/favicon.ico'];
 
     // Verifica se é rota pública ou arquivo estático
     const isPublic = publicRoutes.some(path => request.nextUrl.pathname.startsWith(path)) ||

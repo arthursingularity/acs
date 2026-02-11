@@ -49,59 +49,61 @@ export default function DataTable({
     }
 
     return (
-        <table
-            className={`w-full border-collapse text-[12px] ${className}`}
-            style={{ fontFamily: "Segoe UI, Tahoma, sans-serif" }}
-        >
-            <thead>
-                <tr className="bg-[#E5E5E5] border-[#ccc]">
-                    {columns.map((col, i) => (
-                        <th
-                            key={i}
-                            className="px-2 py-1 text-left font-bold text-black"
-                        >
-                            {col.label}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {data.map((row, index) => {
-                    const rowId = row.id || index;
-                    const isSelected = selectedId && selectedId === rowId;
+        <div className={`datatable-scroll-container ${className}`}>
+            <table
+                className="w-full border-collapse text-[12px]"
+                style={{ fontFamily: "Segoe UI, Tahoma, sans-serif" }}
+            >
+                <thead className="datatable-thead">
+                    <tr className="bg-[#E5E5E5] border-[#ccc]">
+                        {columns.map((col, i) => (
+                            <th
+                                key={i}
+                                className="px-2 py-1 text-left font-bold text-black whitespace-nowrap"
+                            >
+                                {col.label}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((row, index) => {
+                        const rowId = row.id || index;
+                        const isSelected = selectedId && selectedId === rowId;
 
-                    return (
-                        <tr
-                            key={rowId}
-                            className={`border-b font-medium text-[12px] border-[#ddd] cursor-pointer ${isSelected
-                                ? "bg-primary"
-                                : index % 2 === 0
-                                    ? "bg-[#FBFBFB]"
-                                    : "bg-[#EEEEEE]"
-                                } buttonHover`}
-                            onClick={() => onSelect?.(row)}
-                            onDoubleClick={() => onDoubleClick?.(row)}
-                        >
-                            {columns.map((col, colIndex) => {
-                                const value = col.key
-                                    ? col.key.split(".").reduce((obj, k) => obj?.[k], row)
-                                    : undefined;
+                        return (
+                            <tr
+                                key={rowId}
+                                className={`border-b font-medium text-[12px] border-[#ddd] cursor-pointer ${isSelected
+                                    ? "bg-primary"
+                                    : index % 2 === 0
+                                        ? "bg-[#FBFBFB]"
+                                        : "bg-[#EEEEEE]"
+                                    } buttonHover`}
+                                onClick={() => onSelect?.(row)}
+                                onDoubleClick={() => onDoubleClick?.(row)}
+                            >
+                                {columns.map((col, colIndex) => {
+                                    const value = col.key
+                                        ? col.key.split(".").reduce((obj, k) => obj?.[k], row)
+                                        : undefined;
 
-                                return (
-                                    <td
-                                        key={colIndex}
-                                        className={`px-2 border-r border-[#CCCCCC] text-black ${col.width || ""} ${col.className || ""}`}
-                                    >
-                                        {col.render
-                                            ? col.render(value, row, index)
-                                            : value ?? "-"}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
+                                    return (
+                                        <td
+                                            key={colIndex}
+                                            className={`px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap ${col.width || ""} ${col.className || ""}`}
+                                        >
+                                            {col.render
+                                                ? col.render(value, row, index)
+                                                : value ?? "-"}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
     );
 }

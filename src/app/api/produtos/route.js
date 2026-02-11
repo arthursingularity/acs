@@ -24,7 +24,13 @@ export async function GET(request) {
 
         // Montar filtro
         const where = {};
-        if (centroCusto) where.centroCusto = centroCusto;
+        if (centroCusto) {
+            if (centroCusto.includes(',')) {
+                where.centroCusto = { in: centroCusto.split(',') };
+            } else {
+                where.centroCusto = centroCusto;
+            }
+        }
 
         if (busca && busca.length >= 2) {
             // Buscar produtos por descrição (para autocomplete)
