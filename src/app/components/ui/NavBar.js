@@ -128,9 +128,10 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
 
         {almoxarifadoButtons && (
           <div className="bg-white h-[24px] font-bold tracking-wide flex items-center text-[11px] border-b border-gray-300">
-            <NavBarButton onClick={onCadastrarProduto}>Cadastrar Produto</NavBarButton>
+            <NavBarButton onClick={onCadastrarProduto}>Incluir Produto</NavBarButton>
             <NavBarButton onClick={onAlterarProduto}>Alterar</NavBarButton>
             <NavBarButton onClick={onNecessidades}>Necessidades</NavBarButton>
+            <NavBarButton onClick={() => window.location.reload()}>Atualizar</NavBarButton>
           </div>
         )}
 

@@ -306,6 +306,18 @@ export default function AlmoxarifadoPage() {
                                     <span>0</span>
                                 ),
                             },
+                            {
+                                key: "mediaMensal",
+                                label: "Méd. Mensal",
+                                width: "w-[95px]",
+                                render: (val) => val != null ? val.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "-",
+                            },
+                            {
+                                key: "mediaDiaria",
+                                label: "Média Diária",
+                                width: "w-[90px]",
+                                render: (val) => val != null ? val.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "-",
+                            },
                         ]}
                         onSelect={(row) => setProdutoAtivo(row)}
                         selectedId={produtoAtivo?.id}

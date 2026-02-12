@@ -48,13 +48,51 @@ export async function GET(request) {
             return NextResponse.json({ sugestoes: produtos });
         }
 
-        // Buscar todos
+        // Data de 90 dias atrás
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        // Buscar todos com as solicitações dos últimos 90 dias
         const produtos = await prisma.produto.findMany({
             where,
             orderBy: { codigo: 'asc' },
+            include: {
+                solicitacoes: {
+                    where: {
+                        atualizadoEm: {
+                            gte: ninetyDaysAgo
+                        },
+                        quantidadeAtendida: {
+                            gt: 0
+                        }
+                    },
+                    select: {
+                        quantidadeAtendida: true
+                    }
+                }
+            }
         });
 
-        return NextResponse.json(produtos);
+        // Calcular médias
+        const produtosComMedia = produtos.map(produto => {
+            const consumoTotal = produto.solicitacoes.reduce((acc, sol) => acc + sol.quantidadeAtendida, 0);
+
+            // Média mensal (últimos 3 meses)
+            const mediaMensalVal = consumoTotal / 3;
+            const mediaMensal = mediaMensalVal.toFixed(2);
+
+            // Média diária (Média Mensal / 20 dias - dias úteis aprox)
+            const mediaDiaria = (mediaMensalVal / 20).toFixed(2);
+
+            const { solicitacoes, ...rest } = produto;
+            return {
+                ...rest,
+                mediaMensal: parseFloat(mediaMensal),
+                mediaDiaria: parseFloat(mediaDiaria)
+            };
+        });
+
+        return NextResponse.json(produtosComMedia);
     } catch (error) {
         console.error('Erro ao buscar produtos:', error);
         return NextResponse.json({ error: 'Erro ao buscar produtos' }, { status: 500 });
