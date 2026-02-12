@@ -55,25 +55,6 @@ html {
   overflow-x: hidden;
 }
 
-/* Base interactive transitions */
-.buttonHover,
-.buttonHover2 {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.buttonHover:active,
-.buttonHover2:active {
-  transform: scale(0.96);
-}
-
-.buttonAnimation {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.buttonAnimation:active {
-  transform: scale(0.96);
-}
-
 .buttonHover:hover {
   filter: brightness(90%);
   cursor: pointer;

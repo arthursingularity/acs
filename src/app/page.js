@@ -67,18 +67,6 @@ export default function Home() {
                 <img src="/imagens/logo.svg" alt="TOTVS" className="h-[160px]" />
               </div>
             </div>
-            {/* Module Header */}
-            <div className="bg-[#E3E3E3] p-1 border-b border-white">
-              <h2 className="text-[#0079B8] font-bold text-[15px] px-2 py-1 cursor-pointer hover:underline">
-                Estoque/Custos
-              </h2>
-              <div
-                className="flex items-center text-gray-600 text-[12px] px-2 py-1 cursor-pointer hover:bg-gray-200"
-              >
-                <span className="mr-1">≡</span>
-                <span>Trocar módulo</span>
-              </div>
-            </div>
 
             {/* Search */}
             <div className="p-2 border-b border-gray-300">
@@ -97,16 +85,16 @@ export default function Home() {
             </div>
 
             {/* Menu Links */}
-            <div className="flex-1 overflow-y-auto py-2">
+            <div className="overflow-y-auto py-2">
               <div onClick={() => setModalAlmoxarifado(true)}>
                 <MenuLink text="Almoxarifado" />
               </div>
               <div onClick={() => setModalOpen(true)}>
-                <MenuLink text="Controle de Endereçamento" />
+                <MenuLink text="Controle Geral de Produção" />
               </div>
-              <Link href={"/buscarendereco"}>
-                <MenuLink text="Buscar Endereço" />
-              </Link>
+              <div onClick={() => setModalOpen(true)}>
+                <MenuLink text="Endereçamento" />
+              </div>
               <Link href={"/manutencao"}>
                 <MenuLink text="Gerenciamento O.S." />
               </Link>
@@ -118,6 +106,9 @@ export default function Home() {
               </Link>
               <Link href={"/admin/produtos"}>
                 <MenuLink text="Admin" />
+              </Link>
+              <Link href={"/buscarendereco"}>
+                <MenuLink text="Buscar Endereço" />
               </Link>
             </div>
           </div>
@@ -234,7 +225,7 @@ export default function Home() {
 
 function MenuLink({ text, link }) {
   return (
-    <div className={`px-4 py-1.5 text-[13px] hover:underline cursor-pointer ${link ? 'text-[#005a9c] decoration-[#005a9c]' : 'text-[#0079B8] decoration-[#0079B8]'}`}>
+    <div className={`px-4 py-[4px] text-[13px] hover:underline cursor-pointer ${link ? 'text-[#005a9c] decoration-[#005a9c]' : 'text-[#0079B8] decoration-[#0079B8]'}`}>
       {text}
     </div>
   );

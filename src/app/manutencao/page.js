@@ -632,8 +632,8 @@ export default function ManutencaoPage() {
                             label: "Prioridade",
                             render: (val) => {
                                 const color = val === 'URGENTE' ? 'text-red-500' :
-                                    val === 'ALTA' ? 'text-orange-400' :
-                                        val === 'BAIXA' ? 'text-green-400' : 'text-black';
+                                    val === 'ALTA' ? 'text-orange-500' :
+                                        val === 'BAIXA' ? 'text-green-600' : 'text-black';
                                 return <span className={`font-medium ${color}`}>{val}</span>;
                             }
                         },

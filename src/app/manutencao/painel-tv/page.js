@@ -122,30 +122,26 @@ export default function PainelTVPage() {
             </div>
 
             {/* Content */}
-            <div className="p-4 h-[calc(100vh-64px)] grid grid-cols-12 grid-rows-6 gap-4">
-
+            <div className="p-4 h-[calc(100vh-64px)] grid grid-cols-15 grid-rows-6 gap-4">
                 {/* Status Cards - Top Row */}
-                <div className="col-span-2 row-span-1">
+                <div className="col-span-3 row-span-1">
                     <StatusCard label="Abertas" value={dashboard.resumo.abertas} bgColor="bg-yellow-500" />
                 </div>
-                <div className="col-span-2 row-span-1">
+                <div className="col-span-3 row-span-1">
                     <StatusCard label="Na Fila" value={dashboard.resumo.emFila} bgColor="bg-blue-600" />
                 </div>
-                <div className="col-span-2 row-span-1">
+                <div className="col-span-3 row-span-1">
                     <StatusCard label="Em Execução" value={dashboard.resumo.emExecucao} bgColor="bg-green-600" />
                 </div>
-                <div className="col-span-2 row-span-1">
+                <div className="col-span-3 row-span-1">
                     <StatusCard label="Pausadas" value={dashboard.resumo.pausadas} bgColor="bg-orange-500" />
                 </div>
-                <div className="col-span-2 row-span-1">
-                    <StatusCard label="Concluídas" value={dashboard.resumo.concluidasTecnica} bgColor="bg-purple-600" />
-                </div>
-                <div className="col-span-2 row-span-1">
+                <div className="col-span-3 row-span-1">
                     <StatusCard label="Encerradas Hoje" value={dashboard.resumo.encerradasHoje} bgColor="bg-gray-600" />
                 </div>
 
                 {/* Técnicos - Left Column */}
-                <div className="col-span-4 row-span-5 bg-gray-800/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
+                <div className="col-span-5 row-span-5 bg-gray-800/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
                     <h2 className="text-white font-bold text-lg mb-4 flex items-center">
                         <span className="mr-2">👷</span> Status dos Técnicos
                     </h2>
@@ -204,7 +200,7 @@ export default function PainelTVPage() {
                 </div>
 
                 {/* Fila de OS - Middle Column */}
-                <div className="col-span-4 row-span-5 bg-gray-800/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
+                <div className="col-span-5 row-span-5 bg-gray-800/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
                     <h2 className="text-white font-bold text-lg mb-4 flex items-center">
                         <span className="mr-2">📋</span> Fila de Ordens de Serviço
                     </h2>
@@ -249,7 +245,7 @@ export default function PainelTVPage() {
                 </div>
 
                 {/* Em Execução / Pausadas - Right Column */}
-                <div className="col-span-4 row-span-5 flex flex-col gap-4">
+                <div className="col-span-5 row-span-5 flex flex-col gap-4">
                     {/* Em Execução */}
                     <div className="flex-1 bg-green-900/30 rounded-xl p-4 overflow-hidden backdrop-blur-sm border border-green-600/30">
                         <h2 className="text-green-400 font-bold text-lg mb-3 flex items-center">

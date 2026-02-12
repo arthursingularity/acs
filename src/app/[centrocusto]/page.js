@@ -104,9 +104,9 @@ export default function Home() {
   // 🔹 Atualizar título da página
   useEffect(() => {
     if (descricaoSetor) {
-      document.title = `${descricaoSetor} - Controle de Endereçamento`;
+      document.title = `${descricaoSetor}`;
     } else if (centrocusto) {
-      document.title = `${centrocusto} - Controle de Endereçamento`;
+      document.title = `${centrocusto}`;
     }
   }, [descricaoSetor, centrocusto]);
 
