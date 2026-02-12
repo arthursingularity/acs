@@ -150,6 +150,14 @@ export async function PUT(request) {
             }
         }
 
+        if (updateData.fila !== undefined) {
+            if (updateData.fila === "") {
+                updateData.fila = null;
+            } else {
+                updateData.fila = parseInt(updateData.fila);
+            }
+        }
+
         // Ações especiais
         if (acao === "atribuir" && data.tecnicoId) {
             // Buscar a ordem atual para verificar se é SS
@@ -169,6 +177,9 @@ export async function PUT(request) {
             // Se a prioridade foi enviada na atribuição, incluir
             if (data.prioridade) {
                 updateData.prioridade = data.prioridade.toUpperCase();
+            }
+            if (data.fila) {
+                updateData.fila = parseInt(data.fila);
             }
         } else if (acao === "iniciar") {
             updateData = {

@@ -5,7 +5,7 @@ import { useTabs } from "../../context/TabsContext";
 import SelectSetorModal from "../system/SelectSetorModal";
 import NavBarButton from "./NavBarButton";
 
-export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, almoxarifadoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro, onCadastrarProduto, onAlterarProduto, onNecessidades }) {
+export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel, gridRows, gridCols, onAdjustGrid, onIniciarInventario, onFinalizarInventario, manutencaoButtons, almoxarifadoButtons, onIncluirOS, onAlterarOS, onWebMobile, onAtribuirOS, onFiltro, onLegenda, onCadastrarProduto, onAlterarProduto, onNecessidades }) {
   const [openModal, setOpenModal] = useState(false);
   const [username, setUsername] = useState("Visitante");
   const [currentDate, setCurrentDate] = useState("");
@@ -122,6 +122,7 @@ export default function NavBar({ almo, setor, centroCusto, titulo, onExportExcel
             <NavBarButton href="/manutencao/tecnicos">Técnicos</NavBarButton>
             <NavBarButton href="/stamconecta">Stam Conecta</NavBarButton>
             <NavBarButton onClick={onFiltro} hasDropdown>Filtro</NavBarButton>
+            <NavBarButton onClick={onLegenda} hasDropdown>Legenda</NavBarButton>
             <NavBarButton onClick={() => window.location.reload()}>Atualizar</NavBarButton>
           </div>
         )}

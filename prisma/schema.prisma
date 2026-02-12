@@ -164,6 +164,7 @@ model OrdemServico {
   tipoManutencao  String    // Elétrica, Mecânica, Avaliação
   tipoManutencaoCategoria String @default("CORRETIVA") // PREVENTIVA ou CORRETIVA
   prioridade      String    @default("normal") // baixa, normal, alta, urgente
+  fila            Int?      // Fila de prioridade numérica (000)
   observacaoAbertura String?
   solicitante     String    // Nome do solicitante
   

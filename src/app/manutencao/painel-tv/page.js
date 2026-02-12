@@ -150,9 +150,9 @@ export default function PainelTVPage() {
                             <div
                                 key={tecnico.id}
                                 className={`rounded-lg p-3 ${tecnico.status === "disponivel"
-                                    ? "bg-green-600/30 border border-green-500"
+                                    ? "bg-blue-600/30 border border-blue-500"
                                     : tecnico.status === "em_execucao"
-                                        ? "bg-blue-600/30 border border-blue-500"
+                                        ? "bg-green-600/30 border border-green-500"
                                         : "bg-orange-600/30 border border-orange-500"
                                     }`}
                             >
@@ -163,9 +163,9 @@ export default function PainelTVPage() {
                                     </div>
                                     <div
                                         className={`w-3 h-3 rounded-full ${tecnico.status === "disponivel"
-                                            ? "bg-green-400"
+                                            ? "bg-blue-400"
                                             : tecnico.status === "em_execucao"
-                                                ? "bg-blue-400 animate-pulse"
+                                                ? "bg-green-400 animate-pulse"
                                                 : "bg-orange-400"
                                             }`}
                                     />
@@ -199,46 +199,42 @@ export default function PainelTVPage() {
                     </div>
                 </div>
 
-                {/* Fila de OS - Middle Column */}
-                <div className="col-span-5 row-span-5 bg-gray-800/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
-                    <h2 className="text-white font-bold text-lg mb-4 flex items-center">
-                        <span className="mr-2">📋</span> Fila de Ordens de Serviço
+                {/* Em Execução - Middle Column */}
+                <div className="col-span-5 row-span-5 bg-green-900/30 rounded-xl p-4 overflow-hidden backdrop-blur-sm border border-green-600/40">
+                    <h2 className="text-green-400 font-bold text-lg mb-4 flex items-center">
+                        <span className="mr-2 animate-pulse">🔧</span> Em Execução
                     </h2>
                     <div className="space-y-2 overflow-auto h-[calc(100%-40px)]">
-                        {dashboard.ordensEmFila.map((ordem, index) => (
+                        {dashboard.ordensEmExecucao.map((ordem) => (
                             <div
                                 key={ordem.id}
-                                className={`rounded-lg p-3 ${index === 0 ? "bg-primary3/40 border-2 border-primary3" : "bg-gray-700/50"
-                                    }`}
+                                className="bg-green-900/50 rounded-lg p-3 border border-green-600/30"
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${getPrioridadeColor(ordem.prioridade)}`}>
-                                            {ordem.prioridade?.toUpperCase()}
-                                        </span>
-                                        <div>
-                                            <div className="text-white font-bold">OS{String(ordem.numero).padStart(6, '0')}</div>
-                                            <div className="text-white text-sm truncate max-w-[220px]">
-                                                {ordem.bem?.descricao}
-                                            </div>
-                                            <div className="text-cyan-300 text-sm truncate max-w-[200px]">
-                                                {ordem.bem?.localizacao}
-                                            </div>
-                                            <div className="text-gray-300 text-[11px]">
-                                                {ordem.tipoManutencao}
-                                            </div>
+                                    <div>
+                                        <div className="text-white font-bold">OS{String(ordem.numero).padStart(6, '0')}</div>
+                                        <div className="text-green-200 text-sm truncate max-w-[300px]">
+                                            {ordem.bem?.descricao}
+                                        </div>
+                                        <div className="text-cyan-300 text-sm truncate max-w-[280px]">
+                                            {ordem.bem?.localizacao}
+                                        </div>
+                                        <div className="text-gray-300 text-[11px]">
+                                            {ordem.tipoManutencao}
                                         </div>
                                     </div>
-                                    <div className="text-right text-lg font-medium text-cyan-300">
-                                        <div>{ordem.tecnico?.nome || "Não atribuído"}</div>
+                                    <div className="text-right">
+                                        <div className="text-white text-sm font-bold">{ordem.tecnico?.nome}</div>
+                                        <div className="text-green-300 text-sm">
+                                            ⏱️ {getTempoDecorrido(ordem.dataInicio)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         ))}
-                        {dashboard.ordensEmFila.length === 0 && (
-                            <div className="text-gray-500 text-center py-8 flex flex-col items-center">
-                                <span className="text-4xl mb-2">✅</span>
-                                <span>Fila vazia</span>
+                        {dashboard.ordensEmExecucao.length === 0 && (
+                            <div className="text-green-300/50 text-center py-8">
+                                Nenhuma OS em execução
                             </div>
                         )}
                     </div>
@@ -246,39 +242,43 @@ export default function PainelTVPage() {
 
                 {/* Em Execução / Pausadas - Right Column */}
                 <div className="col-span-5 row-span-5 flex flex-col gap-4">
-                    {/* Em Execução */}
-                    <div className="flex-1 bg-green-900/30 rounded-xl p-4 overflow-hidden backdrop-blur-sm border border-green-600/30">
-                        <h2 className="text-green-400 font-bold text-lg mb-3 flex items-center">
-                            <span className="mr-2 animate-pulse">🔧</span> Em Execução
+                    {/* Fila de OS */}
+                    <div className="flex-1 bg-blue-900/30 border border-blue-500/50 rounded-xl p-4 overflow-hidden backdrop-blur-sm">
+                        <h2 className="text-white font-bold text-lg mb-3 flex items-center">
+                            <span className="mr-2">📋</span> Fila de Ordens de Serviço
                         </h2>
                         <div className="space-y-2 overflow-auto h-[calc(100%-40px)]">
-                            {dashboard.ordensEmExecucao.map((ordem) => (
+                            {dashboard.ordensEmFila.map((ordem, index) => (
                                 <div
                                     key={ordem.id}
-                                    className="bg-green-900/50 rounded-lg p-3 border border-green-600/30"
+                                    className={`rounded-lg p-3 ${index === 0 ? "bg-primary3/40 border-2 border-primary3" : "bg-gray-700/50"
+                                        }`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="text-white font-bold">OS{String(ordem.numero).padStart(6, '0')}</div>
-                                            <div className="text-green-200 text-sm truncate max-w-[230px]">
-                                                {ordem.bem?.descricao}
-                                            </div>
-                                            <div className="text-cyan-300 text-sm truncate max-w-[200px]">
-                                                {ordem.bem?.localizacao}
+                                        <div className="flex items-center space-x-2">
+                                            <span className={`px-2 py-1 rounded text-[10px] font-bold ${getPrioridadeColor(ordem.prioridade)}`}>
+                                                {ordem.prioridade?.toUpperCase()}
+                                            </span>
+                                            <div>
+                                                <div className="text-white font-bold text-sm">OS{String(ordem.numero).padStart(6, '0')}</div>
+                                                <div className="text-white text-xs">
+                                                    {ordem.bem?.descricao}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-white text-sm">{ordem.tecnico?.nome}</div>
-                                            <div className="text-green-300 text-xs">
-                                                ⏱️ {getTempoDecorrido(ordem.dataInicio)}
+                                            <div className="text-cyan-300 text-xs font-medium">{ordem.tecnico?.nome || "ND"}</div>
+                                            <div className="text-gray-400 text-[10px] font-mono">
+                                                {ordem.fila ? `F:${String(ordem.fila).padStart(3, '0')}` : ''}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            {dashboard.ordensEmExecucao.length === 0 && (
-                                <div className="text-green-300/50 text-center py-4">
-                                    Nenhuma OS em execução
+                            {dashboard.ordensEmFila.length === 0 && (
+                                <div className="text-gray-500 text-center py-4 flex flex-col items-center">
+                                    <span className="text-2xl mb-1">✅</span>
+                                    <span>Fila vazia</span>
                                 </div>
                             )}
                         </div>

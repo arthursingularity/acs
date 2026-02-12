@@ -32,6 +32,7 @@ export default function ManutencaoPage() {
     const [dadosEdicao, setDadosEdicao] = useState({
         bemId: "",
         prioridade: "",
+        fila: "",
         tipoManutencao: "",
         tipoManutencaoCategoria: "",
         tecnicoId: ""
@@ -49,8 +50,10 @@ export default function ManutencaoPage() {
     const [scannerError, setScannerError] = useState("");
     const scannerRef = useRef(null);
     const html5QrCodeRef = useRef(null);
+    const [modalLegenda, setModalLegenda] = useState(false);
 
     const [atribuirPrioridade, setAtribuirPrioridade] = useState("NORMAL");
+    const [atribuirFila, setAtribuirFila] = useState("");
     const [atribuirTecnicoId, setAtribuirTecnicoId] = useState("");
     const [usuarios, setUsuarios] = useState([]);
 
@@ -225,6 +228,10 @@ export default function ManutencaoPage() {
         setModalFiltro(prev => !prev);
     };
 
+    const handleLegenda = () => {
+        setModalLegenda(prev => !prev);
+    };
+
     // Fechar dropdown de filtro ao clicar fora
     const filtroDropdownRef = useRef(null);
     useEffect(() => {
@@ -244,11 +251,30 @@ export default function ManutencaoPage() {
         };
     }, [modalFiltro]);
 
+    // Fechar dropdown de legenda ao clicar fora
+    const legendaDropdownRef = useRef(null);
+    useEffect(() => {
+        if (!modalLegenda) return;
+        const handleClickOutside = (e) => {
+            if (legendaDropdownRef.current && !legendaDropdownRef.current.contains(e.target)) {
+                setModalLegenda(false);
+            }
+        };
+        const timer = setTimeout(() => {
+            document.addEventListener("mousedown", handleClickOutside);
+        }, 0);
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [modalLegenda]);
+
     const handleAtribuirOS = () => {
         if (osSelecionada) {
             if (osSelecionada.status === "aberta" && !osSelecionada.tecnicoId) {
                 setOsDetalhes(osSelecionada);
                 setAtribuirPrioridade(osSelecionada.prioridade || "NORMAL");
+                setAtribuirFila(osSelecionada.fila ? String(osSelecionada.fila).padStart(3, '0') : "");
                 setAtribuirTecnicoId("");
                 setModalAtribuir(true);
             } else if (osSelecionada.tecnicoId) {
@@ -298,12 +324,12 @@ export default function ManutencaoPage() {
         }
     };
 
-    const handleAtribuir = async (ordemId, tecnicoId, prioridade) => {
+    const handleAtribuir = async (ordemId, tecnicoId, prioridade, fila) => {
         try {
             const response = await fetch("/api/manutencao/ordens", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: ordemId, tecnicoId, prioridade, acao: "atribuir" })
+                body: JSON.stringify({ id: ordemId, tecnicoId, prioridade, fila, acao: "atribuir" })
             });
 
             if (response.ok) {
@@ -396,6 +422,7 @@ export default function ManutencaoPage() {
             setDadosEdicao({
                 bemId: osDetalhes.bemId || "",
                 prioridade: osDetalhes.prioridade || "normal",
+                fila: osDetalhes.fila ? String(osDetalhes.fila).padStart(3, '0') : "",
                 tipoManutencao: osDetalhes.tipoManutencao || "AVALIAÇÃO",
                 tipoManutencaoCategoria: osDetalhes.tipoManutencaoCategoria || "CORRETIVA",
                 tecnicoId: osDetalhes.tecnicoId || ""
@@ -410,6 +437,7 @@ export default function ManutencaoPage() {
         setDadosEdicao({
             bemId: "",
             prioridade: "",
+            fila: "",
             tipoManutencao: "",
             tipoManutencaoCategoria: "",
             tecnicoId: ""
@@ -438,6 +466,13 @@ export default function ManutencaoPage() {
             }
             if (dadosEdicao.prioridade && dadosEdicao.prioridade !== osDetalhes.prioridade) {
                 updateData.prioridade = dadosEdicao.prioridade;
+            }
+            if (dadosEdicao.fila !== (osDetalhes.fila ? String(osDetalhes.fila).padStart(3, '0') : "")) {
+                if (dadosEdicao.fila && !/^\d{3}$/.test(dadosEdicao.fila)) {
+                    alert("A fila deve conter exatamente 3 números.");
+                    return;
+                }
+                updateData.fila = dadosEdicao.fila;
             }
             if (dadosEdicao.tipoManutencao && dadosEdicao.tipoManutencao !== osDetalhes.tipoManutencao) {
                 updateData.tipoManutencao = dadosEdicao.tipoManutencao;
@@ -584,6 +619,7 @@ export default function ManutencaoPage() {
                 onWebMobile={handleWebMobile}
                 onAtribuirOS={handleAtribuirOS}
                 onFiltro={handleFiltro}
+                onLegenda={handleLegenda}
             />
 
             {/* Tabela de Ordens de Serviço */}
@@ -613,10 +649,14 @@ export default function ManutencaoPage() {
                             width: "w-6",
                             render: (val, row) => `${row?.tipo || 'OS'}${String(val).padStart(6, '0')}`
                         },
+                        {
+                            key: "fila",
+                            label: "Fila",
+                            render: (val) => val ? String(val).padStart(3, '0') : "-"
+                        },
                         { key: "bem.codigo", label: "Equipamento/Bem" },
                         { key: "bem.descricao", label: "Descrição do Bem" },
                         { key: "bem.localizacao", label: "Localização" },
-                        { key: "centroCusto", label: "C.C.", width: "w-14" },
                         { key: "tipoManutencao", label: "Tipo de Solicitação" },
                         {
                             key: "tipoManutencaoCategoria",
@@ -635,18 +675,6 @@ export default function ManutencaoPage() {
                                     val === 'ALTA' ? 'text-orange-500' :
                                         val === 'BAIXA' ? 'text-green-600' : 'text-black';
                                 return <span className={`font-medium ${color}`}>{val}</span>;
-                            }
-                        },
-                        {
-                            key: "status",
-                            label: "Status",
-                            render: (val) => {
-                                const labels = {
-                                    aberta: "Aberta", em_fila: "Na Fila", em_execucao: "Em Execução",
-                                    pausada: "Pausada", concluida_tecnica: "Concluída",
-                                    encerrada: "Encerrada", cancelada: "Cancelada"
-                                };
-                                return labels[val] || val;
                             }
                         },
                         { key: "tecnico.nome", label: "Técnico Responsável" },
@@ -707,7 +735,6 @@ export default function ManutencaoPage() {
                             { value: "em_fila", label: "Na Fila" },
                             { value: "em_execucao", label: "Em Execução" },
                             { value: "pausada", label: "Pausadas" },
-                            { value: "concluida_tecnica", label: "Concluídas" },
                             { value: "encerrada", label: "Encerradas" }
                         ].map(option => (
                             <button
@@ -723,6 +750,34 @@ export default function ManutencaoPage() {
                             >
                                 {option.label}
                             </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Dropdown de Legenda - estilo ERP */}
+            {modalLegenda && (
+                <div
+                    ref={legendaDropdownRef}
+                    className="fixed z-[999] bg-white border border-gray-400 shadow-lg"
+                    style={{ top: '126px', left: '673px', minWidth: '200px', maxWidth: '200px' }}
+                >
+                    <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white border-b border-gray-300">
+                        LEGENDA DE STATUS
+                    </div>
+                    <div className="p-2 space-y-2">
+                        {[
+                            { color: "bg-gray-400", label: "Aberta" },
+                            { color: "bg-indigo-500", label: "Na Fila" },
+                            { color: "bg-blue-500", label: "Em Execução" },
+                            { color: "bg-orange-500", label: "Pausada" },
+                            { color: "bg-green-500", label: "Encerrada" },
+                            { color: "bg-red-500", label: "Cancelada" },
+                        ].map((item, idx) => (
+                            <div key={idx} className="flex items-center space-x-2">
+                                <span className={`w-4 h-4 rounded-full border ${item.color}`}></span>
+                                <span className="text-xs font-bold">{item.label}</span>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -904,6 +959,23 @@ export default function ManutencaoPage() {
                         </select>
                     </div>
 
+                    {/* Fila de Prioridade */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Fila (Prioridade)
+                        </label>
+                        <Input
+                            value={atribuirFila}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                                setAtribuirFila(val);
+                            }}
+                            placeholder="000"
+                            className="w-full text-center tracking-widest font-mono"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Formato: 3 dígitos numéricos (ex: 001)</p>
+                    </div>
+
                     {/* Técnico */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -952,7 +1024,11 @@ export default function ManutencaoPage() {
                                     alert("Selecione um técnico");
                                     return;
                                 }
-                                handleAtribuir(osDetalhes?.id, atribuirTecnicoId, atribuirPrioridade);
+                                if (atribuirFila && !/^\d{3}$/.test(atribuirFila)) {
+                                    alert("A fila deve conter exatamente 3 números.");
+                                    return;
+                                }
+                                handleAtribuir(osDetalhes?.id, atribuirTecnicoId, atribuirPrioridade, atribuirFila);
                             }}
                         >
                             {osDetalhes?.tipo === 'SS' ? 'Converter em OS e Atribuir' : 'Atribuir Técnico'}
@@ -974,7 +1050,7 @@ export default function ManutencaoPage() {
                 {osDetalhes && (
                     <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <div>
                                 <p className="text-xs text-gray-500 uppercase font-bold">Status</p>
                                 <p>{getStatusBadge(osDetalhes.status)}</p>
@@ -996,7 +1072,26 @@ export default function ManutencaoPage() {
                                     <p>{getPrioridadeBadge(osDetalhes.prioridade)}</p>
                                 )}
                             </div>
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase font-bold">Fila</p>
+                                {editandoOS ? (
+                                    <Input
+                                        value={dadosEdicao.fila}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                                            setDadosEdicao(prev => ({ ...prev, fila: val }));
+                                        }}
+                                        placeholder="000"
+                                        className="w-full text-sm font-mono text-center tracking-widest"
+                                    />
+                                ) : (
+                                    <p className="font-mono font-bold text-gray-700 bg-gray-100 px-2 rounded inline-block">
+                                        {osDetalhes.fila ? String(osDetalhes.fila).padStart(3, '0') : "-"}
+                                    </p>
+                                )}
+                            </div>
                         </div>
+
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -1093,26 +1188,28 @@ export default function ManutencaoPage() {
                             </div>
                         </div>
 
-                        {osDetalhes.dataInicio && (
-                            <div className="bg-gray-50 p-3 rounded border">
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Início</p>
-                                        <p className="font-mono text-sm">{formatDate(osDetalhes.dataInicio)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Fim</p>
-                                        <p className="font-mono text-sm">{osDetalhes.dataFim ? formatDate(osDetalhes.dataFim) : "-"}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Tempo Total</p>
-                                        <p className="font-bold font-mono text-blue-600">
-                                            {calcularTempoTotal(osDetalhes)}
-                                        </p>
+                        {
+                            osDetalhes.dataInicio && (
+                                <div className="bg-gray-50 p-3 rounded border">
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Início</p>
+                                            <p className="font-mono text-sm">{formatDate(osDetalhes.dataInicio)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Fim</p>
+                                            <p className="font-mono text-sm">{osDetalhes.dataFim ? formatDate(osDetalhes.dataFim) : "-"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Tempo Total</p>
+                                            <p className="font-bold font-mono text-blue-600">
+                                                {calcularTempoTotal(osDetalhes)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
 
                         <div>
                             <p className="text-xs text-gray-500 uppercase font-bold">Técnico Responsável</p>
@@ -1134,48 +1231,54 @@ export default function ManutencaoPage() {
                             )}
                         </div>
 
-                        {osDetalhes.observacaoAbertura && (
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase font-bold">Observação</p>
-                                <p className="bg-gray-50 p-2 rounded text-sm">{osDetalhes.observacaoAbertura}</p>
-                            </div>
-                        )}
-
-                        {osDetalhes.problema && (
-                            <div className="pt-2">
-                                <p className="text-xs text-gray-500 uppercase font-bold mb-2">Diagnóstico (PCS)</p>
-                                <div className="grid grid-cols-3 gap-2 text-sm">
-                                    <div className="bg-red-50 p-2 rounded">
-                                        <p className="text-xs font-bold text-red-700">Problema</p>
-                                        <p>{osDetalhes.problema?.descricao}</p>
-                                    </div>
-                                    <div className="bg-yellow-50 p-2 rounded">
-                                        <p className="text-xs font-bold text-yellow-700">Causa</p>
-                                        <p>{osDetalhes.causa?.descricao}</p>
-                                    </div>
-                                    <div className="bg-green-50 p-2 rounded">
-                                        <p className="text-xs font-bold text-green-700">Solução</p>
-                                        <p>{osDetalhes.solucao?.descricao}</p>
-                                    </div>
+                        {
+                            osDetalhes.observacaoAbertura && (
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase font-bold">Observação</p>
+                                    <p className="bg-gray-50 p-2 rounded text-sm">{osDetalhes.observacaoAbertura}</p>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
 
-                        {osDetalhes.pausas?.length > 0 && (
-                            <div className="pt-2">
-                                <p className="text-xs text-gray-500 uppercase font-bold mb-2">Pausas</p>
-                                <div className="space-y-2">
-                                    {osDetalhes.pausas.map((pausa) => (
-                                        <div key={pausa.id} className="bg-orange-50 p-2 rounded text-sm">
-                                            <p className="font-medium">{pausa.motivoPausa?.descricao}</p>
-                                            <p className="text-xs text-gray-500">
-                                                {formatDate(pausa.dataInicio)} - {pausa.dataFim ? formatDate(pausa.dataFim) : "Em andamento"}
-                                            </p>
+                        {
+                            osDetalhes.problema && (
+                                <div className="pt-2">
+                                    <p className="text-xs text-gray-500 uppercase font-bold mb-2">Diagnóstico (PCS)</p>
+                                    <div className="grid grid-cols-3 gap-2 text-sm">
+                                        <div className="bg-red-50 p-2 rounded">
+                                            <p className="text-xs font-bold text-red-700">Problema</p>
+                                            <p>{osDetalhes.problema?.descricao}</p>
                                         </div>
-                                    ))}
+                                        <div className="bg-yellow-50 p-2 rounded">
+                                            <p className="text-xs font-bold text-yellow-700">Causa</p>
+                                            <p>{osDetalhes.causa?.descricao}</p>
+                                        </div>
+                                        <div className="bg-green-50 p-2 rounded">
+                                            <p className="text-xs font-bold text-green-700">Solução</p>
+                                            <p>{osDetalhes.solucao?.descricao}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
+
+                        {
+                            osDetalhes.pausas?.length > 0 && (
+                                <div className="pt-2">
+                                    <p className="text-xs text-gray-500 uppercase font-bold mb-2">Pausas</p>
+                                    <div className="space-y-2">
+                                        {osDetalhes.pausas.map((pausa) => (
+                                            <div key={pausa.id} className="bg-orange-50 p-2 rounded text-sm">
+                                                <p className="font-medium">{pausa.motivoPausa?.descricao}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {formatDate(pausa.dataInicio)} - {pausa.dataFim ? formatDate(pausa.dataFim) : "Em andamento"}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        }
                         {/* Botão de Editar/Cancelar */}
                         <div className="flex justify-between">
                             <Button
@@ -1200,36 +1303,39 @@ export default function ManutencaoPage() {
                                 </div>
                             )}
                         </div>
-                    </div>
-                )}
-            </ModalWrapper>
+                    </div >
+                )
+                }
+            </ModalWrapper >
 
             {/* Modal QR Scanner */}
-            {modalQRScanner && (
-                <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col">
-                    <div className="p-4 flex justify-between items-center">
-                        <h3 className="text-white text-lg font-bold">Escanear QR Code</h3>
-                        <button
-                            onClick={closeQRScanner}
-                            className="text-white text-2xl"
-                        >
-                            ✕
-                        </button>
+            {
+                modalQRScanner && (
+                    <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col">
+                        <div className="p-4 flex justify-between items-center">
+                            <h3 className="text-white text-lg font-bold">Escanear QR Code</h3>
+                            <button
+                                onClick={closeQRScanner}
+                                className="text-white text-2xl"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center p-4">
+                            <div
+                                id="qr-reader"
+                                ref={scannerRef}
+                                className="w-full max-w-md bg-black rounded-lg overflow-hidden"
+                            />
+                        </div>
+                        <div className="p-4 text-center">
+                            <p className="text-white/80 text-sm">
+                                Aponte a câmera para o QR Code do equipamento
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex-1 flex items-center justify-center p-4">
-                        <div
-                            id="qr-reader"
-                            ref={scannerRef}
-                            className="w-full max-w-md bg-black rounded-lg overflow-hidden"
-                        />
-                    </div>
-                    <div className="p-4 text-center">
-                        <p className="text-white/80 text-sm">
-                            Aponte a câmera para o QR Code do equipamento
-                        </p>
-                    </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

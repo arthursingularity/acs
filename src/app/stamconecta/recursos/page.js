@@ -196,7 +196,7 @@ export default function RecursosPage() {
             <div className="bg-stamOrange text-white px-4 py-3 flex items-center gap-4 shadow-lg">
                 <button
                     onClick={() => router.push("/stamconecta")}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    className="p-2 hover:bg-white/20 buttonHover rounded-lg transition-colors"
                 >
                     <ArrowLeftIcon className="w-6 h-6" />
                 </button>
@@ -206,10 +206,9 @@ export default function RecursosPage() {
                 </div>
                 <button
                     onClick={handleOpenNovaOS}
-                    className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors"
+                    className="bg-primary3 buttonHover px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
                 >
-                    <PlusIcon className="w-5 h-5" />
-                    Incluir
+                    Solicitar Serviço
                 </button>
             </div>
 
@@ -275,7 +274,7 @@ export default function RecursosPage() {
                             <h3 className="font-bold text-lg">Nova Solicitação de Serviço</h3>
                             <button
                                 onClick={() => setModalNovaOS(false)}
-                                className="text-white text-2xl hover:opacity-80"
+                                className="text-white text-2xl buttonHover"
                             >
                                 ✕
                             </button>
