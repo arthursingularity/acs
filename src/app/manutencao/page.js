@@ -20,6 +20,7 @@ export default function ManutencaoPage() {
     const [loading, setLoading] = useState(true);
     const [filtroStatus, setFiltroStatus] = useState("todas");
     const [filtroTipo, setFiltroTipo] = useState("todas");
+    const [filtroSolicitacao, setFiltroSolicitacao] = useState("todas");
     const [modalFiltro, setModalFiltro] = useState(false);
     const [modalNovaOS, setModalNovaOS] = useState(false);
     const [modalDetalhes, setModalDetalhes] = useState(false);
@@ -633,7 +634,7 @@ export default function ManutencaoPage() {
                         setOsDetalhes(ordem);
                         setModalDetalhes(true);
                     }}
-                    data={ordens}
+                    data={filtroSolicitacao === "todas" ? ordens : ordens.filter(o => o.tipoManutencao?.toUpperCase() === filtroSolicitacao.toUpperCase())}
                     columns={[
                         {
                             key: "status",
@@ -727,7 +728,7 @@ export default function ManutencaoPage() {
                         ))}
                     </div>
                     {/* Seção Status */}
-                    <div>
+                    <div className="border-b border-gray-300">
                         <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white border-b border-gray-300">STATUS</div>
                         {[
                             { value: "todas", label: "Todas" },
@@ -744,6 +745,30 @@ export default function ManutencaoPage() {
                                     setModalFiltro(false);
                                 }}
                                 className={`w-full text-left cursor-pointer font-bold px-3 py-[5px] text-[12px] border-b border-gray-100 transition-colors ${filtroStatus === option.value
+                                    ? 'bg-primarySoft'
+                                    : 'hover:bg-primarySoft'
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Seção Tipo de Solicitação */}
+                    <div>
+                        <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white border-b border-gray-300">TIPO DE SOLICITAÇÃO</div>
+                        {[
+                            { value: "todas", label: "Todas" },
+                            { value: "MANUTENÇÃO ELÉTRICA", label: "Manutenção Elétrica" },
+                            { value: "MANUTENÇÃO MECÂNICA", label: "Manutenção Mecânica" },
+                            { value: "AVALIAÇÃO", label: "Avaliação" }
+                        ].map(option => (
+                            <button
+                                key={option.value}
+                                onClick={() => {
+                                    setFiltroSolicitacao(option.value);
+                                    setModalFiltro(false);
+                                }}
+                                className={`w-full text-left cursor-pointer font-bold px-3 py-[5px] text-[12px] border-b border-gray-100 transition-colors ${filtroSolicitacao === option.value
                                     ? 'bg-primarySoft'
                                     : 'hover:bg-primarySoft'
                                     }`}
