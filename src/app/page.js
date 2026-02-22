@@ -62,8 +62,8 @@ export default function Home() {
           {/* Sidebar */}
           <div className="w-[240px] bg-[#EEEEEE] border-r border-gray-300 flex flex-col">
             {/* Logo Area */}
-            <div className="border-[3px] border-black p-8 inline-block">
-              <div className="flex flex-col items-center space-y-3">
+            <div className="border-[3px] border-black px-8 inline-block">
+              <div className="flex flex-col items-center">
                 <img src="/imagens/logo.svg" alt="TOTVS" className="h-[160px]" />
               </div>
             </div>
@@ -89,9 +89,9 @@ export default function Home() {
               <div onClick={() => setModalAlmoxarifado(true)}>
                 <MenuLink text="Almoxarifado" />
               </div>
-              <div onClick={() => setModalOpen(true)}>
-                <MenuLink text="Controle Geral de Produção" />
-              </div>
+              <Link href={"/prototipo"}>
+                <MenuLink text="Protótipo" />
+              </Link>
               <div onClick={() => setModalOpen(true)}>
                 <MenuLink text="Endereçamento" />
               </div>
@@ -104,8 +104,14 @@ export default function Home() {
               <Link href={"/manutencao/mobile"}>
                 <MenuLink text="Web" />
               </Link>
+              <Link href={"/admin/usuarios"}>
+                <MenuLink text="Usuarios" />
+              </Link>
               <Link href={"/admin/produtos"}>
-                <MenuLink text="Admin" />
+                <MenuLink text="Produtos" />
+              </Link>
+              <Link href={"/admin/setores"}>
+                <MenuLink text="Setores" />
               </Link>
               <Link href={"/buscarendereco"}>
                 <MenuLink text="Buscar Endereço" />

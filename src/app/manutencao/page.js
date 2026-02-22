@@ -561,14 +561,11 @@ export default function ManutencaoPage() {
 
     const getStatusColor = (status) => {
         const colors = {
-            aberta: "bg-gray-400",
-            em_analise: "bg-cyan-500",
-            em_fila: "bg-indigo-500",
-            em_execucao: "bg-blue-500",
+            aberta: "bg-yellow-400",
+            em_fila: "bg-indigo-400",
+            em_execucao: "bg-green-500",
             pausada: "bg-orange-500",
-            concluida_tecnica: "bg-purple-500",
-            encerrada: "bg-green-500",
-            cancelada: "bg-red-500"
+            encerrada: "bg-blue-500",
         };
         return colors[status] || colors.aberta;
     };
@@ -792,12 +789,11 @@ export default function ManutencaoPage() {
                     </div>
                     <div className="p-2 space-y-2">
                         {[
-                            { color: "bg-gray-400", label: "Aberta" },
-                            { color: "bg-indigo-500", label: "Na Fila" },
-                            { color: "bg-blue-500", label: "Em Execução" },
+                            { color: "bg-yellow-400", label: "Aberta" },
+                            { color: "bg-indigo-400", label: "Na Fila" },
+                            { color: "bg-green-500", label: "Em Execução" },
                             { color: "bg-orange-500", label: "Pausada" },
-                            { color: "bg-green-500", label: "Encerrada" },
-                            { color: "bg-red-500", label: "Cancelada" },
+                            { color: "bg-blue-500", label: "Encerrada" },
                         ].map((item, idx) => (
                             <div key={idx} className="flex items-center space-x-2">
                                 <span className={`w-4 h-4 rounded-full border ${item.color}`}></span>

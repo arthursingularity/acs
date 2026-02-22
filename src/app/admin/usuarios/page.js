@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import ModalWrapper from "../../components/ui/ModalWrapper";
 import Input from "../../components/ui/Input";
 import DataTable from "../../components/ui/DataTable";
+import NavBarButton from "../../components/ui/NavBarButton";
 
 export default function UsersPage() {
     const [users, setUsers] = useState([]);
@@ -18,6 +19,8 @@ export default function UsersPage() {
     });
     const [loading, setLoading] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [modalAberto, setModalAberto] = useState(false);
+    const [userSelecionado, setUserSelecionado] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -40,8 +43,11 @@ export default function UsersPage() {
 
     // --- Gestão de Usuários ---
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
+        if (!formData.username || !formData.name || (!editingId && !formData.password)) {
+            alert("Preencha todos os campos obrigatórios");
+            return;
+        }
         setLoading(true);
 
         const method = editingId ? "PUT" : "POST";
@@ -55,6 +61,7 @@ export default function UsersPage() {
             });
             if (res.ok) {
                 resetForm();
+                setModalAberto(false);
                 fetchUsers();
             } else {
                 alert("Erro ao salvar usuário");
@@ -64,25 +71,48 @@ export default function UsersPage() {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async () => {
+        if (!userSelecionado) {
+            alert("Selecione um usuário para excluir");
+            return;
+        }
         if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
-        await fetch(`/api/users?id=${id}`, { method: "DELETE" });
+        await fetch(`/api/users?id=${userSelecionado.id}`, { method: "DELETE" });
+        setUserSelecionado(null);
         fetchUsers();
     };
 
-    const handleEdit = (user) => {
-        setEditingId(user.id);
+    const handleIncluir = () => {
+        resetForm();
+        setModalAberto(true);
+    };
+
+    const handleEditar = () => {
+        if (!userSelecionado) {
+            alert("Selecione um usuário para alterar");
+            return;
+        }
+        setEditingId(userSelecionado.id);
         setFormData({
-            username: user.username,
-            password: "", // Senha vazia para não alterar, a menos que digite
-            name: user.name || "",
-            role: user.role,
+            username: userSelecionado.username,
+            password: "",
+            name: userSelecionado.name || "",
+            role: userSelecionado.role,
         });
+        setModalAberto(true);
     };
 
     const resetForm = () => {
         setEditingId(null);
         setFormData({ username: "", password: "", name: "", role: "user" });
+    };
+
+    const handleSelectUser = (user) => {
+        if (userSelecionado?.id === user.id) {
+            setUserSelecionado(null);
+        } else {
+            setUserSelecionado(user);
+        }
     };
 
     // --- Gestão de Solicitações ---
@@ -96,7 +126,7 @@ export default function UsersPage() {
                 body: JSON.stringify({ id: reqId }),
             });
             if (res.ok) {
-                fetchData(); // Atualiza users e requests
+                fetchData();
             } else {
                 alert("Erro ao aprovar solicitação");
             }
@@ -119,143 +149,181 @@ export default function UsersPage() {
         }
     };
 
-    return (
-        <div>
-            <h2 className="text-2xl font-bold mb-6">Gerenciar Usuários</h2>
+    const getRoleBadge = (role) => {
+        if (role === "admin") {
+            return <span className="py-0.5 rounded-full text-[10px] text-purple-700">ADMIN</span>;
+        }
+        return <span className="py-0.5 rounded-full text-[10px] text-green-700">USUÁRIO</span>;
+    };
 
+    return (
+        <div className="flex flex-col h-full">
             {/* Seção de Solicitações Pendentes */}
             {requests.length > 0 && (
-                <div className="mb-8">
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-                        <h3 className="font-bold mb-2">Solicitações de Cadastro Pendentes</h3>
-                        <div className="bg-white rounded border border-gray-300 overflow-hidden">
-                            <table
-                                className="w-full border-collapse text-[12px]"
-                                style={{ fontFamily: "Segoe UI, Tahoma, sans-serif" }}
-                            >
-                                <thead className="datatable-thead">
-                                    <tr className="bg-[#E5E5E5] ">
-                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Nome</th>
-                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Usuário</th>
-                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Data da Solicitação</th>
-                                        <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Ações</th>
+                <div className="bg-yellow-50 border-b border-primary3">
+                    <div className="bg-blackGradient px-3 py-1 text-[11px] font-bold text-white">
+                        SOLICITAÇÕES DE CADASTRO PENDENTES ({requests.length})
+                    </div>
+                    <div className="overflow-hidden">
+                        <table
+                            className="w-full border-collapse text-[12px]"
+                            style={{ fontFamily: "Segoe UI, Tahoma, sans-serif" }}
+                        >
+                            <thead className="datatable-thead">
+                                <tr className="bg-[#E5E5E5]">
+                                    <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Nome</th>
+                                    <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Usuário</th>
+                                    <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Data</th>
+                                    <th className="px-2 py-1 text-left font-bold text-black whitespace-nowrap">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {requests.map((req) => (
+                                    <tr key={req.id} className="border-b font-medium text-[12px] border-[#ddd] bg-white">
+                                        <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.name}</td>
+                                        <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.username}</td>
+                                        <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">
+                                            {new Date(req.createdAt).toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap space-x-2">
+                                            <button
+                                                onClick={() => handleApprove(req.id)}
+                                                className="border-2 border-primary3 h-[20px] rounded bg-primary3 text-white px-2 text-[10px] font-bold hover:brightness-110 cursor-pointer transition-all"
+                                            >
+                                                Aceitar
+                                            </button>
+                                            <button
+                                                onClick={() => handleReject(req.id)}
+                                                className="border-2 border-red-500 h-[20px] rounded text-red-500 px-2 text-[10px] font-bold hover:bg-red-50 cursor-pointer transition-colors"
+                                            >
+                                                Recusar
+                                            </button>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="">
-                                    {requests.map((req) => (
-                                        <tr key={req.id} className="border-b font-medium text-[12px] border-[#ddd] cursor-pointer buttonHover bg-white">
-                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.name}</td>
-                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">{req.username}</td>
-                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">
-                                                {new Date(req.createdAt).toLocaleDateString('pt-BR')}
-                                            </td>
-                                            <td className="px-2 border-r border-[#CCCCCC] text-black whitespace-nowrap">
-                                                <button
-                                                    onClick={() => handleApprove(req.id)}
-                                                    className="text-white cursor-pointer bg-primary3 buttonHover px-2 py-[3px] rounded text-xs font-bold transition-colors"
-                                                >
-                                                    Aceitar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReject(req.id)}
-                                                    className="text-red-500 cursor-pointer px-3 py-1 text-xs buttonHover font-bold"
-                                                >
-                                                    Recusar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
 
-            {/* Form de Criação/Edição */}
-            <div className="bg-white p-6 rounded-lg mb-8 border border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">{editingId ? "Editar Usuário" : "Novo Usuário"}</h3>
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                        <Input
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
-                        <Input
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {editingId ? "Nova Senha (opcional)" : "Senha"}
-                        </label>
-                        <Input
-                            type="password"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required={!editingId}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nível</label>
-                        <select
-                            value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                            className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="user">Usuário</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                    </div>
-                    <div className="md:col-span-1 flex gap-2">
-                        <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-500 justify-center h-10" disabled={loading}>
-                            {loading ? "Salvando..." : (editingId ? "Atualizar" : "Criar")}
-                        </Button>
-                        {editingId && (
-                            <Button type="button" onClick={resetForm} variant="outline" className="h-10 px-4">
-                                ✕
-                            </Button>
-                        )}
-                    </div>
-                </form>
+            {/* Barra de Ferramentas - estilo ERP */}
+            <div className="bg-white h-[24px] font-bold tracking-wide flex items-center justify-between text-[11px] border-b border-gray-300">
+                <div className="flex items-center">
+                    <NavBarButton onClick={handleIncluir}>Incluir</NavBarButton>
+                    <NavBarButton onClick={handleEditar}>Alterar</NavBarButton>
+                    <NavBarButton onClick={handleDelete}>Excluir</NavBarButton>
+                    <NavBarButton onClick={fetchData}>Atualizar</NavBarButton>
+                </div>
+
+                <div className="flex items-center pr-3">
+                    <span className="text-[11px] text-gray-500 font-medium">{users.length} usuário(s)</span>
+                </div>
             </div>
 
-            {/* Lista de Usuários */}
-            <div className="bg-white rounded-lg overflow-hidden border border-gray-300">
+            {/* Tabela de Dados - estilo ERP */}
+            <div className="tabelaNova flex-1 overflow-hidden mt-[3px]">
                 <DataTable
                     data={users}
+                    selectedId={userSelecionado?.id}
+                    onSelect={handleSelectUser}
+                    onDoubleClick={(user) => {
+                        setEditingId(user.id);
+                        setFormData({
+                            username: user.username,
+                            password: "",
+                            name: user.name || "",
+                            role: user.role,
+                        });
+                        setModalAberto(true);
+                    }}
                     columns={[
                         { key: "name", label: "Nome" },
                         { key: "username", label: "Usuário" },
                         {
                             key: "role",
                             label: "Nível",
-                            render: (val) => (
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${val === 'admin' ? 'text-purple-800' : 'text-green-600'}`}>
-                                    {val}
-                                </span>
-                            )
+                            render: (val) => getRoleBadge(val)
                         },
-                        {
-                            key: "id",
-                            label: "Ações",
-                            render: (val, row) => (
-                                <div className="text-left space-x-3">
-                                    <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="text-blue-600 hover:text-blue-900">Editar</button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }} className="text-red-600 hover:text-red-900">Excluir</button>
-                                </div>
-                            )
-                        }
                     ]}
                 />
             </div>
+
+            {/* Modal Cadastro/Edição - estilo ERP */}
+            <ModalWrapper
+                isOpen={modalAberto}
+                onClose={() => { setModalAberto(false); resetForm(); }}
+                title={editingId ? "Alterar Usuário" : "Incluir Usuário"}
+                className="w-[450px]"
+            >
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Nome *
+                        </label>
+                        <Input
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="NOME COMPLETO"
+                            className="w-full h-[28px] text-[12px]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Usuário *
+                        </label>
+                        <Input
+                            value={formData.username}
+                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            placeholder="NOME DE USUÁRIO"
+                            className="w-full h-[28px] text-[12px]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            {editingId ? "Nova Senha (opcional)" : "Senha *"}
+                        </label>
+                        <Input
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            placeholder={editingId ? "DEIXE VAZIO PARA MANTER" : "SENHA"}
+                            className="w-full h-[28px] text-[12px]"
+                            uppercase={false}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Nível
+                        </label>
+                        <select
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            className="w-full border border-gray-300 rounded h-[28px] px-2 text-[12px] outline-none focus:border-primary3 bg-white uppercase"
+                        >
+                            <option value="user">USUÁRIO</option>
+                            <option value="admin">ADMINISTRADOR</option>
+                        </select>
+                    </div>
+
+                    {/* Botões de ação - estilo ERP */}
+                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                        <button
+                            onClick={() => { setModalAberto(false); resetForm(); }}
+                            className="border-2 border-gray-400 h-[28px] rounded text-gray-600 px-4 font-bold text-[11px] hover:bg-gray-100 cursor-pointer transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="border-2 border-primary3 h-[28px] rounded bg-primary3 text-white px-4 font-bold text-[11px] hover:brightness-110 cursor-pointer transition-all disabled:opacity-50"
+                        >
+                            {loading ? "Salvando..." : (editingId ? "Salvar" : "Cadastrar")}
+                        </button>
+                    </div>
+                </div>
+            </ModalWrapper>
         </div>
     );
 }

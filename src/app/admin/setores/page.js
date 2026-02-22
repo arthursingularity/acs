@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import ModalWrapper from "../../components/ui/ModalWrapper";
 import Input from "../../components/ui/Input";
 import DataTable from "../../components/ui/DataTable";
+import NavBarButton from "../../components/ui/NavBarButton";
 
 export default function SetoresPage() {
     const [setores, setSetores] = useState([]);
@@ -14,10 +15,12 @@ export default function SetoresPage() {
     });
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [modalAberto, setModalAberto] = useState(false);
+    const [setorSelecionado, setSetorSelecionado] = useState(null);
 
     useEffect(() => {
         fetchSetores();
-        document.title = "Gerenciar Setores - Admin";
+        document.title = "Gerenciar Setores";
     }, []);
 
     const fetchSetores = async () => {
@@ -25,8 +28,11 @@ export default function SetoresPage() {
         if (res.ok) setSetores(await res.json());
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
+        if (!formData.centroCusto || !formData.descricao) {
+            alert("Preencha todos os campos obrigatórios");
+            return;
+        }
         setLoading(true);
 
         const method = isEditing ? "PUT" : "POST";
@@ -39,6 +45,7 @@ export default function SetoresPage() {
             });
             if (res.ok) {
                 resetForm();
+                setModalAberto(false);
                 fetchSetores();
             } else {
                 alert("Erro ao salvar setor");
@@ -48,19 +55,34 @@ export default function SetoresPage() {
         }
     };
 
-    const handleDelete = async (centroCusto) => {
+    const handleDelete = async () => {
+        if (!setorSelecionado) {
+            alert("Selecione um setor para excluir");
+            return;
+        }
         if (!confirm("Tem certeza? Isso apagará todos os endereços deste setor!")) return;
-        await fetch(`/api/setores/${centroCusto}`, { method: "DELETE" });
+        await fetch(`/api/setores/${setorSelecionado.centroCusto}`, { method: "DELETE" });
+        setSetorSelecionado(null);
         fetchSetores();
     };
 
-    const handleEdit = (setor) => {
+    const handleIncluir = () => {
+        resetForm();
+        setModalAberto(true);
+    };
+
+    const handleEditar = () => {
+        if (!setorSelecionado) {
+            alert("Selecione um setor para alterar");
+            return;
+        }
         setIsEditing(true);
         setFormData({
-            centroCusto: setor.centroCusto,
-            descricao: setor.descricao,
-            almoxarifado: setor.almoxarifado,
+            centroCusto: setorSelecionado.centroCusto,
+            descricao: setorSelecionado.descricao,
+            almoxarifado: setorSelecionado.almoxarifado,
         });
+        setModalAberto(true);
     };
 
     const resetForm = () => {
@@ -68,74 +90,114 @@ export default function SetoresPage() {
         setFormData({ centroCusto: "", descricao: "", almoxarifado: "" });
     };
 
-    return (
-        <div>
-            <h2 className="text-2xl font-bold mb-6">Gerenciar Setores</h2>
+    const handleSelectSetor = (setor) => {
+        if (setorSelecionado?.id === setor.id) {
+            setSetorSelecionado(null);
+        } else {
+            setSetorSelecionado(setor);
+        }
+    };
 
-            {/* Form de Criação/Edição */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
-                <h3 className="text-lg font-semibold mb-4">{isEditing ? "Editar Setor" : "Novo Setor"}</h3>
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Centro de Custo</label>
-                        <Input
-                            value={formData.centroCusto}
-                            onChange={(e) => setFormData({ ...formData, centroCusto: e.target.value })}
-                            required
-                            disabled={isEditing}
-                            className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                        <Input
-                            value={formData.descricao}
-                            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Almoxarifado</label>
-                        <Input
-                            value={formData.almoxarifado}
-                            onChange={(e) => setFormData({ ...formData, almoxarifado: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="md:col-span-1 flex gap-2">
-                        <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 justify-center h-10" disabled={loading}>
-                            {loading ? "Salvando..." : (isEditing ? "Atualizar" : "Criar Setor")}
-                        </Button>
-                        {isEditing && (
-                            <Button type="button" onClick={resetForm} variant="outline" className="h-10 px-4">
-                                ✕
-                            </Button>
-                        )}
-                    </div>
-                </form>
+    return (
+        <div className="flex flex-col h-full">
+            {/* Barra de Ferramentas - estilo ERP */}
+            <div className="bg-white h-[24px] font-bold tracking-wide flex items-center justify-between text-[11px] border-b border-gray-300">
+                <div className="flex items-center">
+                    <NavBarButton onClick={handleIncluir}>Incluir</NavBarButton>
+                    <NavBarButton onClick={handleEditar}>Alterar</NavBarButton>
+                    <NavBarButton onClick={handleDelete}>Excluir</NavBarButton>
+                    <NavBarButton onClick={fetchSetores}>Atualizar</NavBarButton>
+                </div>
+
+                <div className="flex items-center pr-3">
+                    <span className="text-[11px] text-gray-500 font-medium">{setores.length} setor(es)</span>
+                </div>
             </div>
 
-            {/* Lista de Setores */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+            {/* Tabela de Dados - estilo ERP */}
+            <div className="tabelaNova flex-1 overflow-hidden mt-[3px]">
                 <DataTable
                     data={setores}
+                    selectedId={setorSelecionado?.id}
+                    onSelect={handleSelectSetor}
+                    onDoubleClick={(setor) => {
+                        setIsEditing(true);
+                        setFormData({
+                            centroCusto: setor.centroCusto,
+                            descricao: setor.descricao,
+                            almoxarifado: setor.almoxarifado,
+                        });
+                        setModalAberto(true);
+                    }}
                     columns={[
                         { key: "centroCusto", label: "Centro de Custo" },
                         { key: "descricao", label: "Descrição" },
                         { key: "almoxarifado", label: "Almoxarifado" },
-                        {
-                            key: "id",
-                            label: "Ações",
-                            render: (val, row) => (
-                                <div className="text-right space-x-3">
-                                    <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="text-blue-600 hover:text-blue-900">Editar</button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDelete(row.centroCusto); }} className="text-red-600 hover:text-red-900">Excluir</button>
-                                </div>
-                            )
-                        }
                     ]}
                 />
             </div>
+
+            {/* Modal Cadastro/Edição - estilo ERP */}
+            <ModalWrapper
+                isOpen={modalAberto}
+                onClose={() => { setModalAberto(false); resetForm(); }}
+                title={isEditing ? "Alterar Setor" : "Incluir Setor"}
+                className="w-[450px]"
+            >
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Centro de Custo *
+                        </label>
+                        <Input
+                            value={formData.centroCusto}
+                            onChange={(e) => setFormData({ ...formData, centroCusto: e.target.value })}
+                            placeholder="EX: 314111"
+                            className="w-full h-[28px] text-[12px]"
+                            disabled={isEditing}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Descrição *
+                        </label>
+                        <Input
+                            value={formData.descricao}
+                            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                            placeholder="DESCRIÇÃO DO SETOR"
+                            className="w-full h-[28px] text-[12px]"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Almoxarifado
+                        </label>
+                        <Input
+                            value={formData.almoxarifado}
+                            onChange={(e) => setFormData({ ...formData, almoxarifado: e.target.value })}
+                            placeholder="ALMOXARIFADO"
+                            className="w-full h-[28px] text-[12px]"
+                        />
+                    </div>
+
+                    {/* Botões de ação - estilo ERP */}
+                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                        <button
+                            onClick={() => { setModalAberto(false); resetForm(); }}
+                            className="border-2 border-gray-400 h-[28px] rounded text-gray-600 px-4 font-bold text-[11px] hover:bg-gray-100 cursor-pointer transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="border-2 border-primary3 h-[28px] rounded bg-primary3 text-white px-4 font-bold text-[11px] hover:brightness-110 cursor-pointer transition-all disabled:opacity-50"
+                        >
+                            {loading ? "Salvando..." : (isEditing ? "Salvar" : "Cadastrar")}
+                        </button>
+                    </div>
+                </div>
+            </ModalWrapper>
         </div>
     );
 }

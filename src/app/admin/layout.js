@@ -26,20 +26,12 @@ export default function AdminLayout({ children }) {
     };
 
     return (
-        <div>
+        <div className="bg-gray-100 h-screen overflow-hidden flex flex-col">
             <NavBar />
-            <div className="flex h-screen bg-gray-100 mt-[100px]">
-                <ThirdNavBar>
-                    <ThirdNavItem label="Produtos" link="/admin/produtos" />
-                    <ThirdNavItem label="Setores" link="/admin/setores" />
-                    <ThirdNavItem label="Usuários" link="/admin/usuarios" />
-                </ThirdNavBar>
-
+            <div className="flex flex-col flex-1 overflow-hidden mt-[100px]">
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto mt-5">
-                    <div className="p-8 max-w-6xl mx-auto">
-                        {children}
-                    </div>
+                <main className="flex-1 overflow-hidden">
+                    {children}
                 </main>
             </div>
         </div>

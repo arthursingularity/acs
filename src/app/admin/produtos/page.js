@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import { useEffect, useState, useRef } from "react";
+import ModalWrapper from "../../components/ui/ModalWrapper";
 import Input from "../../components/ui/Input";
 import DataTable from "../../components/ui/DataTable";
+import NavBarButton from "../../components/ui/NavBarButton";
 
 export default function ProdutosPage() {
     const [produtos, setProdutos] = useState([]);
@@ -14,10 +15,12 @@ export default function ProdutosPage() {
     const [page, setPage] = useState(1);
     const itemsPerPage = 50;
     const [isEditing, setIsEditing] = useState(false);
+    const [modalAberto, setModalAberto] = useState(false);
+    const [produtoSelecionado, setProdutoSelecionado] = useState(null);
 
     useEffect(() => {
         fetchProdutos();
-        document.title = "Gerenciar Produtos - Admin";
+        document.title = "Gerenciar Produtos";
     }, []);
 
     useEffect(() => {
@@ -36,14 +39,16 @@ export default function ProdutosPage() {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
+        if (!formData.codigo || !formData.descricao) {
+            alert("Preencha todos os campos obrigatórios");
+            return;
+        }
         setLoading(true);
 
         try {
             let res;
             if (isEditing) {
-                // PUT espera um array para bulk update, mas serve para um só
                 res = await fetch("/api/produtos", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -59,6 +64,7 @@ export default function ProdutosPage() {
 
             if (res.ok) {
                 resetForm();
+                setModalAberto(false);
                 fetchProdutos();
             } else {
                 alert("Erro ao salvar produto");
@@ -68,20 +74,33 @@ export default function ProdutosPage() {
         }
     };
 
-    const handleDelete = async (codigo) => {
-        if (!confirm("Tem certeza?")) return;
-        await fetch(`/api/produtos?codigo=${codigo}`, { method: "DELETE" });
+    const handleDelete = async () => {
+        if (!produtoSelecionado) {
+            alert("Selecione um produto para excluir");
+            return;
+        }
+        if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+        await fetch(`/api/produtos?codigo=${produtoSelecionado.codigo}`, { method: "DELETE" });
+        setProdutoSelecionado(null);
         fetchProdutos();
     };
 
-    const handleEdit = (produto) => {
+    const handleIncluir = () => {
+        resetForm();
+        setModalAberto(true);
+    };
+
+    const handleEditar = () => {
+        if (!produtoSelecionado) {
+            alert("Selecione um produto para alterar");
+            return;
+        }
         setIsEditing(true);
         setFormData({
-            codigo: produto.codigo,
-            descricao: produto.descricao,
+            codigo: produtoSelecionado.codigo,
+            descricao: produtoSelecionado.descricao,
         });
-        // Rola para o topo para ver o formulário
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setModalAberto(true);
     };
 
     const resetForm = () => {
@@ -89,109 +108,148 @@ export default function ProdutosPage() {
         setFormData({ codigo: "", descricao: "" });
     };
 
+    const handleSelectProduto = (produto) => {
+        if (produtoSelecionado?.id === produto.id) {
+            setProdutoSelecionado(null);
+        } else {
+            setProdutoSelecionado(produto);
+        }
+    };
+
     const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
 
     return (
-        <div className="pb-20">
-            <h2 className="text-2xl font-bold mb-6">Gerenciar Produtos</h2>
+        <div className="flex flex-col h-full">
+            {/* Barra de Ferramentas - estilo ERP */}
+            <div className="bg-white h-[24px] font-bold tracking-wide flex items-center justify-between text-[11px] border-b border-gray-300">
+                <div className="flex items-center">
+                    <NavBarButton onClick={handleIncluir}>Incluir</NavBarButton>
+                    <NavBarButton onClick={handleEditar}>Alterar</NavBarButton>
+                    <NavBarButton onClick={handleDelete}>Excluir</NavBarButton>
+                    <NavBarButton onClick={fetchProdutos}>Atualizar</NavBarButton>
 
-            {/* Form de Criação/Edição */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
-                <h3 className="text-lg font-semibold mb-4">{isEditing ? "Editar Produto" : "Novo Produto"}</h3>
-                <form onSubmit={handleSubmit} className="flex gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Código</label>
-                        <Input
-                            value={formData.codigo}
-                            onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
-                            required
-                            disabled={isEditing}
-                            className={isEditing ? "bg-gray-100 cursor-not-allowed" : "w-[150px]"}
+                    {/* Separador */}
+                    <div className="w-[1px] h-[16px] bg-gray-300 mx-2"></div>
+
+                    {/* Campo de pesquisa inline - estilo ERP */}
+                    <div className="flex items-center">
+                        <span className="text-[11px] text-gray-500 font-bold mr-1">Pesquisar:</span>
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+                            placeholder="CÓDIGO OU DESCRIÇÃO..."
+                            className="border border-gray-300 rounded h-[18px] px-2 text-[11px] w-[220px] outline-none focus:border-primary3 uppercase"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                        <Input
-                            value={formData.descricao}
-                            onChange={(e) => setFormData({ ...formData, descricao: e.target.value.toUpperCase() })}
-                            required
-                            className="w-full"
-                        />
-                    </div>
-                    <div className="md:col-span-1 flex gap-2">
-                        <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-500 justify-center h-9 px-3" disabled={loading}>
-                            {loading ? "Salvando..." : (isEditing ? "Atualizar" : "Cadastrar Produto")}
-                        </Button>
-                        {isEditing && (
-                            <Button type="button" onClick={resetForm} variant="outline" className="h-10 px-4">
-                                ✕
-                            </Button>
-                        )}
-                    </div>
-                </form>
+                </div>
+
+                <div className="flex items-center pr-3">
+                    <span className="text-[11px] text-gray-500 font-medium">
+                        {filtered.length} produto(s) | Pág. {page}/{totalPages || 1}
+                    </span>
+                </div>
             </div>
 
-            {/* Buscador */}
-            <div className="mb-4">
-                <Input
-                    placeholder="Buscar produto por código ou descrição..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="w-full max-w-md"
+            {/* Tabela de Dados - estilo ERP */}
+            <div className="tabelaNova flex-1 overflow-hidden mt-[3px]">
+                <DataTable
+                    data={paginated}
+                    selectedId={produtoSelecionado?.id}
+                    onSelect={handleSelectProduto}
+                    onDoubleClick={(produto) => {
+                        setIsEditing(true);
+                        setFormData({
+                            codigo: produto.codigo,
+                            descricao: produto.descricao,
+                        });
+                        setModalAberto(true);
+                    }}
+                    columns={[
+                        {
+                            key: "codigo",
+                            label: "Código",
+                            width: "w-[1px]",
+                            render: (val) => <span className="font-mono font-bold text-primary3">{val}</span>
+                        },
+                        { key: "descricao", label: "Descrição" },
+                        { key: "centroCusto", label: "C. Custo" },
+                        { key: "saldo", label: "Saldo", render: (val) => val || 0 },
+                    ]}
                 />
             </div>
 
-            {/* Lista de Produtos */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-                <div className="overflow-x-auto">
-                    <DataTable
-                        data={paginated}
-                        columns={[
-                            { key: "codigo", label: "Código", width: "w-[1px]" },
-                            { key: "descricao", label: "Descrição", width: "w-[600px]" },
-                            { key: "centroCusto", label: "C. Custo", width: "w-[50px]" },
-                            { key: "saldo", label: "Saldo", width: "w-[80px]", render: (val) => val || 0 },
-                            {
-                                key: "id",
-                                label: "Ações",
-                                render: (val, row) => (
-                                    <div className="text-right w-[1px] flex space-x-5 h-4">
-                                        <button onClick={(e) => { e.stopPropagation(); handleEdit(row); }} className="border border-primary3 h-[17px] text-[11px] flex items-center rounded text-primary3 px-2 buttonHover2">Editar</button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(row.codigo); }} className="text-red-600 hover:text-red-900 cursor-pointer">Excluir</button>
-                                    </div>
-                                )
-                            }
-                        ]}
-                    />
+            {/* Paginação - estilo ERP */}
+            {totalPages > 1 && (
+                <div className="bg-white h-[24px] flex items-center justify-center border-t border-gray-300 space-x-2">
+                    <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                        className={`border border-gray-300 rounded h-[18px] px-2 text-[11px] font-bold ${page === 1 ? "text-gray-300 cursor-not-allowed" : "text-primary3 hover:bg-primarySoft cursor-pointer"}`}
+                    >
+                        ◀ Anterior
+                    </button>
+                    <span className="text-[11px] font-bold text-gray-600">Página {page} de {totalPages}</span>
+                    <button
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                        className={`border border-gray-300 rounded h-[18px] px-2 text-[11px] font-bold ${page >= totalPages ? "text-gray-300 cursor-not-allowed" : "text-primary3 hover:bg-primarySoft cursor-pointer"}`}
+                    >
+                        Próxima ▶
+                    </button>
                 </div>
+            )}
 
-                {/* Paginação */}
-                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                        Mostrando {paginated.length} de {filtered.length} produtos
-                    </span>
-                    <div className="flex space-x-2">
-                        <Button
-                            variant="outline"
-                            disabled={page === 1}
-                            onClick={() => setPage(p => p - 1)}
+            {/* Modal Cadastro/Edição - estilo ERP */}
+            <ModalWrapper
+                isOpen={modalAberto}
+                onClose={() => { setModalAberto(false); resetForm(); }}
+                title={isEditing ? "Alterar Produto" : "Incluir Produto"}
+                className="w-[450px]"
+            >
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Código *
+                        </label>
+                        <Input
+                            value={formData.codigo}
+                            onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
+                            placeholder="CÓDIGO DO PRODUTO"
+                            className="w-full h-[28px] text-[12px]"
+                            disabled={isEditing}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-0.5">
+                            Descrição *
+                        </label>
+                        <Input
+                            value={formData.descricao}
+                            onChange={(e) => setFormData({ ...formData, descricao: e.target.value.toUpperCase() })}
+                            placeholder="DESCRIÇÃO DO PRODUTO"
+                            className="w-full h-[28px] text-[12px]"
+                        />
+                    </div>
+
+                    {/* Botões de ação - estilo ERP */}
+                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                        <button
+                            onClick={() => { setModalAberto(false); resetForm(); }}
+                            className="border-2 border-gray-400 h-[28px] rounded text-gray-600 px-4 font-bold text-[11px] hover:bg-gray-100 cursor-pointer transition-colors"
                         >
-                            Anterior
-                        </Button>
-                        <div className="flex items-center px-4">
-                            Página {page} de {totalPages}
-                        </div>
-                        <Button
-                            variant="outline"
-                            disabled={page >= totalPages}
-                            onClick={() => setPage(p => p + 1)}
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="border-2 border-primary3 h-[28px] rounded bg-primary3 text-white px-4 font-bold text-[11px] hover:brightness-110 cursor-pointer transition-all disabled:opacity-50"
                         >
-                            Próxima
-                        </Button>
+                            {loading ? "Salvando..." : (isEditing ? "Salvar" : "Cadastrar")}
+                        </button>
                     </div>
                 </div>
-            </div>
+            </ModalWrapper>
         </div>
     );
 }
